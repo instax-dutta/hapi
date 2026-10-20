@@ -1,0 +1,240 @@
+{
+  "version": "17cf27308c43",
+  "generatedAt": "2026-10-20T17:11:09.429Z",
+  "generator": "hapi",
+  "source": "huggingface-hub",
+  "totals": {
+    "repos": 81,
+    "verifiedRepos": 6250,
+    "unverifiedRepos": 2036,
+    "origins": 40,
+    "recipes": 29,
+    "rankedRecipes": 1010,
+    "directConversions": 1266,
+    "downloadsAllTime": 63891588,
+    "downloads30d": 12003899
+  },
+  "families": [
+    {
+      "slug": "qwen-3-5",
+      "label": "Qwen 3.5",
+      "originCount": 89,
+      "rankedRecipeCount": 121,
+      "bestRecipeId": "rcp_2b587042",
+      "downloadsAllTime": 12352523
+    },
+    {
+      "slug": "llama-3",
+      "label": "Llama 3",
+      "originCount": 14,
+      "rankedRecipeCount": 10,
+      "bestRecipeId": "rcp_3fe29b6b",
+      "downloadsAllTime": 1158234
+    },
+    {
+      "slug": "nemotron",
+      "label": "Nemotron",
+      "originCount": 12,
+      "rankedRecipeCount": 14,
+      "bestRecipeId": "rcp_f7c5d64a",
+      "downloadsAllTime": 234308
+    },
+    {
+      "slug": "gemma-2",
+      "label": "Gemma 2",
+      "originCount": 8,
+      "rankedRecipeCount": 10,
+      "bestRecipeId": "rcp_83ae9fbc",
+      "downloadsAllTime": 110640
+    },
+    {
+      "slug": "aya",
+      "label": "Aya",
+      "originCount": 5,
+      "rankedRecipeCount": 2,
+      "bestRecipeId": "rcp_60d07f8e",
+      "downloadsAllTime": 60248
+    },
+    {
+      "slug": "apertus",
+      "label": "Apertus",
+      "originCount": 4,
+      "rankedRecipeCount": 5,
+      "bestRecipeId": "rcp_121e04bc",
+      "downloadsAllTime": 107091
+    },
+    {
+      "slug": "bielik",
+      "label": "Bielik",
+      "originCount": 4,
+      "rankedRecipeCount": 2,
+      "bestRecipeId": "rcp_bfbd2c02",
+      "downloadsAllTime": 19308
+    },
+    {
+      "slug": "agents",
+      "label": "Agents",
+      "originCount": 2,
+      "rankedRecipeCount": 2,
+      "bestRecipeId": "rcp_49c4c200",
+      "downloadsAllTime": 15645
+    },
+    {
+      "slug": "anubis",
+      "label": "Anubis",
+      "originCount": 2,
+      "rankedRecipeCount": 1,
+      "bestRecipeId": "rcp_7bf78725",
+      "downloadsAllTime": 14029
+    },
+    {
+      "slug": "apollo",
+      "label": "Apollo",
+      "originCount": 2,
+      "rankedRecipeCount": 1,
+      "bestRecipeId": "rcp_add28228",
+      "downloadsAllTime": 13844
+    },
+    {
+      "slug": "bellatrix",
+      "label": "Bellatrix",
+      "originCount": 2,
+      "rankedRecipeCount": 1,
+      "bestRecipeId": "rcp_59d7fd10",
+      "downloadsAllTime": 9317
+    },
+    {
+      "slug": "jamba",
+      "label": "Jamba",
+      "originCount": 2,
+      "rankedRecipeCount": 1,
+      "bestRecipeId": "rcp_f701fa29",
+      "downloadsAllTime": 17870
+    },
+    {
+      "slug": "kimi",
+      "label": "Kimi",
+      "originCount": 2,
+      "rankedRecipeCount": 0,
+      "bestRecipeId": null,
+      "downloadsAllTime": 11690
+    },
+    {
+      "slug": "a0l",
+      "label": "A0l",
+      "originCount": 1,
+      "rankedRecipeCount": 1,
+      "bestRecipeId": "rcp_a439d3e5",
+      "downloadsAllTime": 6932
+    },
+    {
+      "slug": "alia",
+      "label": "ALIA",
+      "originCount": 1,
+      "rankedRecipeCount": 0,
+      "bestRecipeId": null,
+      "downloadsAllTime": 18681
+    },
+    {
+      "slug": "alkahest",
+      "label": "alkahest",
+      "originCount": 1,
+      "rankedRecipeCount": 0,
+      "bestRecipeId": null,
+      "downloadsAllTime": 1252
+    },
+    {
+      "slug": "amalia",
+      "label": "AMALIA",
+      "originCount": 1,
+      "rankedRecipeCount": 0,
+      "bestRecipeId": null,
+      "downloadsAllTime": 798
+    },
+    {
+      "slug": "apex",
+      "label": "apex",
+      "originCount": 1,
+      "rankedRecipeCount": 0,
+      "bestRecipeId": null,
+      "downloadsAllTime": 97
+    },
+    {
+      "slug": "apriel",
+      "label": "Apriel",
+      "originCount": 1,
+      "rankedRecipeCount": 3,
+      "bestRecipeId": "rcp_373de334",
+      "downloadsAllTime": 31280
+    },
+    {
+      "slug": "arsenic",
+      "label": "arsenic",
+      "originCount": 1,
+      "rankedRecipeCount": 1,
+      "bestRecipeId": "rcp_1c2eb423",
+      "downloadsAllTime": 284
+    },
+    {
+      "slug": "artemis",
+      "label": "Artemis",
+      "originCount": 1,
+      "rankedRecipeCount": 0,
+      "bestRecipeId": null,
+      "downloadsAllTime": 21276
+    },
+    {
+      "slug": "assistant",
+      "label": "Assistant",
+      "originCount": 1,
+      "rankedRecipeCount": 1,
+      "bestRecipeId": "rcp_6123ac4d",
+      "downloadsAllTime": 62
+    },
+    {
+      "slug": "astral",
+      "label": "Astral",
+      "originCount": 1,
+      "rankedRecipeCount": 0,
+      "bestRecipeId": null,
+      "downloadsAllTime": 7270
+    },
+    {
+      "slug": "aurora",
+      "label": "Aurora",
+      "originCount": 1,
+      "rankedRecipeCount": 0,
+      "bestRecipeId": null,
+      "downloadsAllTime": 6758
+    },
+    {
+      "slug": "azure",
+      "label": "Azure",
+      "originCount": 1,
+      "rankedRecipeCount": 0,
+      "bestRecipeId": null,
+      "downloadsAllTime": 4598
+    },
+    {
+      "slug": "behemoth",
+      "label": "Behemoth",
+      "originCount": 1,
+      "rankedRecipeCount": 1,
+      "bestRecipeId": "rcp_a21ac586",
+      "downloadsAllTime": 7123
+    },
+    {
+      "slug": "bella",
+      "label": "bella",
+      "originCount": 1,
+      "rankedRecipeCount": 1,
+      "bestRecipeId": "rcp_28cdd63b",
+      "downloadsAllTime": 18140
+    }
+  ],
+  "counts": {
+    "models": 40,
+    "recipes": 29,
+    "repos": 81
+  }
+}

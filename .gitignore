@@ -1,0 +1,11 @@
+node_modules/
+dist/
+data/raw.json
+data/cache/
+data/snapshot.json
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+.wrangler/

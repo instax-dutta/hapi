@@ -1,0 +1,35 @@
+{
+  "name": "hapi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A public, free, read-only JSON API for the Heretic (abliterated) model ecosystem on Hugging Face",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:unit": "node scripts/verify/test.mjs test/unit",
+    "test:integration": "node scripts/verify/test.mjs test/integration",
+    "test": "npm run test:unit && npm run test:integration",
+    "gates:openapi": "node scripts/verify/openapi.mjs",
+    "gates:dataset": "node scripts/verify/dataset.mjs",
+    "gates:dox": "node scripts/verify/dox.mjs",
+    "gates": "node scripts/verify/all.mjs",
+    "verify": "npm run typecheck && npm run test:unit && npm run test:integration && npm run gates",
+    "crawl": "node scripts/verify/run.mjs scripts/crawl.ts",
+    "build:dataset": "node scripts/verify/run.mjs scripts/build-dataset.ts",
+    "build:stats": "node scripts/verify/run.mjs scripts/build-stats.ts",
+    "build:openapi": "node scripts/build-openapi.mjs",
+    "publish": "node scripts/verify/run.mjs scripts/publish.ts",
+    "refresh": "npm run crawl && npm run build:dataset && npm run build:stats && npm run publish",
+    "dev": "node scripts/verify/run.mjs src/server-node.ts"
+  },
+  "dependencies": {
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  }
+}
