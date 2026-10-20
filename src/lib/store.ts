@@ -28,7 +28,11 @@ export class DatasetUnavailableError extends Error {
 
 /** Reads dataset objects from a Cloudflare R2 bucket. */
 export class R2Store implements DatasetStore {
-  constructor(private readonly bucket: R2BucketLike) {}
+  private readonly bucket: R2BucketLike;
+
+  constructor(bucket: R2BucketLike) {
+    this.bucket = bucket;
+  }
 
   async get(key: string): Promise<string | null> {
     const object = await this.bucket.get(key);

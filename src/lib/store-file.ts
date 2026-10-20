@@ -10,7 +10,11 @@ import { join, normalize, sep } from "node:path";
 import type { DatasetStore } from "./store.ts";
 
 export class FileStore implements DatasetStore {
-  constructor(private readonly directory: string) {}
+  private readonly directory: string;
+
+  constructor(directory: string) {
+    this.directory = directory;
+  }
 
   /** Resolve a key inside the directory. A key may not escape it. */
   private pathFor(key: string): string {

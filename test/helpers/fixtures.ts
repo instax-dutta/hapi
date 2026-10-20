@@ -18,7 +18,11 @@ import type { DatasetStore } from "../../src/lib/store.ts";
 export class FakeStore implements DatasetStore {
   readonly reads: string[] = [];
 
-  constructor(private readonly objects: Record<string, string>) {}
+  private readonly objects: Record<string, string>;
+
+  constructor(objects: Record<string, string>) {
+    this.objects = objects;
+  }
 
   async get(key: string): Promise<string | null> {
     this.reads.push(key);

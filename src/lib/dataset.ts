@@ -40,7 +40,11 @@ export interface DatasetFamilies {
 }
 
 export class DatasetLoader {
-  constructor(private readonly store: DatasetStore) {}
+  private readonly store: DatasetStore;
+
+  constructor(store: DatasetStore) {
+    this.store = store;
+  }
 
   private async load<T>(key: string): Promise<T> {
     const storeKey = this.store as unknown as object;
