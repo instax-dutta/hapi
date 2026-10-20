@@ -46,7 +46,8 @@ test("a number is read out of a messy cell", () => {
 test("a refusal is read as a count over a total", () => {
   assert.deepEqual(parseRefusal("3/100"), { count: 3, total: 100 });
   assert.deepEqual(parseRefusal("3 out of 100"), { count: 3, total: 100 });
-  assert.equal(parseRefusal("3"), null);
+  // A bare count has no denominator, so it is a count with no total.
+  assert.deepEqual(parseRefusal("3"), { count: 3, total: null });
   assert.equal(parseRefusal("0/0"), null);
 });
 

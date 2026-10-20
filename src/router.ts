@@ -41,21 +41,27 @@ export interface RouteMatch {
 function matchPattern(pattern: string, pathname: string): Record<string, string> | null {
   const patternParts = pattern.split("/").filter((part) => part.length > 0);
   const pathParts = pathname.split("/").filter((part) => part.length > 0);
-  if (patternParts.length !== pathParts.length) return null;
+
+  // A greedy tail captures the rest of the path, so the path may have more
+  // segments than the pattern. Every other pattern matches exactly.
+  const last = patternParts[patternParts.length - 1];
+  const greedy = Boolean(last && last.startsWith(":") && last.endsWith("*"));
+  if (greedy) {
+    if (pathParts.length < patternParts.length) return null;
+  } else if (patternParts.length !== pathParts.length) {
+    return null;
+  }
 
   const params: Record<string, string> = {};
   for (let i = 0; i < patternParts.length; i += 1) {
     const expected = patternParts[i];
-    const actual = pathParts[i];
     if (expected.startsWith(":") && expected.endsWith("*")) {
-      // A greedy tail. It must be the last pattern segment, and it captures the
-      // rest of the path so an id that contains a slash survives.
-      if (i !== patternParts.length - 1) return null;
       const value = pathParts.slice(i).map(decodeURIComponent).join("/");
       if (value.length === 0) return null;
       params[expected.slice(1, -1)] = value;
       return params;
     }
+    const actual = pathParts[i];
     if (expected.startsWith(":")) {
       const value = decodeURIComponent(actual);
       if (value.length === 0) return null;
