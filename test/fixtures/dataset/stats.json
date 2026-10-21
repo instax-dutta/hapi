@@ -18,12 +18,7 @@
     "allTimeDownloads": 305209,
     "last30DaysDownloads": 28572
   },
-  "discovered": {
-    "modelCount": 81,
-    "allTimeDownloads": 305209,
-    "last30DaysDownloads": 28572
-  },
-  "discoveredRate": {
+  "indexedRate": {
     "downloadsPerSecond": 0.011023148148148148,
     "windowDays": 30,
     "basis": "derived"

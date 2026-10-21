@@ -159,6 +159,10 @@ export interface RankedRow {
   kl: number;
   refusalRate: number;
   verification: Verification;
+  /** The tie-breaker when two ablations measure the same. */
+  downloadsAllTime: number;
+  /** The tie-breaker after the downloads. */
+  lastModified: string;
 }
 
 /** A locale-independent id comparison. The published bytes must not depend on the runtime's locale. */
@@ -178,12 +182,21 @@ export function compareVerification(a: RankedRow, b: RankedRow): number {
   return va - vb;
 }
 
-/** Inside a cohort: the best score, then the cheapest ablation, then the id. */
+/**
+ * Inside a cohort: the best score, then the cheapest ablation, then the most
+ * downloaded, then the most recently changed, then the id.
+ *
+ * The last three are tie-breakers. Two ablations that measure exactly the same
+ * are ordered by how much attention they get, and then by how recently they
+ * were touched, so the order is stable and says something.
+ */
 export function compareCohort(a: RankedRow, b: RankedRow): number {
   return (
     b.score - a.score ||
     a.kl - b.kl ||
     a.refusalRate - b.refusalRate ||
+    b.downloadsAllTime - a.downloadsAllTime ||
+    compareIds(b.lastModified, a.lastModified) ||
     compareIds(a.id, b.id)
   );
 }
@@ -199,15 +212,24 @@ export interface RankedModelRow {
   bestScore: number | null;
   bestKl: number | null;
   bestRefusalRate: number | null;
+  downloadsAllTime: number;
+  lastModified: string;
 }
 
-/** The canonical order of models: the best score, then the cheapest, then the id. */
+/**
+ * The canonical order of models: the best score, then the cheapest, then the
+ * most downloaded, then the most recently changed, then the id. The same
+ * tie-breakers the ablations use, so a model and its leading ablation are
+ * ordered the same way.
+ */
 export function compareCanonicalModel(a: RankedModelRow, b: RankedModelRow): number {
   return (
     (b.bestScore ?? 0) - (a.bestScore ?? 0) ||
     (a.bestKl ?? Number.POSITIVE_INFINITY) - (b.bestKl ?? Number.POSITIVE_INFINITY) ||
     (a.bestRefusalRate ?? Number.POSITIVE_INFINITY) -
       (b.bestRefusalRate ?? Number.POSITIVE_INFINITY) ||
+    b.downloadsAllTime - a.downloadsAllTime ||
+    compareIds(b.lastModified, a.lastModified) ||
     compareIds(a.id, b.id)
   );
 }

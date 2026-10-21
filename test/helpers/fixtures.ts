@@ -228,6 +228,7 @@ export function statsRow(overrides: Partial<StatsScope> = {}): StatsScope {
     scope: "global",
     username: null,
     updatedAt: NOW,
+    // The reach: every model the tag-and-name index found.
     totals: {
       modelCount: 3,
       allTimeDownloads: 1000,
@@ -235,6 +236,17 @@ export function statsRow(overrides: Partial<StatsScope> = {}): StatsScope {
     },
     rate: { downloadsPerSecond: 100 / (30 * 24 * 60 * 60), windowDays: 30, basis: "derived" },
     source: "Hugging Face Hub API",
+    // The subset the directory publishes.
+    indexed: {
+      modelCount: 2,
+      allTimeDownloads: 600,
+      last30DaysDownloads: 60,
+    },
+    indexedRate: {
+      downloadsPerSecond: 60 / (30 * 24 * 60 * 60),
+      windowDays: 30,
+      basis: "derived",
+    },
     ...overrides,
   };
 }

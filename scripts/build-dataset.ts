@@ -10,6 +10,8 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import { dirname, join } from "node:path";
 import { buildSnapshot, type RawDataset } from "../src/core/snapshot.ts";
 import { apiRowsFromSnapshot, type RawExtras } from "./lib/dataset-rows.ts";
+import { buildCreators } from "./lib/creators.ts";
+import type { DatasetMeta } from "../src/lib/types.ts";
 
 const ROOT = process.cwd();
 const RAW_PATH = join(ROOT, "data", "raw.json");
@@ -56,14 +58,32 @@ function main(): void {
     if (repo.safetensorsTotal !== null) extras.safetensorsTotal![repo.id] = repo.safetensorsTotal;
   }
 
-  const { meta, models, recipes, repos, creators } = apiRowsFromSnapshot(snapshot, extras);
-  const dataset = { meta, models, recipes, repos, creators };
+  const { meta, models, recipes, repos } = apiRowsFromSnapshot(snapshot, extras);
+
+  // The creator rows come from the discovery, so a creator's numbers are the
+  // reach they actually generated, not only the artifacts the directory could
+  // classify.
+  const creators = buildCreators(
+    raw.repos.map((repo) => ({
+      id: repo.id,
+      author: repo.author,
+      downloads30d: repo.downloads30d,
+      downloadsAllTime: repo.downloadsAllTime,
+      likes: repo.likes,
+    })),
+    recipes,
+    repos,
+    snapshot.updatedAt,
+  );
+
+  const published: DatasetMeta = { ...meta, counts: { ...meta.counts, creators: creators.length } };
+  const dataset = { meta: published, models, recipes, repos, creators };
 
   // The snapshot is written too, so the sample builder and a human can read
   // the full document without rebuilding it.
   writeAtomic(join(ROOT, "data", "snapshot.json"), JSON.stringify(snapshot));
 
-  writeAtomic(join(DIST, "meta.json"), JSON.stringify(meta));
+  writeAtomic(join(DIST, "meta.json"), JSON.stringify(published));
   writeAtomic(join(DIST, "models.json"), JSON.stringify({ origins: models }));
   writeAtomic(join(DIST, "recipes.json"), JSON.stringify({ recipes }));
   writeAtomic(join(DIST, "repos.json"), JSON.stringify({ repos }));

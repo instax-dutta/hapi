@@ -20,9 +20,9 @@ import {
   apiRowsFromSnapshot,
   assignModelRanks,
   assignRanks,
-  buildCreators,
   buildFacets,
 } from "./lib/dataset-rows.ts";
+import { buildCreators } from "./lib/creators.ts";
 import { aggregate, estimateDownloadsPerSecond, LIVE_RATE_WINDOW_DAYS } from "../src/core/live.ts";
 
 const source = process.argv[2];
@@ -51,8 +51,20 @@ const keptRepos = full.repos.filter(
 assignRanks(keptRecipes);
 assignModelRanks(keptModels);
 
-// Everything derived is derived again from the slice.
-const keptCreators = buildCreators(keptRepos, keptRecipes, snapshot.updatedAt);
+// Everything derived is derived again from the slice. The sample has no
+// discovery of its own, so the creators are cut from the slice's artifacts.
+const keptCreators = buildCreators(
+  keptRepos.map((repo) => ({
+    id: repo.id,
+    author: repo.author,
+    downloads30d: repo.downloads30d,
+    downloadsAllTime: repo.downloadsAllTime,
+    likes: repo.likes,
+  })),
+  keptRecipes,
+  keptRepos,
+  snapshot.updatedAt,
+);
 const facets = buildFacets(keptRecipes, keptRepos, keptModels);
 
 const measured = keptRepos.map((repo) => ({
@@ -109,8 +121,7 @@ const stats = {
   },
   source: "Hugging Face Hub API",
   indexed: totals,
-  discovered: totals,
-  discoveredRate: {
+  indexedRate: {
     downloadsPerSecond: estimateDownloadsPerSecond(totals.last30DaysDownloads),
     windowDays: LIVE_RATE_WINDOW_DAYS,
     basis: "derived",

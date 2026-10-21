@@ -12,11 +12,9 @@ import {
   compareCanonical,
   compareCanonicalModel,
   compareIds,
-  type RankedRow,
 } from "../../src/core/scoring.ts";
 import type {
   BestRecipeSummary,
-  CreatorRow,
   DatasetFacets,
   DatasetMeta,
   FacetCount,
@@ -30,7 +28,6 @@ export interface ApiRows {
   models: ModelRow[];
   recipes: RecipeRow[];
   repos: RepoRow[];
-  creators: CreatorRow[];
 }
 
 /** The Hub metadata the snapshot does not carry. */
@@ -77,7 +74,7 @@ function facet(rows: Array<{ value: string; downloadsAllTime: number }>): FacetC
  * and still looks broken.
  */
 export function compareRecipes(a: RecipeRow, b: RecipeRow): number {
-  return compareCanonical(a as RankedRow, b as RankedRow);
+  return compareCanonical(a, b);
 }
 
 /**
@@ -312,13 +309,12 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
 
   assignModelRanks(models);
 
-  const creators = buildCreators(repos, recipes, snapshot.updatedAt);
   const facets = buildFacets(recipes, repos, models);
 
   // The version is a content hash of the published rows. It changes when the
   // data changes and not when the build is merely re-run.
   const version = createHash("sha256")
-    .update(JSON.stringify({ models, recipes, repos, creators }))
+    .update(JSON.stringify({ models, recipes, repos }))
     .digest("hex")
     .slice(0, 12);
 
@@ -333,12 +329,13 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
       models: models.length,
       recipes: recipes.length,
       repos: repos.length,
-      creators: creators.length,
+      // The creator count is added by the caller, which knows the discovery.
+      creators: 0,
     },
     facets,
   };
 
-  return { meta, models, recipes, repos, creators };
+  return { meta, models, recipes, repos };
 }
 
 /**
@@ -358,78 +355,6 @@ export function assignModelRanks(models: ModelRow[]): void {
   ranked.forEach((model, index) => {
     model.rank = index + 1;
   });
-}
-
-export function buildCreators(
-  repos: RepoRow[],
-  recipes: RecipeRow[],
-  updatedAt: string,
-): CreatorRow[] {
-  const byAuthor = new Map<string, RepoRow[]>();
-  for (const repo of repos) {
-    const list = byAuthor.get(repo.author) ?? [];
-    list.push(repo);
-    byAuthor.set(repo.author, list);
-  }
-
-  const recipesByAuthor = new Map<string, RecipeRow[]>();
-  for (const recipe of recipes) {
-    for (const author of recipe.authors) {
-      const list = recipesByAuthor.get(author) ?? [];
-      list.push(recipe);
-      recipesByAuthor.set(author, list);
-    }
-  }
-
-  const creators: CreatorRow[] = [];
-  for (const [username, models] of byAuthor) {
-    const authorRecipes = recipesByAuthor.get(username) ?? [];
-    // The leading ablation of a creator is a corroborated one. An
-    // uncorroborated card must never be the headline, even for a creator.
-    const sorted = [...authorRecipes].sort(compareRecipes);
-    const best = sorted[0] ?? null;
-    const totals = {
-      modelCount: models.length,
-      allTimeDownloads: models.reduce((sum, model) => sum + model.downloadsAllTime, 0),
-      last30DaysDownloads: models.reduce((sum, model) => sum + model.downloads30d, 0),
-    };
-
-    creators.push({
-      scope: "user",
-      username,
-      updatedAt,
-      totals,
-      rate: {
-        downloadsPerSecond: estimateDownloadsPerSecond(totals.last30DaysDownloads),
-        windowDays: RATE_WINDOW_DAYS,
-        basis: "derived",
-      },
-      source: "Hugging Face Hub API",
-      recipeCount: authorRecipes.length,
-      originCount: new Set(models.map((model) => model.originId)).size,
-      likes: models.reduce((sum, model) => sum + model.likes, 0),
-      bestScore: best?.score ?? null,
-      bestKl: best?.kl ?? null,
-      bestRefusalRate: best?.refusalRate ?? null,
-      verifiedCount: authorRecipes.filter(
-        (recipe) => recipe.verification === "verified" || recipe.verification === "publisher",
-      ).length,
-      lastModified: models.map((model) => model.lastModified).sort().reverse()[0] ?? updatedAt,
-      models: models
-        .slice()
-        .sort((a, b) => b.downloadsAllTime - a.downloadsAllTime)
-        .map((model) => ({
-          id: model.id,
-          url: `https://huggingface.co/${model.id}`,
-          downloads: model.downloads30d,
-          downloadsAllTime: model.downloadsAllTime,
-          likes: model.likes,
-        })),
-    });
-  }
-
-  creators.sort((a, b) => b.totals.allTimeDownloads - a.totals.allTimeDownloads);
-  return creators;
 }
 
 export function buildFacets(

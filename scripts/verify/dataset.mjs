@@ -11,6 +11,7 @@
  */
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { compareCanonical } from "../../src/core/scoring.ts";
 
 const root = resolve(process.cwd());
 const directory = process.env.HAPI_DATASET_DIR
@@ -101,12 +102,23 @@ if (stats.totals.allTimeDownloads !== downloadsAllTime) {
 }
 if (stats.rate.basis !== "derived") fail("stats.rate is not labelled as derived.");
 
-// Every creator must be a creator of the artifacts in the dataset.
+// Every creator's totals are the sum of the models it lists. The list comes
+// from the discovery, so a creator can publish models the directory could not
+// classify, and the arithmetic still has to hold.
 for (const creator of creators) {
-  const owned = repos.filter((repo) => repo.author === creator.username);
-  if (owned.length === 0) fail(`The creator ${creator.username} owns no artifact.`);
-  if (creator.totals.modelCount !== owned.length) {
-    fail(`The creator ${creator.username} claims ${creator.totals.modelCount} artifacts and owns ${owned.length}.`);
+  if (creator.totals.modelCount !== creator.models.length) {
+    fail(`The creator ${creator.username} claims ${creator.totals.modelCount} models and lists ${creator.models.length}.`);
+  }
+  const allTime = creator.models.reduce((sum, model) => sum + model.downloadsAllTime, 0);
+  if (creator.totals.allTimeDownloads !== allTime) {
+    fail(`The creator ${creator.username} claims ${creator.totals.allTimeDownloads} all-time downloads and its models sum to ${allTime}.`);
+  }
+  const recent = creator.models.reduce((sum, model) => sum + model.downloads, 0);
+  if (creator.totals.last30DaysDownloads !== recent) {
+    fail(`The creator ${creator.username} claims ${creator.totals.last30DaysDownloads} recent downloads and its models sum to ${recent}.`);
+  }
+  if (new Set(creator.models.map((model) => model.id)).size !== creator.models.length) {
+    fail(`The creator ${creator.username} lists the same model twice.`);
   }
 }
 if (!meta.version) fail("meta.version is empty.");
@@ -181,19 +193,11 @@ for (const repo of repos) {
   if (!repo.url) fail(`The artifact ${repo.id} has no URL.`);
 }
 
-// The ranks are recomputed from the published rows, so the rank column and the
-// default sort cannot drift apart.
+// The ranks are recomputed from the published rows, with the same comparator
+// the publisher uses, so the rank column and the default sort cannot drift
+// apart. The comparator is imported, not copied.
 const ranked = recipes.filter((recipe) => recipe.ranked);
-const verifiedFirst = (recipe) =>
-  recipe.verification === "verified" || recipe.verification === "publisher";
-const ordered = [...ranked].sort(
-  (a, b) =>
-    Number(verifiedFirst(b)) - Number(verifiedFirst(a)) ||
-    b.score - a.score ||
-    a.kl - b.kl ||
-    a.refusalRate - b.refusalRate ||
-    a.id.localeCompare(b.id),
-);
+const ordered = [...ranked].sort(compareCanonical);
 ordered.forEach((recipe, index) => {
   if (recipe.rank !== index + 1) {
     fail(`The recipe ${recipe.id} claims rank ${recipe.rank} but holds ${index + 1}.`);

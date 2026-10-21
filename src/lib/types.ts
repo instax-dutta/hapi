@@ -266,15 +266,20 @@ export interface StatsScope {
   scope: "global" | "user";
   username: string | null;
   updatedAt: string;
+  /**
+   * The reach.
+   *
+   * For the global scope this is every model the tag-and-name index found,
+   * which is the same arithmetic the live counter uses. For a creator it is
+   * every model that creator published that the index found.
+   */
   totals: DownloadTotals;
   rate: DownloadRate;
   source: string;
   /** The artifacts the directory publishes. The global scope only. */
   indexed?: DownloadTotals;
-  /** Every model the tag-and-name index found. The global scope only. */
-  discovered?: DownloadTotals;
-  /** The derived rate for the discovered scope. The global scope only. */
-  discoveredRate?: DownloadRate;
+  /** The derived rate for the indexed scope. The global scope only. */
+  indexedRate?: DownloadRate;
 }
 
 /** One creator. */

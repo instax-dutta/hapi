@@ -102,20 +102,23 @@ function main(): void {
   );
 
   const updatedAt = raw.crawledAt;
+  // The headline is the discovered scope: every model the tag-and-name index
+  // found, which is the same arithmetic the live counter at
+  // `heretic.sdad.pro` uses. The indexed scope is the subset the directory
+  // could classify, published beside it.
   const scope: StatsScope = {
     scope: "global",
     username: null,
     updatedAt,
-    totals: indexedTotals,
-    rate: rateOf(indexedTotals),
+    totals: discoveredTotals,
+    rate: rateOf(discoveredTotals),
     source: "Hugging Face Hub API · heretic tag + name index",
   };
 
   const document = {
     ...scope,
     indexed: indexedTotals,
-    discovered: discoveredTotals,
-    discoveredRate: rateOf(discoveredTotals),
+    indexedRate: rateOf(indexedTotals),
   };
 
   writeAtomic(join(DIST, "stats.json"), JSON.stringify(document));
@@ -123,8 +126,8 @@ function main(): void {
   console.log(
     [
       `Stats written to ${DIST}`,
+      `  discovered   ${discoveredTotals.modelCount} models, ${discoveredTotals.allTimeDownloads.toLocaleString("en-US")} all time, ${discoveredTotals.last30DaysDownloads.toLocaleString("en-US")} in 30 days`,
       `  indexed      ${indexedTotals.modelCount} artifacts, ${indexedTotals.allTimeDownloads.toLocaleString("en-US")} all time`,
-      `  discovered   ${discoveredTotals.modelCount} models, ${discoveredTotals.allTimeDownloads.toLocaleString("en-US")} all time`,
       `  rate         ${scope.rate.downloadsPerSecond.toFixed(4)}/s (derived)`,
     ].join("\n"),
   );

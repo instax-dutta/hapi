@@ -6,9 +6,9 @@ import {
   apiRowsFromSnapshot,
   assignModelRanks,
   assignRanks,
-  buildCreators,
   buildFacets,
 } from "../../scripts/lib/dataset-rows.ts";
+import { buildCreators } from "../../scripts/lib/creators.ts";
 import type { ParsedCard, Snapshot } from "../../src/core/types.ts";
 
 function emptyCard(): ParsedCard {
@@ -367,11 +367,53 @@ test("an uncorroborated ablation never holds a rank above a corroborated one", (
 
 test("a creator owns every ablation they published", () => {
   const rows = apiRowsFromSnapshot(snapshotFixture());
-  const creators = buildCreators(rows.repos, rows.recipes, "2026-10-21T00:00:00.000Z");
+  const creators = buildCreators(
+    rows.repos.map((repo) => ({
+      id: repo.id,
+      author: repo.author,
+      downloads30d: repo.downloads30d,
+      downloadsAllTime: repo.downloadsAllTime,
+      likes: repo.likes,
+    })),
+    rows.recipes,
+    rows.repos,
+    "2026-10-21T00:00:00.000Z",
+  );
   const names = creators.map((creator) => creator.username).sort();
   assert.deepEqual(names, ["a", "b"]);
   const a = creators.find((creator) => creator.username === "a");
   assert.equal(a?.totals.modelCount, 1);
+});
+
+test("a creator's numbers come from the discovery, not the published artifacts", () => {
+  const rows = apiRowsFromSnapshot(snapshotFixture());
+  // A creator published ten models, and the directory classified one of them.
+  const discovery = Array.from({ length: 10 }, (_, index) => ({
+    id: `a/model-${index}`,
+    author: "a",
+    downloads30d: 5,
+    downloadsAllTime: 50,
+    likes: 1,
+  }));
+  const creators = buildCreators(discovery, rows.recipes, rows.repos, "2026-10-21T00:00:00.000Z");
+  const a = creators.find((creator) => creator.username === "a");
+  assert.equal(a?.totals.modelCount, 10);
+  assert.equal(a?.totals.allTimeDownloads, 500);
+  // The classified work is still attached.
+  assert.equal(a?.recipeCount, 1);
+});
+
+test("two ablations that measure the same are ordered by their downloads", () => {
+  const rows = apiRowsFromSnapshot(snapshotFixture());
+  rows.recipes = [
+    { ...rows.recipes[0], id: "rcp_small", downloadsAllTime: 10 },
+    { ...rows.recipes[0], id: "rcp_big", downloadsAllTime: 10_000 },
+  ];
+  assignRanks(rows.recipes);
+  // The tie is broken by the downloads, exactly as the published leaderboard
+  // does, so the rank column and the row order agree with it.
+  assert.equal(rows.recipes.find((r) => r.id === "rcp_big")?.rank, 1);
+  assert.equal(rows.recipes.find((r) => r.id === "rcp_small")?.rank, 2);
 });
 
 test("the version hash does not move when the data does not", () => {
