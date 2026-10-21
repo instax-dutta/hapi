@@ -733,6 +733,18 @@
             }
           },
           {
+            "name": "implausible",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ]
+            },
+            "description": "Set to 0 to drop the ablations whose divergence is below the floor. Default: keep both."
+          },
+          {
             "name": "bestPick",
             "in": "query",
             "schema": {
@@ -1069,6 +1081,18 @@
                 "1"
               ]
             }
+          },
+          {
+            "name": "implausible",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ]
+            },
+            "description": "Set to 0 to drop the ablations whose divergence is below the floor. Default: keep both."
           },
           {
             "name": "bestPick",
@@ -1409,6 +1433,18 @@
             }
           },
           {
+            "name": "implausible",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ]
+            },
+            "description": "Set to 0 to drop the ablations whose divergence is below the floor. Default: keep both."
+          },
+          {
             "name": "bestPick",
             "in": "query",
             "schema": {
@@ -1747,6 +1783,18 @@
             }
           },
           {
+            "name": "implausible",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ]
+            },
+            "description": "Set to 0 to drop the ablations whose divergence is below the floor. Default: keep both."
+          },
+          {
             "name": "bestPick",
             "in": "query",
             "schema": {
@@ -1975,7 +2023,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "A model id, an ablation id or an artifact id."
           },
           {
             "name": "b",
@@ -1983,7 +2032,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "A model id, an ablation id or an artifact id."
           }
         ],
         "responses": {
@@ -2206,6 +2256,78 @@
           }
         }
       },
+      "BestRecipe": {
+        "type": "object",
+        "required": [
+          "id",
+          "score",
+          "kl",
+          "refusals",
+          "refusalTotal"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "implausible": {
+            "type": "boolean"
+          },
+          "score": {
+            "type": "number"
+          },
+          "kl": {
+            "type": "number"
+          },
+          "refusals": {
+            "type": "integer"
+          },
+          "refusalTotal": {
+            "type": "integer"
+          },
+          "refusalRate": {
+            "type": "number"
+          },
+          "verification": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "string"
+          },
+          "hereticVersion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "downloadsAllTime": {
+            "type": "integer"
+          },
+          "lastModified": {
+            "type": "string"
+          },
+          "originalKl": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "originalRefusals": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "originalRefusalTotal": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      },
       "Model": {
         "type": "object",
         "required": [
@@ -2219,6 +2341,9 @@
           "id": {
             "type": "string",
             "description": "The canonical upstream model id."
+          },
+          "url": {
+            "type": "string"
           },
           "owner": {
             "type": "string"
@@ -2268,6 +2393,13 @@
               "null"
             ]
           },
+          "rank": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The position among the models, best first."
+          },
           "bestScore": {
             "type": [
               "number",
@@ -2290,7 +2422,8 @@
             "type": [
               "object",
               "null"
-            ]
+            ],
+            "description": "The corroborated ablation that leads this model."
           },
           "verifiedRepoCount": {
             "type": "integer"
@@ -2356,6 +2489,23 @@
         "properties": {
           "id": {
             "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "rank": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The position among the ranked ablations."
+          },
+          "familyRank": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The position among the ablations of the same model."
           },
           "originId": {
             "type": "string"
@@ -2554,6 +2704,9 @@
           "id": {
             "type": "string"
           },
+          "url": {
+            "type": "string"
+          },
           "author": {
             "type": "string"
           },
@@ -2676,11 +2829,44 @@
           "benchmarkCount": {
             "type": "integer"
           },
-          "sha": {
-            "type": "string"
+          "kl": {
+            "type": [
+              "number",
+              "null"
+            ]
           },
-          "metrics": {
-            "type": "object"
+          "refusals": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "refusalTotal": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "inherited",
+              "none"
+            ]
+          },
+          "evidence": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "inheritedFrom": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       },

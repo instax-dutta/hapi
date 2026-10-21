@@ -25,6 +25,7 @@ export const MODEL_SORTS = [
   "kl",
   "refusals",
   "downloads",
+  "recent",
   "params",
   "newest",
   "model",
@@ -44,6 +45,8 @@ function matches(row: ModelRow, query: CommonQuery): boolean {
   if (query.minScore > 0 && (row.bestScore ?? 0) < query.minScore) return false;
   if (query.maxKl > 0 && (row.bestKl ?? Infinity) > query.maxKl) return false;
   if (query.minParams > 0 && (row.paramsB ?? 0) < query.minParams) return false;
+  if (query.implausible === "0" && row.bestRecipe?.implausible) return false;
+  if (query.implausible === "1" && !row.bestRecipe?.implausible) return false;
   if (query.maxParams > 0 && (row.paramsB ?? Infinity) > query.maxParams) return false;
   if (!isUpdatedAfter(row.lastModified, query.updatedAfter)) return false;
   if (query.q) {
@@ -61,6 +64,8 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Mode
     compareNullable(a.bestRefusalRate, b.bestRefusalRate, dir);
   const byDownloads: RowComparator<ModelRow> = (a, b) =>
     compareNullable(a.downloadsAllTime, b.downloadsAllTime, dir);
+  const byRecent: RowComparator<ModelRow> = (a, b) =>
+    compareNullable(a.downloads30d, b.downloads30d, dir);
   const byParams: RowComparator<ModelRow> = (a, b) => compareNullable(a.paramsB, b.paramsB, dir);
   const byNewest: RowComparator<ModelRow> = (a, b) => compareText(a.lastModified, b.lastModified, dir);
   const byName: RowComparator<ModelRow> = (a, b) => compareText(a.displayName, b.displayName, dir);
@@ -75,6 +80,7 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Mode
     kl: byKl,
     refusals: byRefusals,
     downloads: byDownloads,
+    recent: byRecent,
     params: byParams,
     newest: byNewest,
     model: byName,

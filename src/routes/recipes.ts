@@ -25,6 +25,7 @@ export const RECIPE_SORTS = [
   "kl",
   "refusals",
   "downloads",
+  "recent",
   "params",
   "newest",
   "model",
@@ -55,6 +56,8 @@ function matches(row: RecipeRow, query: CommonQuery): boolean {
   if (query.minLikes > 0 && row.likes < query.minLikes) return false;
   if (query.maxKl > 0 && row.kl > query.maxKl) return false;
   if (query.bench && row.benchmarks.length === 0) return false;
+  if (query.implausible === "0" && row.implausible) return false;
+  if (query.implausible === "1" && !row.implausible) return false;
   if (!isUpdatedAfter(row.lastModified, query.updatedAfter)) return false;
   if (query.q) {
     const haystack = `${row.id} ${row.originId} ${row.originName} ${row.author} ${row.authors.join(" ")} ${row.bestRepoId} ${row.evidenceRepoId}`;
@@ -71,6 +74,8 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Reci
     compareNullable(a.refusalRate, b.refusalRate, dir);
   const byDownloads: RowComparator<RecipeRow> = (a, b) =>
     compareNullable(a.downloadsAllTime, b.downloadsAllTime, dir);
+  const byRecent: RowComparator<RecipeRow> = (a, b) =>
+    compareNullable(a.downloads30d, b.downloads30d, dir);
   const byParams: RowComparator<RecipeRow> = (a, b) => compareNullable(a.paramsB, b.paramsB, dir);
   const byNewest: RowComparator<RecipeRow> = (a, b) => compareText(a.lastModified, b.lastModified, dir);
   const byName: RowComparator<RecipeRow> = (a, b) => compareText(a.originName, b.originName, dir);
@@ -90,6 +95,7 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Reci
     kl: verified(byKl),
     refusals: verified(byRefusals),
     downloads: verified(byDownloads),
+    recent: verified(byRecent),
     params: verified(byParams),
     newest: verified(byNewest),
     model: verified(byName),

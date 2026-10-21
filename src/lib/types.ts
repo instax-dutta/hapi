@@ -22,6 +22,8 @@ export type { Benchmark, MetricConfidence, RepoKind, SizeClass, Verification };
 /** One canonical upstream model. */
 export interface ModelRow {
   id: string;
+  /** The upstream model on the Hub. */
+  url: string;
   owner: string;
   name: string;
   displayName: string;
@@ -39,6 +41,8 @@ export interface ModelRow {
   bestScore: number | null;
   bestKl: number | null;
   bestRefusalRate: number | null;
+  /** The position among the models, best first. Null when it leads with none. */
+  rank: number | null;
   /** The corroborated ablation that leads this model, in one object. */
   bestRecipe: BestRecipeSummary | null;
   verifiedRepoCount: number;
@@ -61,6 +65,8 @@ export interface ModelRow {
 export interface BestRecipeSummary {
   id: string;
   author: string;
+  /** The divergence is below the floor an ablation can produce. */
+  implausible: boolean;
   score: number;
   kl: number;
   refusals: number;
@@ -71,11 +77,17 @@ export interface BestRecipeSummary {
   hereticVersion: string | null;
   downloadsAllTime: number;
   lastModified: string;
+  /** The base model's numbers, when the card published them side by side. */
+  originalKl: number | null;
+  originalRefusals: number | null;
+  originalRefusalTotal: number | null;
 }
 
 /** One ablation attempt. This is what a leaderboard ranks. */
 export interface RecipeRow {
   id: string;
+  /** The leading artifact on the Hub. */
+  url: string;
   originId: string;
   originName: string;
   family: string;
@@ -88,6 +100,10 @@ export interface RecipeRow {
   refusalTotal: number;
   refusalRate: number;
   score: number;
+  /** The position among the ranked ablations, best first. */
+  rank: number | null;
+  /** The position among the ablations of the same model. */
+  familyRank: number | null;
   /** False when the card published no usable pair. The recipe is still served. */
   ranked: boolean;
   pareto: boolean;
@@ -132,6 +148,8 @@ export interface RecipeRow {
 /** One published artifact. */
 export interface RepoRow {
   id: string;
+  /** The artifact on the Hub. */
+  url: string;
   author: string;
   originId: string;
   recipeId: string | null;
@@ -163,15 +181,15 @@ export interface RepoRow {
   /** The total parameter count the Hub reports, in parameters. */
   safetensorsTotal: number | null;
   benchmarkCount: number;
-  metrics: {
-    kl: number | null;
-    refusals: number | null;
-    refusalTotal: number | null;
-    confidence: MetricConfidence;
-    /** The repo this artifact inherited its numbers from, when it inherited. */
-    sourceRepoId: string | null;
-    evidence: string | null;
-  };
+  /** The numbers this artifact publishes, or inherits. */
+  kl: number | null;
+  refusals: number | null;
+  refusalTotal: number | null;
+  confidence: MetricConfidence;
+  /** The exact snippet the numbers came from. */
+  evidence: string | null;
+  /** The artifact this one inherited its numbers from, when it inherited. */
+  inheritedFrom: string | null;
 }
 
 export interface FamilyRow {

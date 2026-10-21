@@ -8,9 +8,42 @@
  * It never returns a metric the card does not publish.
  */
 import { parseCard } from "../core/card.ts";
+import type { ParsedCard } from "../core/types.ts";
 import { errorResponse, json } from "../lib/http.ts";
 import { fetchModel, fetchReadme, isValidRepoId } from "../lib/hf.ts";
 import type { RouteContext, RouteDeps } from "../router.ts";
+
+/**
+ * The parse cache.
+ *
+ * The endpoint is the only one that reaches the Hub during a request, so it
+ * must not reach it twice for the same card. An isolate keeps the last
+ * parses, and a repeated request for one of them is served from memory.
+ */
+const PARSE_CACHE_TTL_MS = 10 * 60 * 1000;
+const PARSE_CACHE_MAX = 200;
+const parseCache = new Map<string, { parsed: ParsedCard; fetchedAt: string }>();
+
+function cachedParse(id: string): { parsed: ParsedCard; fetchedAt: string } | null {
+  const hit = parseCache.get(id);
+  if (!hit) return null;
+  if (Date.now() - Date.parse(hit.fetchedAt) > PARSE_CACHE_TTL_MS) {
+    parseCache.delete(id);
+    return null;
+  }
+  parseCache.delete(id);
+  parseCache.set(id, hit);
+  return hit;
+}
+
+function rememberParse(id: string, parsed: ParsedCard, fetchedAt: string): void {
+  parseCache.set(id, { parsed, fetchedAt });
+  while (parseCache.size > PARSE_CACHE_MAX) {
+    const oldest = parseCache.keys().next();
+    if (oldest.done) break;
+    parseCache.delete(oldest.value);
+  }
+}
 
 export async function parseRepo(context: RouteContext, deps: RouteDeps): Promise<Response> {
   const raw = (context.query.get("repo") ?? "").trim();
@@ -22,6 +55,20 @@ export async function parseRepo(context: RouteContext, deps: RouteDeps): Promise
       400,
       "bad_request",
       "A repository id looks like `owner/name`, with letters, digits, dots, dashes and underscores.",
+    );
+  }
+
+  const fromCache = cachedParse(raw);
+  if (fromCache) {
+    return json(
+      {
+        repo: raw,
+        url: `https://huggingface.co/${raw}`,
+        fetchedAt: fromCache.fetchedAt,
+        cached: true,
+        parsed: fromCache.parsed,
+      },
+      { cache: "parse" },
     );
   }
 
@@ -53,12 +100,15 @@ export async function parseRepo(context: RouteContext, deps: RouteDeps): Promise
     : [];
 
   const parsed = parseCard(markdown, { selfId: raw, declaredBaseModels });
+  const fetchedAt = new Date().toISOString();
+  rememberParse(raw, parsed, fetchedAt);
 
   return json(
     {
       repo: raw,
       url: `https://huggingface.co/${raw}`,
-      fetchedAt: new Date().toISOString(),
+      fetchedAt,
+      cached: false,
       meta: meta
         ? {
             downloads30d: meta.downloads ?? 0,

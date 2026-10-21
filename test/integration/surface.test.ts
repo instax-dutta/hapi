@@ -134,10 +134,11 @@ test("the comparison names both models and the difference between them", async (
   );
   assert.equal(response.status, 200);
   const body = (await response.json()) as {
-    a: { model: { id: string } };
-    b: { model: { id: string } };
+    a: { kind: string; model: { id: string } };
+    b: { kind: string; model: { id: string } };
     difference: { bestScore: number | null; downloadsAllTime: number | null };
   };
+  assert.equal(body.a.kind, "model");
   assert.equal(body.a.model.id, "google/gemma-3-12b-it");
   assert.equal(body.b.model.id, "x/y");
   assert.equal(body.difference.bestScore, 41.2);
@@ -191,12 +192,20 @@ test("a model row carries the best ablation in one object", async () => {
 test("an artifact row carries the base chain and the Hub tags", async () => {
   const response = await call("/v1/repos/coder3101/gemma-3-12b-it-heretic");
   const body = (await response.json()) as {
-    repo: { parentIds: string[]; tags: string[]; isDirectConversion: boolean };
+    repo: {
+      parentIds: string[];
+      tags: string[];
+      isDirectConversion: boolean;
+      kl: number | null;
+      inheritedFrom: string | null;
+    };
     model: { id: string } | null;
   };
   assert.deepEqual(body.repo.parentIds, ["google/gemma-3-12b-it"]);
   assert.deepEqual(body.repo.tags, ["heretic", "uncensored"]);
   assert.equal(body.repo.isDirectConversion, true);
+  assert.equal(body.repo.kl, 0.012);
+  assert.equal(body.repo.inheritedFrom, null);
   assert.equal(body.model?.id, "google/gemma-3-12b-it");
 });
 

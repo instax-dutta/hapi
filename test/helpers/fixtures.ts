@@ -36,6 +36,8 @@ export const NOW = "2026-10-21T09:00:00.000Z";
 export function modelRow(overrides: Partial<ModelRow> = {}): ModelRow {
   return {
     id: "google/gemma-3-12b-it",
+    url: "https://huggingface.co/google/gemma-3-12b-it",
+    rank: 1,
     owner: "google",
     name: "gemma-3-12b-it",
     displayName: "gemma-3-12b-it",
@@ -55,6 +57,7 @@ export function modelRow(overrides: Partial<ModelRow> = {}): ModelRow {
     bestRecipe: {
       id: "rcp_a",
       author: "coder3101",
+      implausible: false,
       score: 91.2,
       kl: 0.012,
       refusals: 1,
@@ -65,6 +68,9 @@ export function modelRow(overrides: Partial<ModelRow> = {}): ModelRow {
       hereticVersion: "1.2.0",
       downloadsAllTime: 500,
       lastModified: "2026-10-20T00:00:00.000Z",
+      originalKl: 0.4,
+      originalRefusals: 40,
+      originalRefusalTotal: 100,
     },
     verifiedRepoCount: 3,
     downloadsAllTime: 1000,
@@ -84,6 +90,9 @@ export function modelRow(overrides: Partial<ModelRow> = {}): ModelRow {
 export function recipeRow(overrides: Partial<RecipeRow> = {}): RecipeRow {
   return {
     id: "rcp_a",
+    url: "https://huggingface.co/coder3101/gemma-3-12b-it-heretic",
+    rank: 1,
+    familyRank: 1,
     originId: "google/gemma-3-12b-it",
     originName: "gemma-3-12b-it",
     family: "Gemma 3",
@@ -133,6 +142,7 @@ export function recipeRow(overrides: Partial<RecipeRow> = {}): RecipeRow {
 export function repoRow(overrides: Partial<RepoRow> = {}): RepoRow {
   return {
     id: "coder3101/gemma-3-12b-it-heretic",
+    url: "https://huggingface.co/coder3101/gemma-3-12b-it-heretic",
     author: "coder3101",
     originId: "google/gemma-3-12b-it",
     recipeId: "rcp_a",
@@ -160,14 +170,12 @@ export function repoRow(overrides: Partial<RepoRow> = {}): RepoRow {
     tags: ["heretic", "uncensored"],
     safetensorsTotal: 12_000_000_000,
     benchmarkCount: 1,
-    metrics: {
-      kl: 0.012,
-      refusals: 1,
-      refusalTotal: 100,
-      confidence: "medium",
-      sourceRepoId: null,
-      evidence: "| KL divergence | 0.012 |",
-    },
+    kl: 0.012,
+    refusals: 1,
+    refusalTotal: 100,
+    confidence: "medium",
+    evidence: "| KL divergence | 0.012 |",
+    inheritedFrom: null,
     ...overrides,
   };
 }

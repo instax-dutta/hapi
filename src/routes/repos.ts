@@ -21,6 +21,7 @@ import type { RouteContext, RouteDeps } from "../router.ts";
 
 export const REPO_SORTS = [
   "downloads",
+  "recent",
   "likes",
   "params",
   "newest",
@@ -40,6 +41,7 @@ function matches(row: RepoRow, query: CommonQuery): boolean {
   if (query.origin && row.originId !== query.origin) return false;
   if (query.license && (row.license ?? "").toLowerCase() !== query.license) return false;
   if (query.quant && (row.quant ?? "").toUpperCase() !== query.quant) return false;
+  if (query.version && row.hereticVersion !== query.version) return false;
   if (query.minDownloads > 0 && row.downloadsAllTime < query.minDownloads) return false;
   if (query.minLikes > 0 && row.likes < query.minLikes) return false;
   if (query.minParams > 0 && (row.paramsB ?? 0) < query.minParams) return false;
@@ -58,6 +60,8 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Repo
   const dir = query.dir;
   const byDownloads: RowComparator<RepoRow> = (a, b) =>
     compareNullable(a.downloadsAllTime, b.downloadsAllTime, dir);
+  const byRecent: RowComparator<RepoRow> = (a, b) =>
+    compareNullable(a.downloads30d, b.downloads30d, dir);
   const byLikes: RowComparator<RepoRow> = (a, b) => compareNullable(a.likes, b.likes, dir);
   const byParams: RowComparator<RepoRow> = (a, b) => compareNullable(a.paramsB, b.paramsB, dir);
   const byNewest: RowComparator<RepoRow> = (a, b) => compareText(a.lastModified, b.lastModified, dir);
@@ -68,6 +72,7 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Repo
 
   return {
     downloads: byDownloads,
+    recent: byRecent,
     likes: byLikes,
     params: byParams,
     newest: byNewest,

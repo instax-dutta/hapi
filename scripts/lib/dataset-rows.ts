@@ -63,12 +63,60 @@ function facet(rows: Array<{ value: string; downloadsAllTime: number }>): FacetC
  * The recipe's evidence snippet comes from the artifact it cites as evidence.
  * That artifact published the numbers, so its card carries the snippet.
  */
+
+/**
+ * The canonical leaderboard order.
+ *
+ * Corroboration first, then the score, then the cheaper ablation, then the
+ * id. The rank column and the default sort have to agree, so both use this.
+ * A leaderboard whose rows read 17, 19, 18 is right about every number in it
+ * and still looks broken.
+ */
+export function compareRecipes(a: RecipeRow, b: RecipeRow): number {
+  const verified = (row: RecipeRow) =>
+    row.verification === "verified" || row.verification === "publisher";
+  return (
+    Number(verified(b)) - Number(verified(a)) ||
+    b.score - a.score ||
+    a.kl - b.kl ||
+    a.refusalRate - b.refusalRate ||
+    a.id.localeCompare(b.id)
+  );
+}
+
+/**
+ * Give every ablation its position.
+ *
+ * The global rank is the position among the ranked ablations. The family rank
+ * is the position among the ablations of the same model, which is the number
+ * a model page shows.
+ */
+function assignRanks(recipes: RecipeRow[]): void {
+  const ranked = recipes.filter((recipe) => recipe.ranked).sort(compareRecipes);
+  ranked.forEach((recipe, index) => {
+    recipe.rank = index + 1;
+  });
+
+  const byFamily = new Map<string, RecipeRow[]>();
+  for (const recipe of ranked) {
+    const list = byFamily.get(recipe.familySlug) ?? [];
+    list.push(recipe);
+    byFamily.set(recipe.familySlug, list);
+  }
+  for (const cohort of byFamily.values()) {
+    cohort.forEach((recipe, index) => {
+      recipe.familyRank = index + 1;
+    });
+  }
+}
+
 export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}): ApiRows {
   const originById = new Map(snapshot.origins.map((origin) => [origin.id, origin]));
   const repoById = new Map(snapshot.repos.map((repo) => [repo.id, repo]));
 
   const repos: RepoRow[] = snapshot.repos.map((repo) => ({
     id: repo.id,
+    url: `https://huggingface.co/${repo.id}`,
     author: repo.author,
     originId: repo.originId ?? "",
     recipeId: repo.recipeId,
@@ -98,14 +146,12 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
     tags: extras.tags?.[repo.id] ?? [],
     safetensorsTotal: extras.safetensorsTotal?.[repo.id] ?? null,
     benchmarkCount: repo.benchmarks.length,
-    metrics: {
-      kl: repo.metrics.kl,
-      refusals: repo.metrics.refusals,
-      refusalTotal: repo.metrics.refusalTotal,
-      confidence: repo.metrics.confidence,
-      sourceRepoId: repo.metrics.sourceRepoId,
-      evidence: repo.metrics.evidence,
-    },
+    kl: repo.metrics.kl,
+    refusals: repo.metrics.refusals,
+    refusalTotal: repo.metrics.refusalTotal,
+    confidence: repo.metrics.confidence,
+    evidence: repo.metrics.evidence,
+    inheritedFrom: repo.metrics.sourceRepoId,
   }));
 
   const recipes: RecipeRow[] = snapshot.recipes.map((recipe) => {
@@ -125,6 +171,9 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
 
     return {
       id: recipe.id,
+      url: `https://huggingface.co/${recipe.bestRepoId}`,
+      rank: null,
+      familyRank: null,
       originId: recipe.originId,
       originName: origin?.displayName ?? recipe.originId,
       family: origin?.family ?? "Other",
@@ -175,6 +224,7 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
     };
   });
 
+  assignRanks(recipes);
   const recipeById = new Map(recipes.map((recipe) => [recipe.id, recipe]));
 
   const models: ModelRow[] = snapshot.origins.map((origin) => {
@@ -185,6 +235,7 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
       ? {
           id: best.id,
           author: best.author,
+          implausible: best.implausible,
           score: best.score,
           kl: best.kl,
           refusals: best.refusals,
@@ -195,11 +246,16 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
           hereticVersion: best.hereticVersion,
           downloadsAllTime: best.downloadsAllTime,
           lastModified: best.lastModified,
+          originalKl: best.originalKl,
+          originalRefusals: best.originalRefusals,
+          originalRefusalTotal: best.originalRefusalTotal,
         }
       : null;
 
     return {
       id: origin.id,
+      url: `https://huggingface.co/${origin.id}`,
+      rank: null,
       owner: origin.owner,
       name: origin.name,
       displayName: origin.displayName,
@@ -231,6 +287,20 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
       ].sort() as string[],
       authors: [...new Set(members.map((member) => member.author))].sort(),
     };
+  });
+
+  const rankedModels = models
+    .filter((model) => model.bestRecipe !== null)
+    .sort(
+      (a, b) =>
+        (b.bestScore ?? 0) - (a.bestScore ?? 0) ||
+        (a.bestKl ?? Number.POSITIVE_INFINITY) - (b.bestKl ?? Number.POSITIVE_INFINITY) ||
+        (a.bestRefusalRate ?? Number.POSITIVE_INFINITY) -
+          (b.bestRefusalRate ?? Number.POSITIVE_INFINITY) ||
+        a.id.localeCompare(b.id),
+    );
+  rankedModels.forEach((model, index) => {
+    model.rank = index + 1;
   });
 
   const creators = buildCreators(repos, recipes, snapshot.updatedAt);
@@ -284,7 +354,9 @@ function buildCreators(
   const creators: CreatorRow[] = [];
   for (const [username, models] of byAuthor) {
     const authorRecipes = recipesByAuthor.get(username) ?? [];
-    const sorted = [...authorRecipes].sort((a, b) => b.score - a.score);
+    // The leading ablation of a creator is a corroborated one. An
+    // uncorroborated card must never be the headline, even for a creator.
+    const sorted = [...authorRecipes].sort(compareRecipes);
     const best = sorted[0] ?? null;
     const totals = {
       modelCount: models.length,

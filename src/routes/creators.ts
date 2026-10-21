@@ -20,6 +20,7 @@ import type { RouteContext, RouteDeps } from "../router.ts";
 
 export const CREATOR_SORTS = [
   "downloads",
+  "recent",
   "models",
   "recipes",
   "score",
@@ -42,6 +43,8 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Crea
   const dir = query.dir;
   const byDownloads: RowComparator<CreatorRow> = (a, b) =>
     compareNullable(a.totals.allTimeDownloads, b.totals.allTimeDownloads, dir);
+  const byRecent: RowComparator<CreatorRow> = (a, b) =>
+    compareNullable(a.totals.last30DaysDownloads, b.totals.last30DaysDownloads, dir);
   const byModels: RowComparator<CreatorRow> = (a, b) =>
     compareNullable(a.totals.modelCount, b.totals.modelCount, dir);
   const byRecipes: RowComparator<CreatorRow> = (a, b) =>
@@ -55,6 +58,7 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Crea
 
   return {
     downloads: byDownloads,
+    recent: byRecent,
     models: byModels,
     recipes: byRecipes,
     score: byScore,

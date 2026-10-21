@@ -32,6 +32,7 @@ export interface CommonQuery {
   ranked: boolean;
   pareto: boolean;
   bestPick: boolean;
+  implausible: string;
   direct: boolean;
   updatedAfter: string;
   sort: string;
@@ -119,6 +120,7 @@ export function parseQuery(
     ranked: one(params, "ranked") !== "0",
     pareto: one(params, "pareto") === "1",
     bestPick: one(params, "bestPick") === "1",
+    implausible: one(params, "implausible").trim().toLowerCase(),
     direct: one(params, "direct") === "1",
     updatedAfter,
     sort,

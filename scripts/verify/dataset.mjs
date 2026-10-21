@@ -112,16 +112,36 @@ for (const repo of repos) {
     fail(`The artifact ${repo.id} names an unknown recipe ${repo.recipeId}.`);
   }
   if (!repo.originId) fail(`The artifact ${repo.id} has no origin.`);
+  if (!repo.url) fail(`The artifact ${repo.id} has no URL.`);
 }
+
+// The ranks are recomputed from the published rows, so the rank column and the
+// default sort cannot drift apart.
+const ranked = recipes.filter((recipe) => recipe.ranked);
+const verifiedFirst = (recipe) =>
+  recipe.verification === "verified" || recipe.verification === "publisher";
+const ordered = [...ranked].sort(
+  (a, b) =>
+    Number(verifiedFirst(b)) - Number(verifiedFirst(a)) ||
+    b.score - a.score ||
+    a.kl - b.kl ||
+    a.refusalRate - b.refusalRate ||
+    a.id.localeCompare(b.id),
+);
+ordered.forEach((recipe, index) => {
+  if (recipe.rank !== index + 1) {
+    fail(`The recipe ${recipe.id} claims rank ${recipe.rank} but holds ${index + 1}.`);
+  }
+});
 
 // Every recipe's numbers match the artifact it cites as evidence.
 for (const recipe of recipes) {
   const evidence = repoById.get(recipe.evidenceRepoId);
   if (!evidence) continue;
-  if (evidence.metrics.kl !== recipe.kl) {
+  if (evidence.kl !== recipe.kl) {
     fail(`The recipe ${recipe.id} and its evidence artifact disagree about the KL.`);
   }
-  if (evidence.metrics.refusals !== recipe.refusals) {
+  if (evidence.refusals !== recipe.refusals) {
     fail(`The recipe ${recipe.id} and its evidence artifact disagree about the refusals.`);
   }
 }

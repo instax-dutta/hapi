@@ -9,6 +9,8 @@
  * without asking for the whole dataset.
  */
 import { json } from "../lib/http.ts";
+import { verificationFirst } from "../lib/query.ts";
+import type { RecipeRow } from "../lib/types.ts";
 import type { RouteContext, RouteDeps } from "../router.ts";
 
 const TOP = 5;
@@ -26,9 +28,17 @@ export async function summary(_context: RouteContext, deps: RouteDeps): Promise<
     .sort((a, b) => (b.bestScore ?? 0) - (a.bestScore ?? 0) || b.downloadsAllTime - a.downloadsAllTime)
     .slice(0, TOP);
 
+  // Corroboration outranks score here too. A fabricated card must never lead
+  // the payload a homepage renders.
   const topRecipes = [...recipes]
     .filter((recipe) => recipe.ranked)
-    .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id))
+    .sort(
+      verificationFirst(
+        (recipe: RecipeRow) =>
+          recipe.verification === "verified" || recipe.verification === "publisher",
+        (a, b) => b.score - a.score || a.kl - b.kl || a.id.localeCompare(b.id),
+      ),
+    )
     .slice(0, TOP);
 
   const topCreators = [...creators]
