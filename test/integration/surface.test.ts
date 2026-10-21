@@ -191,10 +191,9 @@ test("a model row carries the best ablation in one object", async () => {
 test("an artifact row carries the base chain and the Hub tags", async () => {
   const response = await call("/v1/repos/coder3101/gemma-3-12b-it-heretic");
   const body = (await response.json()) as {
-    repo: { baseModels: string[]; parentIds: string[]; tags: string[]; isDirectConversion: boolean };
+    repo: { parentIds: string[]; tags: string[]; isDirectConversion: boolean };
     model: { id: string } | null;
   };
-  assert.deepEqual(body.repo.baseModels, ["google/gemma-3-12b-it"]);
   assert.deepEqual(body.repo.parentIds, ["google/gemma-3-12b-it"]);
   assert.deepEqual(body.repo.tags, ["heretic", "uncensored"]);
   assert.equal(body.repo.isDirectConversion, true);

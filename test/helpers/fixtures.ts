@@ -156,12 +156,10 @@ export function repoRow(overrides: Partial<RepoRow> = {}): RepoRow {
     verified: true,
     isDirectConversion: true,
     classificationEvidence: "card states the weights were abliterated with Heretic",
-    baseModels: ["google/gemma-3-12b-it"],
     parentIds: ["google/gemma-3-12b-it"],
     tags: ["heretic", "uncensored"],
     safetensorsTotal: 12_000_000_000,
     benchmarkCount: 1,
-    sha: "abc123",
     metrics: {
       kl: 0.012,
       refusals: 1,

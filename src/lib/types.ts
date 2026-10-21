@@ -156,8 +156,6 @@ export interface RepoRow {
   /** True when the artifact is the ablation itself, not a derivative of one. */
   isDirectConversion: boolean;
   classificationEvidence: string;
-  /** The base models the artifact declares. */
-  baseModels: string[];
   /** The immediate parents in the base chain. */
   parentIds: string[];
   /** The Hub's own tags. */
@@ -165,7 +163,6 @@ export interface RepoRow {
   /** The total parameter count the Hub reports, in parameters. */
   safetensorsTotal: number | null;
   benchmarkCount: number;
-  sha: string;
   metrics: {
     kl: number | null;
     refusals: number | null;

@@ -92,12 +92,12 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
     verified: repo.verified,
     isDirectConversion: repo.kind === "heretic",
     classificationEvidence: repo.classificationEvidence,
-    baseModels: repo.declaredBaseModels,
+    // The base chain. The declared base models are the same list, so only one
+    // of them is published.
     parentIds: repo.parentIds,
     tags: extras.tags?.[repo.id] ?? [],
     safetensorsTotal: extras.safetensorsTotal?.[repo.id] ?? null,
     benchmarkCount: repo.benchmarks.length,
-    sha: extras.sha?.[repo.id] ?? "",
     metrics: {
       kl: repo.metrics.kl,
       refusals: repo.metrics.refusals,

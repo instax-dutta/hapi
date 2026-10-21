@@ -30,6 +30,15 @@ interface MemoEntry {
  */
 let memos = new WeakMap<object, Map<string, MemoEntry>>();
 
+/**
+ * How many families an isolate keeps parsed at once.
+ *
+ * Two is enough for the common pairing (a list of ablations, then the origin
+ * of each) and it bounds the heap: the full corpus is large enough that
+ * holding every family at once would not fit in an isolate.
+ */
+const MEMO_FAMILIES = 2;
+
 export interface DatasetFamilies {
   meta: DatasetMeta;
   models: ModelRow[];
@@ -57,6 +66,10 @@ export class DatasetLoader {
     const hit = perStore.get(key);
     const now = Date.now();
     if (hit && now - hit.at < MEMO_TTL_MS) {
+      // Refresh the position, so the least recently used family is the one
+      // that gets dropped.
+      perStore.delete(key);
+      perStore.set(key, hit);
       return hit.value as T;
     }
 
@@ -66,6 +79,11 @@ export class DatasetLoader {
     }
     const value = JSON.parse(raw) as T;
     perStore.set(key, { value, at: now });
+    while (perStore.size > MEMO_FAMILIES) {
+      const oldest = perStore.keys().next();
+      if (oldest.done) break;
+      perStore.delete(oldest.value);
+    }
     return value;
   }
 
