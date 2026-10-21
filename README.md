@@ -57,7 +57,7 @@ Base path `/v1`. Every response is JSON.
 | GET | `/v1/repos/{id}` | One artifact with its ablation and its origin |
 | GET | `/v1/creators` | The creator leaderboard |
 | GET | `/v1/creators/{username}` | One creator with their artifacts and ablations |
-| GET | `/v1/stats` | The global download totals and the derived rate |
+| GET | `/v1/stats` | The global download totals and the derived rate, in two scopes |
 | GET | `/v1/stats/{username}` | One creator's download totals, rate and models |
 | GET | `/v1/compare` | Two models side by side, with the difference |
 | GET | `/v1/simulate` | Seeded Poisson download events for a rate and a window |
@@ -138,6 +138,12 @@ measurement.
   those rows for a client that wants only the measurements.
 - **`downloadsAllTime` and `downloads30d`** are measurements, straight from the
   Hub.
+- **`/v1/stats` publishes two scopes.** `totals` is the reach: every model the
+  tag-and-name index found, which is the same arithmetic the live counter at
+  `heretic.sdad.pro` uses. `indexed` is the subset the directory could
+  classify and publish. A creator's row is their reach too, so a prolific
+  re-uploader is counted for everything they generated, not only for the
+  artifacts the directory could place.
 - **`downloadsPerSecond`, `downloadsPerDay` and `refusalReduction`** are
   derivations. The rate carries `basis: "derived"` so a client cannot mistake
   it for a measurement.

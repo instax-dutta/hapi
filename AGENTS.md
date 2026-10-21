@@ -111,6 +111,10 @@ The API serves three entity levels, matching the domain:
   possible KL) outranks score in every ordering
 - Download totals are measurements. The derived per-second rate is an extrapolation
   from the 30-day mean and must never be labelled a measurement
+- The ecosystem has two honest download numbers: the reach (every model the
+  tag-and-name index found) and the indexed scope (the artifacts the directory
+  could classify). The API leads with the reach and publishes the indexed scope
+  beside it
 - Public Hugging Face metadata only. No authentication, no private repos, no
   secrets, no environment variables at request time
 - Every response is CORS-open (`Access-Control-Allow-Origin: *`) and cacheable

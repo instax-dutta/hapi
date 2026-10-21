@@ -234,7 +234,7 @@ The pipeline publishes these objects:
 | `recipes.json` | recipes, plus the origin fields each row needs | 1.4 MB |
 | `repos.json` | artifacts | 8.6 MB |
 | `creators.json` | creators with their totals and their models | 1.8 MB |
-| `stats.json` | the indexed and the discovered download totals, and the rate | 600 B |
+| `stats.json` | the reach (the discovered scope), the indexed scope and both rates | 600 B |
 | `dataset.json` | every entity family in one document | 13.4 MB |
 
 The sizes are the real ones, measured against a crawl of 8317 discovered

@@ -16,14 +16,17 @@ request.
 - `build-dataset.ts` - turn `data/raw.json` into `data/snapshot.json` and the
   published dataset objects in `dist/`
 - `build-stats.ts` - compute the global download statistics into
-  `dist/stats.json`. It publishes two scopes: the indexed artifacts and the
-  wider discovered set
+  `dist/stats.json`. It publishes two scopes: the reach (every model the
+  tag-and-name index found) and the indexed artifacts the directory published
 - `publish.ts` - upload the dataset objects to the configured store
 - `make-sample.mjs` - cut a committed sample dataset out of a directory
   snapshot, for the gate that checks the dataset invariants. Everything the
   sample publishes is re-derived from the slice
 - `lib/dataset-rows.ts` - the conversion from a directory snapshot into the
-  published API rows, the facets and the creators
+  published API rows and the facets
+- `lib/creators.ts` - the creator rows. Their numbers come from the discovery,
+  not from the published artifacts, so a creator is counted for everything they
+  generated
 - `lib/pool.ts` - bounded-concurrency mapping that preserves input order
 - `lib/incremental.ts` - the card cache decision: fetch, reuse or re-parse
 - `verify/` - the verification harness and the acceptance gates
@@ -67,6 +70,16 @@ request.
   in `dist/`, which is where the Node server reads it from
 - Credentials come from the environment at publish time only. Nothing secret
   reaches the repository, the dataset or the API
+
+### The statistics lead with the reach
+
+- The global totals are the reach: every model the tag-and-name index found.
+  It is the same arithmetic the live counter uses, and the two agree to the
+  unit
+- The indexed scope is published beside it. A client that wants the classified
+  subset reads `indexed`
+- A creator's numbers are their reach, for the same reason. A prolific
+  re-uploader generates far more traffic than the directory can classify
 
 ### The pipeline shares the core
 
