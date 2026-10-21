@@ -93,7 +93,8 @@ export class DatasetLoader {
   }
 
   async creators(): Promise<Record<string, CreatorStats>> {
-    return this.load<{ creators: Record<string, CreatorStats> }>(KEYS.creators);
+    const body = await this.load<{ creators: Record<string, CreatorStats> }>(KEYS.creators);
+    return body.creators;
   }
 
   /** The whole dataset in one document, for bulk consumers. */

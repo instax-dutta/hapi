@@ -96,7 +96,7 @@ export default {
       return emptyResponse(204);
     }
 
-    const { match, pathExists } = matchRoute(routes, method, url.pathname);
+    const { match, pathExists } = matchRoute(routes, method === "HEAD" ? "GET" : method, url.pathname);
     if (!match) {
       if (pathExists) {
         return errorResponse(

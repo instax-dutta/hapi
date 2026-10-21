@@ -28,6 +28,7 @@ export async function serviceIndex(_context: RouteContext, _deps: RouteDeps): Pr
         models: "/v1/models",
         model: "/v1/models/{id}",
         recipes: "/v1/recipes",
+        leaderboard: "/v1/recipes",
         recipe: "/v1/recipes/{id}",
         repos: "/v1/repos",
         repo: "/v1/repos/{id}",
