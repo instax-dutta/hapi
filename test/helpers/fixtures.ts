@@ -252,7 +252,6 @@ export function creatorRow(username: string, overrides: Partial<CreatorRow> = {}
     bestScore: 91.2,
     bestKl: 0.012,
     bestRefusalRate: 0.01,
-    bestRefusals: 1,
     verifiedCount: 1,
     lastModified: "2026-10-20T00:00:00.000Z",
     models: [

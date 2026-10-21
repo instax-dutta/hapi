@@ -212,10 +212,12 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
       baseRefusalRate,
       refusalReduction:
         baseRefusalRate === null ? null : Math.round((baseRefusalRate - recipe.refusalRate) * 10000) / 10000,
-      licenses: [...new Set(members.map((member) => member.license).filter(Boolean))].sort(compareIds) as string[],
+      licenses: [
+        ...new Set(members.map((member) => member.license).filter((value): value is string => Boolean(value))),
+      ].sort(compareIds),
       quantizations: [
-        ...new Set(members.map((member) => member.quant).filter(Boolean)),
-      ].sort(compareIds) as string[],
+        ...new Set(members.map((member) => member.quant).filter((value): value is string => Boolean(value))),
+      ].sort(compareIds),
       authors: [...new Set(members.map((member) => member.author))].sort(compareIds),
     };
   });

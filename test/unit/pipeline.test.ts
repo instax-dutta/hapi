@@ -9,7 +9,34 @@ import {
   buildCreators,
   buildFacets,
 } from "../../scripts/lib/dataset-rows.ts";
-import type { Snapshot } from "../../src/core/types.ts";
+import type { ParsedCard, Snapshot } from "../../src/core/types.ts";
+
+function emptyCard(): ParsedCard {
+  return {
+    baseModelIds: [],
+    baseModelEvidence: null,
+    hereticVersion: null,
+    isHereticConversion: false,
+    referencesHereticProject: false,
+    metrics: {
+      kl: null,
+      refusals: null,
+      refusalTotal: null,
+      originalKl: null,
+      originalRefusals: null,
+      originalRefusalTotal: null,
+      confidence: "none",
+      evidence: null,
+      sourceRepoId: null,
+    },
+    benchmarks: [],
+    license: null,
+    languages: [],
+    quantizedBy: null,
+    formatHints: [],
+    kindHint: null,
+  };
+}
 
 test("the pool preserves the input order", async () => {
   const input = [5, 1, 4, 2, 3];
@@ -47,7 +74,7 @@ test("a cached card with the current parser version is reused", async () => {
       fetched += 1;
       return "# card";
     },
-    () => null,
+    () => emptyCard(),
   );
   assert.equal(result.fetched, false);
   assert.equal(result.changed, false);
@@ -72,7 +99,7 @@ test("a card with a stale parser version is re-parsed and marked changed", async
     },
     () => {
       parsed += 1;
-      return null;
+      return emptyCard();
     },
   );
   // The markdown is already in the cache, so nothing is fetched.
@@ -100,7 +127,7 @@ test("a card with a changed commit is fetched again", async () => {
       fetched += 1;
       return "# card";
     },
-    () => null,
+    () => emptyCard(),
   );
   assert.equal(fetched, 1);
   assert.equal(result.fetched, true);
@@ -122,7 +149,7 @@ test("a repository with no commit hash is always fetched", async () => {
       fetched += 1;
       return "# card";
     },
-    () => null,
+    () => emptyCard(),
   );
   assert.equal(fetched, 1);
 });
@@ -206,7 +233,6 @@ function snapshotFixture(): Snapshot {
         downloads30d: 20,
         downloadsAllTime: 200,
         likes: 2,
-        tags: ["heretic"],
         gated: false,
         pipelineTag: "text-generation",
         libraryName: "transformers",
@@ -239,11 +265,6 @@ function snapshotFixture(): Snapshot {
         verified: true,
         classificationEvidence: "card states the weights were abliterated with Heretic",
         firstSeenAt: "2026-01-01T00:00:00.000Z",
-        license: "apache-2.0",
-        pipelineTag: "text-generation",
-        libraryName: "transformers",
-        safetensorsTotal: 7_000_000_000,
-        files: ["model.gguf"],
       },
       {
         id: "b/two",
@@ -253,7 +274,6 @@ function snapshotFixture(): Snapshot {
         downloads30d: 10,
         downloadsAllTime: 100,
         likes: 0,
-        tags: ["gguf"],
         gated: false,
         pipelineTag: "text-generation",
         libraryName: "transformers",
@@ -286,11 +306,6 @@ function snapshotFixture(): Snapshot {
         verified: true,
         classificationEvidence: "quantized artifact of a Heretic model",
         firstSeenAt: "2026-01-02T00:00:00.000Z",
-        license: null,
-        pipelineTag: "text-generation",
-        libraryName: "transformers",
-        safetensorsTotal: 7_000_000_000,
-        files: ["model.gguf"],
       },
     ],
     families: [
