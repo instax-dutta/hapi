@@ -70,6 +70,7 @@ function main(): void {
       downloads30d: repo.downloads30d,
       downloadsAllTime: repo.downloadsAllTime,
       likes: repo.likes,
+      lastModified: repo.lastModified,
     })),
     recipes,
     repos,

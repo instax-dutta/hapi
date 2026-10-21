@@ -23,6 +23,7 @@ export interface DiscoveredModel {
   downloads30d: number;
   downloadsAllTime: number;
   likes: number;
+  lastModified: string;
 }
 
 export function buildCreators(

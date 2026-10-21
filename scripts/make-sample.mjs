@@ -60,6 +60,7 @@ const keptCreators = buildCreators(
     downloads30d: repo.downloads30d,
     downloadsAllTime: repo.downloadsAllTime,
     likes: repo.likes,
+    lastModified: repo.lastModified,
   })),
   keptRecipes,
   keptRepos,
