@@ -63,7 +63,7 @@ Base path `/v1`. Every response is JSON.
 | GET | `/v1/simulate` | Seeded Poisson download events for a rate and a window |
 | GET | `/v1/parse` | Parse a live model card by repository id. Cached per isolate |
 | GET | `/v1/openapi.json` | The OpenAPI 3.1 description of this surface |
-| GET | `/v1/dataset.json` | The whole dataset in one document |
+| GET | `/v1/dataset.json` | Every entity family in one document |
 
 The full description, with every parameter and every field, is at
 [`/v1/openapi.json`](docs/openapi.json).
