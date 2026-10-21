@@ -93,12 +93,21 @@ if (meta.totals.downloadsAllTime !== downloadsAllTime) {
   fail("meta.totals.downloadsAllTime does not match the rows.");
 }
 
-// The statistics must agree with the artifacts.
-if (stats.totals.modelCount !== repos.length) {
-  fail("stats.totals.modelCount does not match the artifacts.");
+// The statistics lead with the reach: every model the tag-and-name index
+// found. The indexed scope is the subset the directory publishes, and that is
+// the one that has to agree with the artifacts.
+if (!stats.indexed) fail("stats.indexed is missing.");
+if (stats.indexed.modelCount !== repos.length) {
+  fail("stats.indexed.modelCount does not match the artifacts.");
 }
-if (stats.totals.allTimeDownloads !== downloadsAllTime) {
-  fail("stats.totals.allTimeDownloads does not match the artifacts.");
+if (stats.indexed.allTimeDownloads !== downloadsAllTime) {
+  fail("stats.indexed.allTimeDownloads does not match the artifacts.");
+}
+if (stats.totals.modelCount < stats.indexed.modelCount) {
+  fail("stats.totals.modelCount is smaller than the published artifacts.");
+}
+if (stats.totals.allTimeDownloads < stats.indexed.allTimeDownloads) {
+  fail("stats.totals.allTimeDownloads is smaller than the published artifacts.");
 }
 if (stats.rate.basis !== "derived") fail("stats.rate is not labelled as derived.");
 

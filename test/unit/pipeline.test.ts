@@ -374,6 +374,7 @@ test("a creator owns every ablation they published", () => {
       downloads30d: repo.downloads30d,
       downloadsAllTime: repo.downloadsAllTime,
       likes: repo.likes,
+      lastModified: repo.lastModified,
     })),
     rows.recipes,
     rows.repos,
@@ -394,6 +395,7 @@ test("a creator's numbers come from the discovery, not the published artifacts",
     downloads30d: 5,
     downloadsAllTime: 50,
     likes: 1,
+    lastModified: "2026-10-20T00:00:00.000Z",
   }));
   const creators = buildCreators(discovery, rows.recipes, rows.repos, "2026-10-21T00:00:00.000Z");
   const a = creators.find((creator) => creator.username === "a");
