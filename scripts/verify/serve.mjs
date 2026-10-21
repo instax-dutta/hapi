@@ -17,14 +17,24 @@ const port = Number(process.env.HAPI_GATE_PORT ?? 8791);
 const base = `http://127.0.0.1:${port}`;
 
 // The gate serves the committed sample dataset, so it runs offline and needs
-// no crawl first.
+// no crawl first. Point HAPI_DATA_DIR at a build to serve that instead.
 const sample = join(root, "test", "fixtures", "dataset");
-if (!existsSync(sample)) {
-  console.error("GATE FAILED: the committed sample dataset is missing");
-  process.exit(1);
+const configured = process.env.HAPI_DATA_DIR;
+let dataDirectory;
+if (configured) {
+  dataDirectory = resolve(root, configured);
+  if (!existsSync(dataDirectory)) {
+    console.error(`GATE FAILED: ${dataDirectory} does not exist`);
+    process.exit(1);
+  }
+} else {
+  if (!existsSync(sample)) {
+    console.error("GATE FAILED: the committed sample dataset is missing");
+    process.exit(1);
+  }
+  dataDirectory = mkdtempSync(join(tmpdir(), "hapi-serve-"));
+  cpSync(sample, dataDirectory, { recursive: true });
 }
-const dataDirectory = mkdtempSync(join(tmpdir(), "hapi-serve-"));
-cpSync(sample, dataDirectory, { recursive: true });
 
 const failures = [];
 const fail = (message) => failures.push(message);
@@ -108,10 +118,18 @@ try {
     const head = await fetch(`${base}/v1/models`, { method: "HEAD" });
     if (head.status !== 200) fail("a HEAD request did not answer 200");
     if ((await head.text()) !== "") fail("a HEAD request returned a body");
+
+    const families = await get("/v1/families");
+    if (families.response.status !== 200) fail("/v1/families did not answer 200");
+    if (!Array.isArray(families.body?.families)) fail("/v1/families did not return families");
+
+    const bulk = await get("/v1/dataset.json");
+    if (bulk.response.status !== 200) fail("/v1/dataset.json did not answer 200");
+    if (!bulk.body?.models) fail("/v1/dataset.json did not return the dataset");
   }
 } finally {
   server.kill("SIGTERM");
-  rmSync(dataDirectory, { recursive: true, force: true });
+  if (!configured) rmSync(dataDirectory, { recursive: true, force: true });
 }
 
 if (failures.length > 0) {
