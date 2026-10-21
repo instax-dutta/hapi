@@ -122,27 +122,6 @@ const paginationFields = {
   perPage: { type: "integer" },
 } as const;
 
-const facetDocument = (name: string) => ({
-  type: "object",
-  required: ["facet", "total", "values"],
-  properties: {
-    updatedAt: { type: "string", format: "date-time" },
-    facet: { type: "string", examples: [name] },
-    total: { type: "integer" },
-    values: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          value: { type: "string" },
-          count: { type: "integer" },
-          downloadsAllTime: { type: "integer" },
-        },
-      },
-    },
-  },
-});
-
 const methodNotAllowed = {
   description: "The method is not allowed. The API is read-only.",
   content: {
@@ -223,7 +202,14 @@ const document = {
         tags: ["meta"],
         summary: "The service index.",
         operationId: "getServiceIndex",
-        responses: { "200": { description: "The index." } },
+        responses: {
+          "200": {
+            description: "The index.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ServiceIndex" } },
+            },
+          },
+        },
       },
     },
     "/v1/health": {
@@ -231,7 +217,14 @@ const document = {
         tags: ["meta"],
         summary: "Liveness and dataset freshness.",
         operationId: "getHealth",
-        responses: { "200": { description: "The health document." } },
+        responses: {
+          "200": {
+            description: "The health document.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Health" } },
+            },
+          },
+        },
       },
     },
     "/v1/meta": {
@@ -256,7 +249,12 @@ const document = {
         summary: "Everything a homepage needs, in one request.",
         operationId: "getSummary",
         responses: {
-          "200": { description: "The summary document." },
+          "200": {
+            description: "The summary document.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Summary" } },
+            },
+          },
           "503": errorResponse,
         },
       },
@@ -266,7 +264,14 @@ const document = {
         tags: ["meta"],
         summary: "The model families.",
         operationId: "getFamilies",
-        responses: { "200": { description: "The families." } },
+        responses: {
+          "200": {
+            description: "The families.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/FamilyList" } },
+            },
+          },
+        },
       },
     },
     "/v1/families/{slug}": {
@@ -278,7 +283,12 @@ const document = {
           { name: "slug", in: "path", required: true, schema: { type: "string" } },
         ],
         responses: {
-          "200": { description: "The family document." },
+          "200": {
+            description: "The family document.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/FamilyDocument" } },
+            },
+          },
           "404": errorResponse,
           "503": errorResponse,
         },
@@ -292,7 +302,7 @@ const document = {
         responses: {
           "200": {
             description: "The versions.",
-            content: { "application/json": { schema: facetDocument("versions") } },
+            content: { "application/json": { schema: { $ref: "#/components/schemas/Facet" } } },
           },
         },
       },
@@ -305,7 +315,7 @@ const document = {
         responses: {
           "200": {
             description: "The formats.",
-            content: { "application/json": { schema: facetDocument("formats") } },
+            content: { "application/json": { schema: { $ref: "#/components/schemas/Facet" } } },
           },
         },
       },
@@ -318,7 +328,7 @@ const document = {
         responses: {
           "200": {
             description: "The licenses.",
-            content: { "application/json": { schema: facetDocument("licenses") } },
+            content: { "application/json": { schema: { $ref: "#/components/schemas/Facet" } } },
           },
         },
       },
@@ -331,7 +341,7 @@ const document = {
         responses: {
           "200": {
             description: "The tags.",
-            content: { "application/json": { schema: facetDocument("tags") } },
+            content: { "application/json": { schema: { $ref: "#/components/schemas/Facet" } } },
           },
         },
       },
@@ -344,7 +354,7 @@ const document = {
         responses: {
           "200": {
             description: "The kinds.",
-            content: { "application/json": { schema: facetDocument("kinds") } },
+            content: { "application/json": { schema: { $ref: "#/components/schemas/Facet" } } },
           },
         },
       },
@@ -357,7 +367,7 @@ const document = {
         responses: {
           "200": {
             description: "The size classes.",
-            content: { "application/json": { schema: facetDocument("sizes") } },
+            content: { "application/json": { schema: { $ref: "#/components/schemas/Facet" } } },
           },
         },
       },
@@ -410,7 +420,12 @@ const document = {
           },
         ],
         responses: {
-          "200": { description: "The origin document." },
+          "200": {
+            description: "The origin document.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ModelDocument" } },
+            },
+          },
           "404": errorResponse,
           "503": errorResponse,
         },
@@ -470,7 +485,12 @@ const document = {
           },
         ],
         responses: {
-          "200": { description: "The recipe document." },
+          "200": {
+            description: "The recipe document.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/RecipeDocument" } },
+            },
+          },
           "404": errorResponse,
           "503": errorResponse,
         },
@@ -529,7 +549,12 @@ const document = {
           },
         ],
         responses: {
-          "200": { description: "The artifact document." },
+          "200": {
+            description: "The artifact document.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/RepoDocument" } },
+            },
+          },
           "404": errorResponse,
           "503": errorResponse,
         },
@@ -569,7 +594,12 @@ const document = {
           { name: "username", in: "path", required: true, schema: { type: "string" } },
         ],
         responses: {
-          "200": { description: "The creator document." },
+          "200": {
+            description: "The creator document.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/CreatorDocument" } },
+            },
+          },
           "404": errorResponse,
           "503": errorResponse,
         },
@@ -600,7 +630,12 @@ const document = {
           { name: "username", in: "path", required: true, schema: { type: "string" } },
         ],
         responses: {
-          "200": { description: "The creator document." },
+          "200": {
+            description: "The creator document.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Creator" } },
+            },
+          },
           "404": errorResponse,
           "503": errorResponse,
         },
@@ -628,7 +663,12 @@ const document = {
           },
         ],
         responses: {
-          "200": { description: "The comparison document." },
+          "200": {
+            description: "The comparison document.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Comparison" } },
+            },
+          },
           "400": errorResponse,
           "404": errorResponse,
         },
@@ -657,7 +697,12 @@ const document = {
           { name: "seed", in: "query", schema: { type: "integer", default: 1 } },
         ],
         responses: {
-          "200": { description: "The simulation document." },
+          "200": {
+            description: "The simulation document.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Simulation" } },
+            },
+          },
           "400": errorResponse,
         },
       },
@@ -677,7 +722,12 @@ const document = {
           },
         ],
         responses: {
-          "200": { description: "The parsed card." },
+          "200": {
+            description: "The parsed card.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ParsedCard" } },
+            },
+          },
           "400": errorResponse,
           "404": errorResponse,
           "502": errorResponse,
@@ -689,7 +739,12 @@ const document = {
         tags: ["meta"],
         summary: "This document.",
         operationId: "getOpenApi",
-        responses: { "200": { description: "The OpenAPI description." } },
+        responses: {
+          "200": {
+            description: "The OpenAPI description.",
+            content: { "application/json": { schema: { type: "object" } } },
+          },
+        },
       },
     },
     "/v1/dataset.json": {
@@ -697,7 +752,12 @@ const document = {
         tags: ["meta"],
         summary: "The whole dataset in one document.",
         operationId: "getDataset",
-        responses: { "200": { description: "The dataset." } },
+        responses: {
+          "200": {
+            description: "Every entity family in one document.",
+            content: { "application/json": { schema: { type: "object" } } },
+          },
+        },
       },
     },
   },
@@ -774,7 +834,11 @@ const document = {
           bestScore: { type: ["number", "null"] },
           bestKl: { type: ["number", "null"] },
           bestRefusalRate: { type: ["number", "null"] },
-          bestRecipe: { type: ["object", "null"], description: "The corroborated ablation that leads this model." },
+          bestRefusals: { type: ["integer", "null"], description: "The refusal count of the leading ablation." },
+          bestRecipe: {
+            oneOf: [{ $ref: "#/components/schemas/BestRecipe" }, { type: "null" }],
+            description: "The corroborated ablation that leads this model.",
+          },
           verifiedRepoCount: { type: "integer" },
           downloadsAllTime: { type: "integer" },
           downloads30d: { type: "integer" },
@@ -795,7 +859,8 @@ const document = {
           id: { type: "string" },
           url: { type: "string" },
           rank: { type: ["integer", "null"], description: "The position among the ranked ablations." },
-          familyRank: { type: ["integer", "null"], description: "The position among the ablations of the same model." },
+          originRank: { type: ["integer", "null"], description: "The position among the ablations of the same model." },
+          familyRank: { type: ["integer", "null"], description: "The position among the ablations of the same family." },
           originId: { type: "string" },
           originName: { type: "string" },
           family: { type: "string" },
@@ -932,6 +997,181 @@ const document = {
         properties: {
           ...paginationFields,
           rows: { type: "array", items: { $ref: "#/components/schemas/Creator" } },
+        },
+      },
+      Family: {
+        type: "object",
+        required: ["slug", "label"],
+        properties: {
+          slug: { type: "string" },
+          label: { type: "string" },
+          originCount: { type: "integer" },
+          rankedRecipeCount: { type: "integer" },
+          bestRecipeId: { type: ["string", "null"] },
+          downloadsAllTime: { type: "integer" },
+        },
+      },
+      FamilyList: {
+        type: "object",
+        required: ["updatedAt", "total", "families"],
+        properties: {
+          updatedAt: { type: "string", format: "date-time" },
+          total: { type: "integer" },
+          families: { type: "array", items: { $ref: "#/components/schemas/Family" } },
+        },
+      },
+      FamilyDocument: {
+        type: "object",
+        required: ["updatedAt", "family", "models", "recipes"],
+        properties: {
+          updatedAt: { type: "string", format: "date-time" },
+          family: { $ref: "#/components/schemas/Family" },
+          models: { type: "array", items: { $ref: "#/components/schemas/Model" } },
+          recipes: { type: "array", items: { $ref: "#/components/schemas/Recipe" } },
+        },
+      },
+      ModelDocument: {
+        type: "object",
+        required: ["updatedAt", "model", "recipes", "repos"],
+        properties: {
+          updatedAt: { type: "string", format: "date-time" },
+          model: { $ref: "#/components/schemas/Model" },
+          recipes: { type: "array", items: { $ref: "#/components/schemas/Recipe" } },
+          repos: { type: "array", items: { $ref: "#/components/schemas/Repo" } },
+        },
+      },
+      RecipeDocument: {
+        type: "object",
+        required: ["updatedAt", "recipe"],
+        properties: {
+          updatedAt: { type: "string", format: "date-time" },
+          recipe: { $ref: "#/components/schemas/Recipe" },
+          model: { oneOf: [{ $ref: "#/components/schemas/Model" }, { type: "null" }] },
+          repos: { type: "array", items: { $ref: "#/components/schemas/Repo" } },
+        },
+      },
+      RepoDocument: {
+        type: "object",
+        required: ["updatedAt", "repo", "url"],
+        properties: {
+          updatedAt: { type: "string", format: "date-time" },
+          repo: { $ref: "#/components/schemas/Repo" },
+          recipe: { oneOf: [{ $ref: "#/components/schemas/Recipe" }, { type: "null" }] },
+          model: { oneOf: [{ $ref: "#/components/schemas/Model" }, { type: "null" }] },
+          url: { type: "string" },
+        },
+      },
+      CreatorDocument: {
+        type: "object",
+        required: ["updatedAt", "creator", "repos", "recipes"],
+        properties: {
+          updatedAt: { type: "string", format: "date-time" },
+          creator: { $ref: "#/components/schemas/Creator" },
+          repos: { type: "array", items: { $ref: "#/components/schemas/Repo" } },
+          recipes: { type: "array", items: { $ref: "#/components/schemas/Recipe" } },
+        },
+      },
+      ServiceIndex: {
+        type: "object",
+        required: ["service", "version", "endpoints"],
+        properties: {
+          service: { type: "string" },
+          name: { type: "string" },
+          description: { type: "string" },
+          version: { type: "string" },
+          docs: { type: "string" },
+          base: { type: "string" },
+          license: { type: "string" },
+          endpoints: { type: "object", additionalProperties: { type: "string" } },
+        },
+      },
+      Health: {
+        type: "object",
+        required: ["status", "api", "dataset"],
+        properties: {
+          status: { type: "string" },
+          api: { type: "object" },
+          dataset: {
+            type: "object",
+            properties: {
+              version: { type: "string" },
+              generatedAt: { type: "string", format: "date-time" },
+              ageSeconds: { type: ["integer", "null"] },
+              source: { type: "string" },
+            },
+          },
+        },
+      },
+      Summary: {
+        type: "object",
+        required: ["updatedAt", "version", "totals", "counts"],
+        properties: {
+          updatedAt: { type: "string", format: "date-time" },
+          version: { type: "string" },
+          totals: { type: "object" },
+          counts: { type: "object" },
+          topModels: { type: "array", items: { $ref: "#/components/schemas/Model" } },
+          topRecipes: { type: "array", items: { $ref: "#/components/schemas/Recipe" } },
+          topCreators: { type: "array", items: { type: "object" } },
+          topFamilies: { type: "array", items: { $ref: "#/components/schemas/Family" } },
+          versions: { type: "array", items: { type: "object" } },
+        },
+      },
+      Comparison: {
+        type: "object",
+        required: ["updatedAt", "a", "b", "difference"],
+        properties: {
+          updatedAt: { type: "string", format: "date-time" },
+          a: { type: "object" },
+          b: { type: "object" },
+          difference: { type: "object" },
+          note: { type: "string" },
+        },
+      },
+      Simulation: {
+        type: "object",
+        required: ["rate", "seconds", "seed", "events", "expected", "method"],
+        properties: {
+          source: { type: "string" },
+          rate: { type: "number" },
+          seconds: { type: "number" },
+          seed: { type: "integer" },
+          events: { type: "integer" },
+          expected: { type: "number" },
+          method: { type: "string" },
+          note: { type: "string" },
+        },
+      },
+      ParsedCard: {
+        type: "object",
+        required: ["repo", "parsed"],
+        properties: {
+          repo: { type: "string" },
+          url: { type: "string" },
+          fetchedAt: { type: "string", format: "date-time" },
+          cached: { type: "boolean" },
+          meta: { type: ["object", "null"] },
+          parsed: { type: "object" },
+        },
+      },
+      Facet: {
+        type: "object",
+        required: ["facet", "total", "values"],
+        properties: {
+          updatedAt: { type: "string", format: "date-time" },
+          facet: { type: "string" },
+          total: { type: "integer" },
+          values: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                value: { type: "string" },
+                count: { type: "integer" },
+                downloadsAllTime: { type: "integer" },
+              },
+            },
+          },
         },
       },
       Meta: {

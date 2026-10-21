@@ -94,6 +94,7 @@ export function recipeRow(overrides: Partial<RecipeRow> = {}): RecipeRow {
     id: "rcp_a",
     url: "https://huggingface.co/coder3101/gemma-3-12b-it-heretic",
     rank: 1,
+    originRank: 1,
     familyRank: 1,
     originId: "google/gemma-3-12b-it",
     originName: "gemma-3-12b-it",

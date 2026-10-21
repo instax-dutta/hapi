@@ -105,6 +105,8 @@ export interface RecipeRow {
   /** The position among the ranked ablations, best first. */
   rank: number | null;
   /** The position among the ablations of the same model. */
+  originRank: number | null;
+  /** The position among the ablations of the same family. */
   familyRank: number | null;
   /** False when the card published no usable pair. The recipe is still served. */
   ranked: boolean;

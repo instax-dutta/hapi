@@ -83,13 +83,15 @@ export function compareRecipes(a: RecipeRow, b: RecipeRow): number {
 /**
  * Give every ablation its position.
  *
- * The global rank is the position among the ranked ablations. The family rank
- * is the position among the ablations of the same model, which is the number
- * a model page shows.
+ * Three positions, three questions:
+ *   rank        - among the ranked ablations, the leaderboard
+ *   originRank  - among the ablations of the same model, the model page
+ *   familyRank  - among the ablations of the same family, the family page
  */
 export function assignRanks(recipes: RecipeRow[]): void {
   for (const recipe of recipes) {
     recipe.rank = null;
+    recipe.originRank = null;
     recipe.familyRank = null;
   }
   const ranked = recipes.filter((recipe) => recipe.ranked).sort(compareRecipes);
@@ -97,11 +99,20 @@ export function assignRanks(recipes: RecipeRow[]): void {
     recipe.rank = index + 1;
   });
 
+  const byOrigin = new Map<string, RecipeRow[]>();
   const byFamily = new Map<string, RecipeRow[]>();
   for (const recipe of ranked) {
-    const list = byFamily.get(recipe.familySlug) ?? [];
-    list.push(recipe);
-    byFamily.set(recipe.familySlug, list);
+    const origin = byOrigin.get(recipe.originId) ?? [];
+    origin.push(recipe);
+    byOrigin.set(recipe.originId, origin);
+    const family = byFamily.get(recipe.familySlug) ?? [];
+    family.push(recipe);
+    byFamily.set(recipe.familySlug, family);
+  }
+  for (const cohort of byOrigin.values()) {
+    cohort.forEach((recipe, index) => {
+      recipe.originRank = index + 1;
+    });
   }
   for (const cohort of byFamily.values()) {
     cohort.forEach((recipe, index) => {
@@ -179,6 +190,7 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
       id: recipe.id,
       url: `https://huggingface.co/${recipe.bestRepoId}`,
       rank: null,
+      originRank: null,
       familyRank: null,
       originId: recipe.originId,
       originName: origin?.displayName ?? recipe.originId,

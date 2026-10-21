@@ -55,7 +55,14 @@
         "operationId": "getServiceIndex",
         "responses": {
           "200": {
-            "description": "The index."
+            "description": "The index.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceIndex"
+                }
+              }
+            }
           },
           "405": {
             "description": "The method is not allowed. The API is read-only.",
@@ -79,7 +86,14 @@
         "operationId": "getHealth",
         "responses": {
           "200": {
-            "description": "The health document."
+            "description": "The health document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
           },
           "405": {
             "description": "The method is not allowed. The API is read-only.",
@@ -154,7 +168,14 @@
         "operationId": "getSummary",
         "responses": {
           "200": {
-            "description": "The summary document."
+            "description": "The summary document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Summary"
+                }
+              }
+            }
           },
           "405": {
             "description": "The method is not allowed. The API is read-only.",
@@ -188,7 +209,14 @@
         "operationId": "getFamilies",
         "responses": {
           "200": {
-            "description": "The families."
+            "description": "The families.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyList"
+                }
+              }
+            }
           },
           "405": {
             "description": "The method is not allowed. The API is read-only.",
@@ -232,7 +260,14 @@
         ],
         "responses": {
           "200": {
-            "description": "The family document."
+            "description": "The family document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyDocument"
+                }
+              }
+            }
           },
           "404": {
             "description": "The request could not be served.",
@@ -280,44 +315,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": [
-                    "facet",
-                    "total",
-                    "values"
-                  ],
-                  "properties": {
-                    "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "facet": {
-                      "type": "string",
-                      "examples": [
-                        "versions"
-                      ]
-                    },
-                    "total": {
-                      "type": "integer"
-                    },
-                    "values": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "value": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer"
-                          },
-                          "downloadsAllTime": {
-                            "type": "integer"
-                          }
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/Facet"
                 }
               }
             }
@@ -358,44 +356,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": [
-                    "facet",
-                    "total",
-                    "values"
-                  ],
-                  "properties": {
-                    "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "facet": {
-                      "type": "string",
-                      "examples": [
-                        "formats"
-                      ]
-                    },
-                    "total": {
-                      "type": "integer"
-                    },
-                    "values": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "value": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer"
-                          },
-                          "downloadsAllTime": {
-                            "type": "integer"
-                          }
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/Facet"
                 }
               }
             }
@@ -436,44 +397,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": [
-                    "facet",
-                    "total",
-                    "values"
-                  ],
-                  "properties": {
-                    "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "facet": {
-                      "type": "string",
-                      "examples": [
-                        "licenses"
-                      ]
-                    },
-                    "total": {
-                      "type": "integer"
-                    },
-                    "values": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "value": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer"
-                          },
-                          "downloadsAllTime": {
-                            "type": "integer"
-                          }
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/Facet"
                 }
               }
             }
@@ -514,44 +438,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": [
-                    "facet",
-                    "total",
-                    "values"
-                  ],
-                  "properties": {
-                    "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "facet": {
-                      "type": "string",
-                      "examples": [
-                        "tags"
-                      ]
-                    },
-                    "total": {
-                      "type": "integer"
-                    },
-                    "values": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "value": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer"
-                          },
-                          "downloadsAllTime": {
-                            "type": "integer"
-                          }
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/Facet"
                 }
               }
             }
@@ -592,44 +479,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": [
-                    "facet",
-                    "total",
-                    "values"
-                  ],
-                  "properties": {
-                    "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "facet": {
-                      "type": "string",
-                      "examples": [
-                        "kinds"
-                      ]
-                    },
-                    "total": {
-                      "type": "integer"
-                    },
-                    "values": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "value": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer"
-                          },
-                          "downloadsAllTime": {
-                            "type": "integer"
-                          }
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/Facet"
                 }
               }
             }
@@ -670,44 +520,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": [
-                    "facet",
-                    "total",
-                    "values"
-                  ],
-                  "properties": {
-                    "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "facet": {
-                      "type": "string",
-                      "examples": [
-                        "sizes"
-                      ]
-                    },
-                    "total": {
-                      "type": "integer"
-                    },
-                    "values": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "value": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer"
-                          },
-                          "downloadsAllTime": {
-                            "type": "integer"
-                          }
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/Facet"
                 }
               }
             }
@@ -957,7 +770,14 @@
         ],
         "responses": {
           "200": {
-            "description": "The origin document."
+            "description": "The origin document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDocument"
+                }
+              }
+            }
           },
           "404": {
             "description": "The request could not be served.",
@@ -1284,7 +1104,14 @@
         ],
         "responses": {
           "200": {
-            "description": "The recipe document."
+            "description": "The recipe document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeDocument"
+                }
+              }
+            }
           },
           "404": {
             "description": "The request could not be served.",
@@ -1579,7 +1406,14 @@
         ],
         "responses": {
           "200": {
-            "description": "The artifact document."
+            "description": "The artifact document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepoDocument"
+                }
+              }
+            }
           },
           "404": {
             "description": "The request could not be served.",
@@ -1762,7 +1596,14 @@
         ],
         "responses": {
           "200": {
-            "description": "The creator document."
+            "description": "The creator document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatorDocument"
+                }
+              }
+            }
           },
           "404": {
             "description": "The request could not be served.",
@@ -1857,7 +1698,14 @@
         ],
         "responses": {
           "200": {
-            "description": "The creator document."
+            "description": "The creator document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Creator"
+                }
+              }
+            }
           },
           "404": {
             "description": "The request could not be served.",
@@ -1921,7 +1769,14 @@
         ],
         "responses": {
           "200": {
-            "description": "The comparison document."
+            "description": "The comparison document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comparison"
+                }
+              }
+            }
           },
           "400": {
             "description": "The request could not be served.",
@@ -2019,7 +1874,14 @@
         ],
         "responses": {
           "200": {
-            "description": "The simulation document."
+            "description": "The simulation document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Simulation"
+                }
+              }
+            }
           },
           "400": {
             "description": "The request could not be served.",
@@ -2064,7 +1926,14 @@
         ],
         "responses": {
           "200": {
-            "description": "The parsed card."
+            "description": "The parsed card.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParsedCard"
+                }
+              }
+            }
           },
           "400": {
             "description": "The request could not be served.",
@@ -2118,7 +1987,14 @@
         "operationId": "getOpenApi",
         "responses": {
           "200": {
-            "description": "The OpenAPI description."
+            "description": "The OpenAPI description.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           },
           "405": {
             "description": "The method is not allowed. The API is read-only.",
@@ -2142,7 +2018,14 @@
         "operationId": "getDataset",
         "responses": {
           "200": {
-            "description": "The dataset."
+            "description": "Every entity family in one document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           },
           "405": {
             "description": "The method is not allowed. The API is read-only.",
@@ -2371,10 +2254,21 @@
               "null"
             ]
           },
-          "bestRecipe": {
+          "bestRefusals": {
             "type": [
-              "object",
+              "integer",
               "null"
+            ],
+            "description": "The refusal count of the leading ablation."
+          },
+          "bestRecipe": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/BestRecipe"
+              },
+              {
+                "type": "null"
+              }
             ],
             "description": "The corroborated ablation that leads this model."
           },
@@ -2453,12 +2347,19 @@
             ],
             "description": "The position among the ranked ablations."
           },
-          "familyRank": {
+          "originRank": {
             "type": [
               "integer",
               "null"
             ],
             "description": "The position among the ablations of the same model."
+          },
+          "familyRank": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The position among the ablations of the same family."
           },
           "originId": {
             "type": "string"
@@ -3025,6 +2926,481 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Creator"
+            }
+          }
+        }
+      },
+      "Family": {
+        "type": "object",
+        "required": [
+          "slug",
+          "label"
+        ],
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "originCount": {
+            "type": "integer"
+          },
+          "rankedRecipeCount": {
+            "type": "integer"
+          },
+          "bestRecipeId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "downloadsAllTime": {
+            "type": "integer"
+          }
+        }
+      },
+      "FamilyList": {
+        "type": "object",
+        "required": [
+          "updatedAt",
+          "total",
+          "families"
+        ],
+        "properties": {
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "families": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Family"
+            }
+          }
+        }
+      },
+      "FamilyDocument": {
+        "type": "object",
+        "required": [
+          "updatedAt",
+          "family",
+          "models",
+          "recipes"
+        ],
+        "properties": {
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "family": {
+            "$ref": "#/components/schemas/Family"
+          },
+          "models": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Model"
+            }
+          },
+          "recipes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recipe"
+            }
+          }
+        }
+      },
+      "ModelDocument": {
+        "type": "object",
+        "required": [
+          "updatedAt",
+          "model",
+          "recipes",
+          "repos"
+        ],
+        "properties": {
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "model": {
+            "$ref": "#/components/schemas/Model"
+          },
+          "recipes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recipe"
+            }
+          },
+          "repos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Repo"
+            }
+          }
+        }
+      },
+      "RecipeDocument": {
+        "type": "object",
+        "required": [
+          "updatedAt",
+          "recipe"
+        ],
+        "properties": {
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recipe": {
+            "$ref": "#/components/schemas/Recipe"
+          },
+          "model": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Model"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "repos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Repo"
+            }
+          }
+        }
+      },
+      "RepoDocument": {
+        "type": "object",
+        "required": [
+          "updatedAt",
+          "repo",
+          "url"
+        ],
+        "properties": {
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "repo": {
+            "$ref": "#/components/schemas/Repo"
+          },
+          "recipe": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Recipe"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "model": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Model"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "CreatorDocument": {
+        "type": "object",
+        "required": [
+          "updatedAt",
+          "creator",
+          "repos",
+          "recipes"
+        ],
+        "properties": {
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "creator": {
+            "$ref": "#/components/schemas/Creator"
+          },
+          "repos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Repo"
+            }
+          },
+          "recipes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recipe"
+            }
+          }
+        }
+      },
+      "ServiceIndex": {
+        "type": "object",
+        "required": [
+          "service",
+          "version",
+          "endpoints"
+        ],
+        "properties": {
+          "service": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "docs": {
+            "type": "string"
+          },
+          "base": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string"
+          },
+          "endpoints": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Health": {
+        "type": "object",
+        "required": [
+          "status",
+          "api",
+          "dataset"
+        ],
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "api": {
+            "type": "object"
+          },
+          "dataset": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "string"
+              },
+              "generatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "ageSeconds": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "source": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "Summary": {
+        "type": "object",
+        "required": [
+          "updatedAt",
+          "version",
+          "totals",
+          "counts"
+        ],
+        "properties": {
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "string"
+          },
+          "totals": {
+            "type": "object"
+          },
+          "counts": {
+            "type": "object"
+          },
+          "topModels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Model"
+            }
+          },
+          "topRecipes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recipe"
+            }
+          },
+          "topCreators": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "topFamilies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Family"
+            }
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "Comparison": {
+        "type": "object",
+        "required": [
+          "updatedAt",
+          "a",
+          "b",
+          "difference"
+        ],
+        "properties": {
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "a": {
+            "type": "object"
+          },
+          "b": {
+            "type": "object"
+          },
+          "difference": {
+            "type": "object"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "Simulation": {
+        "type": "object",
+        "required": [
+          "rate",
+          "seconds",
+          "seed",
+          "events",
+          "expected",
+          "method"
+        ],
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "rate": {
+            "type": "number"
+          },
+          "seconds": {
+            "type": "number"
+          },
+          "seed": {
+            "type": "integer"
+          },
+          "events": {
+            "type": "integer"
+          },
+          "expected": {
+            "type": "number"
+          },
+          "method": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "ParsedCard": {
+        "type": "object",
+        "required": [
+          "repo",
+          "parsed"
+        ],
+        "properties": {
+          "repo": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "fetchedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cached": {
+            "type": "boolean"
+          },
+          "meta": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "parsed": {
+            "type": "object"
+          }
+        }
+      },
+      "Facet": {
+        "type": "object",
+        "required": [
+          "facet",
+          "total",
+          "values"
+        ],
+        "properties": {
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "facet": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                },
+                "downloadsAllTime": {
+                  "type": "integer"
+                }
+              }
             }
           }
         }

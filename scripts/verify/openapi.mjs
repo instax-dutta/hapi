@@ -168,6 +168,28 @@ for (const route of routes) {
   }
 }
 
+// Every path describes what it returns, and every schema is used.
+const referenced = new Set();
+const scan = (node) => {
+  if (!node || typeof node !== "object") return;
+  if (typeof node.$ref === "string") referenced.add(node.$ref);
+  for (const value of Object.values(node)) scan(value);
+};
+scan(openapiDocument.paths);
+scan(openapiDocument.components.schemas);
+
+for (const [path, entry] of Object.entries(openapiDocument.paths)) {
+  const success = entry.get.responses["200"];
+  if (!success.content) {
+    fail(`The path ${path} does not describe the document it returns.`);
+  }
+}
+for (const name of Object.keys(openapiDocument.components.schemas)) {
+  if (!referenced.has(`#/components/schemas/${name}`)) {
+    fail(`The schema ${name} is defined and never referenced.`);
+  }
+}
+
 if (failures.length > 0) {
   console.error("OPENAPI VERIFICATION FAILED");
   for (const failure of failures) console.error(`  - ${failure}`);
