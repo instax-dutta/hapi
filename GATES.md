@@ -10,8 +10,9 @@ Every gate below was executed on the author's own server (Node 22.23.3, Linux
 x86_64) against this exact tree, and the recorded evidence is bound to the
 command that produced it.
 
-- 74 unit tests and 61 integration tests pass, with no network and no clock
-- 27 routes are implemented and 27 are documented, and the two agree
+- 89 unit tests and 74 integration tests pass, with no network and no clock
+- 27 routes are implemented and 27 are documented, the two agree on the paths and
+  on every parameter, and every response field is described
 - The committed sample dataset satisfies every invariant: a ranked recipe has a
   positive divergence, no unverified recipe holds a best pick, the Pareto
   flags recompute from the published rows, and every recipe agrees with the
@@ -21,30 +22,13 @@ command that produced it.
 - The Node server answered the index, the model list, the recipe list, the
   statistics, an unknown recipe and a HEAD request over loopback, against both
   the committed sample and a live build of 1021 artifacts
+- The build is deterministic: two builds of the same input produced identical
+  bytes, so a refresh that changed nothing publishes nothing
 
 The full corpus needs a Hugging Face token for the crawl. The token is a
 secret and never reaches the repository, the dataset or the API.
 
-## What was measured
-
-Every gate below was executed on the author's own server (Node 22.23.3, Linux
-x86_64) against this exact tree, and the recorded evidence is bound to the
-command that produced it.
-
-- 74 unit tests and 61 integration tests pass, with no network and no clock
-- 27 routes are implemented and 27 are documented, and the two agree
-- The committed sample dataset satisfies every invariant: a ranked recipe has a
-  positive divergence, no unverified recipe holds a best pick, the Pareto
-  flags recompute from the published rows, and every recipe agrees with the
-  artifact it cites as evidence
-- A live crawl of the Hugging Face Hub discovered 8298 models (6310 tagged,
-  6942 named) and parsed 3390 cards before the anonymous rate limit set in
-- The Node server answered the index, the model list, the recipe list, the
-  statistics, an unknown recipe and a HEAD request over loopback, against both
-  the committed sample and a live build of 1021 artifacts
-
-The full corpus needs a Hugging Face token for the crawl. The token is a
-secret and never reaches the repository, the dataset or the API.
+## Gates
 
 - [x] G1: The codebase typechecks without errors
   CHECK: node scripts/verify/gate.mjs typecheck

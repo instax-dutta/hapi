@@ -50,8 +50,8 @@ proves the acceptance criteria in `GATES.md`.
   They are the ground truth for the parser
 - A new card shape the parser claims to support needs a fixture in the same
   change
-- The synthetic dataset in `fixtures/` is small on purpose. It proves behaviour,
-  it does not prove scale
+- The sample dataset in `fixtures/dataset/` is small on purpose. It proves
+  behaviour, it does not prove scale
 
 ### The gate harness
 

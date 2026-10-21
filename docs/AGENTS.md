@@ -20,8 +20,10 @@ description of the public surface, and the hosting guides.
 - The description is served at `/v1/openapi.json` and is the same file
 - A change to the public surface changes `openapi.json` in the same change
   as the code
-- The description is validated in CI. A route that is not described, or a
-  described route that does not exist, fails the gate
+- The description is validated by `npm run gates:openapi`. A route that is not
+  described, a described route that does not exist, a parameter the route
+  ignores, a parameter the route reads and does not describe, a path with no
+  response schema and a schema nothing references all fail the gate
 
 ### The hosting guides are instructions, not essays
 

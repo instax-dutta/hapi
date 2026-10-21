@@ -32,9 +32,10 @@ Origin  google/gemma-3-12b-it          one canonical upstream model
 ```
 
 - **Origin** - the model a newcomer searches for. Many artifacts, many recipes.
-- **Recipe** - one ablation attempt, identified by `(origin, author, kl, refusals,
+- **Recipe** - one ablation attempt, identified by `(origin, kl, refusals,
   refusalTotal, hereticVersion)`. Published as one or several repos. This is what
-  a leaderboard ranks.
+  a leaderboard ranks. The author is not part of the identity, which is why one
+  ablation can appear under several publishers.
 - **Repo** - one Hugging Face repository. An artifact of a recipe, never a rank.
 
 ### Invariants carried over from the source projects
@@ -132,6 +133,7 @@ that sends `sort=bogus` gets the default sort, not a 400.
 | `score` | recipes, models, creators | desc |
 | `kl` | recipes, models | asc |
 | `refusals` | recipes, models | asc |
+| `refusalRate` | recipes, models | asc |
 | `downloads` | recipes, models, repos, creators | desc |
 | `recent` | recipes, models, repos, creators | desc |
 | `params` | models, recipes, repos | asc |
@@ -233,7 +235,7 @@ The pipeline publishes these objects:
 | `repos.json` | artifacts | 2 MB |
 | `creators.json` | creators with their totals and their models | 400 KB |
 | `stats.json` | the indexed and the discovered download totals, and the rate | 2 KB |
-| `dataset.json` | everything above in one document | 4 MB |
+| `dataset.json` | every entity family in one document | 4 MB |
 
 The store is split per entity family on purpose. A request for `/v1/repos` must
 not pay the parse cost of the recipe and origin data, and vice versa. The
@@ -244,10 +246,19 @@ dataset is loaded lazily per family and memoized per isolate.
 One interface, two implementations:
 
 ```ts
+interface StoredObject {
+  /** The raw bytes. */
+  text: string;
+  /** The store's own validator for the bytes. */
+  etag: string;
+}
+
 interface DatasetStore {
-  get(key: string): Promise<string | null>
+  get(key: string): Promise<StoredObject | null>;
 }
 ```
+
+A store hands over the bytes and its own validator for them, so the bulk endpoint serves the published document without parsing and re-serializing it. `DatasetLoader.raw(key)` is that path.
 
 - `R2Store` - a Cloudflare R2 bucket binding
 - `FileStore` - a directory on disk, for development and for the test suite

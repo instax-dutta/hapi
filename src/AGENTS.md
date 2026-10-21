@@ -13,13 +13,14 @@ JSON document, and a JSON document back into a response.
 - `router.ts` - path matching and parameter extraction. No domain knowledge
 - `http.ts` - CORS, JSON responses, the error envelope, ETag and conditional
   requests
-- `store.ts` - the `DatasetStore` interface plus the R2 and filesystem
+- `store.ts` - the `DatasetStore` interface plus the R2 and null
   implementations. A store hands over the bytes and its own validator for them
 - `dataset.ts` - the published dataset shape and the lazy, memoized loader
 - `hf.ts` - the Hugging Face Hub client: pagination, expansions, retries, the
   README fetch. The one place that knows how to talk to the Hub
 - `store-file.ts` - the filesystem store, for the Node entry point and the tests.
   It is never reachable from the Worker bundle
+- `query.ts` - the filter, sort and paginate engine shared by the list endpoints
 - `types.ts` - the public API response types
 
 ## Local Contracts

@@ -80,7 +80,7 @@ default rather than failing, so a client never has to guess.
 | `q` | all four | Free-text over id, name, author, tags and repo ids |
 | `family` | models, recipes, repos | Family slug |
 | `size` | models, recipes, repos | `sub-1b`, `1-4b`, `4-9b`, `9-15b`, `15-32b`, `32-70b`, `70b-plus`, `unknown` |
-| `format` | models, recipes, repos | `gguf`, `safetensors`, `mlx`, `fp8`, `nvfp4`, `mxfp4`, `awq`, `gptq`, `exl`, `onnx`, `lora` |
+| `format` | models, recipes, repos | `gguf`, `safetensors`, `mlx`, `fp8`, `nvfp4`, `mxfp4`, `awq`, `gptq`, `exl`, `onnx`, `lora`, `other` |
 | `kind` | recipes, repos | `heretic`, `quant`, `finetune`, `merge`, `lora`, `unknown` |
 | `version` | recipes, repos | The Heretic version |
 | `author` | repos | The creator id |
@@ -146,9 +146,10 @@ measurement.
   the ablation was measured against.
 - **`evidence`** is the exact snippet the numbers were read from. Every number
   can be traced back to a line of a card.
-- **`rank` and `familyRank`** are the position among the ablations and the
-  position among the ablations of the same model. A model page shows the
-  family rank, a leaderboard shows the global one.
+- **`rank`, `originRank` and `familyRank`** are three positions: among the
+  ranked ablations, among the ablations of the same model, and among the
+  ablations of the same family. A leaderboard shows the first, a model page the
+  second, a family page the third.
 - **`url`** is the address on the Hub. A client never has to build one.
 - **An artifact publishes the same fields as an ablation**: `kl`, `refusals`,
   `refusalTotal`, `confidence` and `evidence` sit at the top level, and
@@ -192,9 +193,9 @@ the client.
 
 | Surface | `Cache-Control` |
 | --- | --- |
-| `/v1`, `/v1/health`, `/v1/meta`, `/v1/summary`, `/v1/families`, the six facet endpoints, `/v1/openapi.json` | `public, max-age=60, s-maxage=60, stale-while-revalidate=300` |
+| `/v1`, `/v1/health`, `/v1/meta`, `/v1/summary`, `/v1/families`, the six facet endpoints, `/v1/simulate`, `/v1/openapi.json` | `public, max-age=60, s-maxage=60, stale-while-revalidate=300` |
 | The list and detail endpoints | `public, max-age=300, s-maxage=600, stale-while-revalidate=3600` |
-| `/v1/stats` | `public, max-age=60, s-maxage=300, stale-while-revalidate=600` |
+| `/v1/stats`, `/v1/stats/{username}` | `public, max-age=60, s-maxage=300, stale-while-revalidate=600` |
 | `/v1/parse` | `public, max-age=300, s-maxage=3600` |
 | `/v1/dataset.json` | `public, max-age=300, s-maxage=3600, stale-while-revalidate=86400` |
 | Any error | `no-store` |
@@ -214,6 +215,9 @@ npm run build:dataset    # assemble the published dataset
 npm run build:stats      # compute the download statistics
 npm run dev              # serve http://127.0.0.1:8787
 ```
+
+`npm run build:openapi` regenerates `docs/openapi.json` from the spec module.
+The `npm run gates:openapi` gate fails when the two have drifted apart.
 
 ```bash
 curl http://127.0.0.1:8787/v1/recipes?sort=score\&perPage=5

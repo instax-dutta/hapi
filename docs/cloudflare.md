@@ -109,11 +109,11 @@ that.
 The free plan gives 100,000 requests a day and 10 ms of CPU per request. Two
 things follow from that, and both are handled by the architecture:
 
-- **CPU.** The dataset is parsed once per isolate and memoized, so the parse
-  cost is not paid per request. The dataset is split per entity family, so a
-  request for the artifact list does not pay for the origin data. If a request
-  still comes close to the limit, move the dataset into a Durable Object, which
-  gets 30 seconds of CPU per request
+- **CPU.** The dataset is parsed once per family and kept for thirty seconds,
+  and at most two families are kept parsed at a time, so a request for the
+  artifact list does not pay for the origin data and the parse cost is not paid
+  on every request. If a request still comes close to the limit, move the
+  dataset into a Durable Object, which gets 30 seconds of CPU per request
 - **Subrequests.** The handler makes one R2 read per request. The pipeline does
   the Hub traffic, not the request path. The one exception is `/v1/parse`,
   which fetches a single card

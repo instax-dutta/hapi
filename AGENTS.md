@@ -85,7 +85,7 @@ Default section order:
 
 ---
 
-## Project: hapi - Heretic API
+## Project: hapi - the Heretic API
 
 A public, free, read-only JSON API for the Heretic (abliterated) model ecosystem on
 Hugging Face. It combines the two backends of the author's own projects:
@@ -106,7 +106,7 @@ The API serves three entity levels, matching the domain:
 ### Domain rules
 
 - Never invent a metric. A model card that does not publish KL and refusals yields
-  an unranked artifact, and the API says so rather than guessing
+  an unranked recipe, and the API says so rather than guessing
 - A fabricated card cannot take rank 1. Corroboration (real weights, physically
   possible KL) outranks score in every ordering
 - Download totals are measurements. The derived per-second rate is an extrapolation
@@ -148,8 +148,6 @@ The API serves three entity levels, matching the domain:
 ## Child DOX Index
 
 - `src/AGENTS.md` - request handling, routing, storage, dataset model
-- `src/core/AGENTS.md` - pure domain logic ported from heretico and heretic-live-agent
-- `src/routes/AGENTS.md` - the public endpoint surface
 - `scripts/AGENTS.md` - the offline pipeline: crawl, build, publish
 - `test/AGENTS.md` - test suites, fixtures and the gate harness
 - `docs/AGENTS.md` - the OpenAPI description and hosting guides
