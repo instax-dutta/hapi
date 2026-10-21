@@ -59,7 +59,8 @@ test("a card whose refusals exceed the total is not rankable", () => {
 test("the score is bounded and rewards both a low divergence and few refusals", () => {
   const good = scoreOf(input({ kl: 0.01, refusals: 0, refusalTotal: 100 }));
   const bad = scoreOf(input({ kl: 5, refusals: 50, refusalTotal: 100 }));
-  assert.ok(good && bad);
+  assert.ok(good);
+  assert.ok(bad);
   assert.ok(good.quality > bad.quality);
   assert.ok(good.quality <= 100);
   assert.ok(bad.quality >= 0);
@@ -71,7 +72,6 @@ test("corroboration outranks score in the leaderboard order", () => {
     kl: 0,
     refusals: 0,
     refusalTotal: 100,
-    score: undefined as never,
     verification: "unverified",
   });
   const measured = input({ id: "rcp_measured", kl: 0.5, refusals: 10, refusalTotal: 100 });

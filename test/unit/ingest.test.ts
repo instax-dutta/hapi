@@ -149,7 +149,7 @@ test("one spelling wins for an origin that was written two ways", () => {
 });
 
 test("a repository that ships weights with a possible divergence is corroborated", () => {
-  const evidence = { repo: repo(), classification: { kind: "heretic" as const, parents: [], originId: "x", verified: true, evidence: "" } };
+  const evidence = { repo: repo(), card: card(), classification: { kind: "heretic" as const, parents: [], originId: "x", verified: true, evidence: "" } };
   assert.equal(verificationFor(evidence, 0.05), "verified");
   assert.equal(verificationFor(evidence, 0), "unverified");
   assert.equal(
@@ -160,7 +160,7 @@ test("a repository that ships weights with a possible divergence is corroborated
 
 test("a divergence below the floor is not a measurement", () => {
   assert.ok(KL_FLOOR > 0);
-  const evidence = { repo: repo(), classification: { kind: "heretic" as const, parents: [], originId: "x", verified: true, evidence: "" } };
+  const evidence = { repo: repo(), card: card(), classification: { kind: "heretic" as const, parents: [], originId: "x", verified: true, evidence: "" } };
   assert.equal(verificationFor(evidence, KL_FLOOR / 2), "unverified");
 });
 
