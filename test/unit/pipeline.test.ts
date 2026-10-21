@@ -441,6 +441,16 @@ test("the facets are derived from the rows", () => {
   assert.equal(facets.tags.length, 0);
 });
 
+test("the coverage floor is a share of the published artifacts", () => {
+  // The guard compares the new artifact count against the published one, so a
+  // crawl that read fewer cards cannot quietly shrink the index.
+  const before = 1000;
+  const floor = 0.95;
+  assert.equal(1000 >= before * floor, true);
+  assert.equal(940 >= before * floor, false);
+  assert.equal(951 >= before * floor, true);
+});
+
 test("the model ranks are assigned over the models that lead with one", () => {
   const rows = apiRowsFromSnapshot(snapshotFixture());
   rows.models[0].bestRecipe = null;

@@ -33,6 +33,16 @@ interface RawFile extends RawDataset {
   >;
 }
 
+/**
+ * The coverage floor.
+ *
+ * A crawl that hits a rate limit reads fewer cards, so fewer artifacts can be
+ * classified, and the published dataset quietly shrinks. A client would see
+ * the download totals drop and never know why. The build refuses to publish a
+ * dataset that lost more than this much.
+ */
+const COVERAGE_FLOOR = 0.95;
+
 function main(): void {
   if (!existsSync(RAW_PATH)) {
     console.error("data/raw.json is missing. Run `npm run crawl` first.");
@@ -78,6 +88,28 @@ function main(): void {
   );
 
   const published: DatasetMeta = { ...meta, counts: { ...meta.counts, creators: creators.length } };
+
+  // The coverage guard. The previous published dataset is the baseline, so a
+  // crawl that quietly read fewer cards cannot shrink the index.
+  const previousPath = join(DIST, "meta.json");
+  if (existsSync(previousPath) && !process.argv.includes("--force")) {
+    try {
+      const previous = JSON.parse(readFileSync(previousPath, "utf8")) as DatasetMeta;
+      const before = previous.totals?.verifiedRepos ?? 0;
+      const after = published.totals.verifiedRepos;
+      if (before > 0 && after < before * COVERAGE_FLOOR) {
+        console.error(
+          `The dataset lost coverage: ${before} artifacts before, ${after} now. ` +
+            "A crawl that read fewer cards would publish a smaller index. " +
+            "Run `npm run build:dataset -- --force` if that is intended.",
+        );
+        process.exit(1);
+      }
+    } catch {
+      // A previous dataset that cannot be read is not a reason to refuse.
+    }
+  }
+
   const dataset = { meta: published, models, recipes, repos, creators };
 
   // The snapshot is written too, so the sample builder and a human can read

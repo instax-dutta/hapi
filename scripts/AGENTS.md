@@ -59,6 +59,10 @@ request.
   visible
 - `build-stats` refuses to publish a measurement when the artifact list is
   missing or empty
+- The build refuses to publish a dataset that lost more than 5% of its
+  artifacts. A crawl that hit a rate limit reads fewer cards, so fewer
+  artifacts can be classified, and the download totals would quietly drop.
+  `--force` overrides it
 
 ### Publishing is content addressed
 
