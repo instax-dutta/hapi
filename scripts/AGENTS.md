@@ -15,10 +15,15 @@ request.
   changed, write `data/raw.json` and the per-repo card cache
 - `build-dataset.ts` - turn `data/raw.json` into `data/snapshot.json` and the
   published dataset objects in `dist/`
-- `build-stats.ts` - compute the global and per-creator download statistics
-  into `dist/stats.json` and `dist/creators.json`
+- `build-stats.ts` - compute the global download statistics into
+  `dist/stats.json`. It publishes two scopes: the indexed artifacts and the
+  wider discovered set
 - `publish.ts` - upload the dataset objects to the configured store
-- `lib/hf.ts` - the Hub client: pagination, expansions, retries, rate limiting
+- `make-sample.mjs` - cut a committed sample dataset out of a directory
+  snapshot, for the gate that checks the dataset invariants
+- `build-openapi.mjs` - generate `docs/openapi.json` from the spec module
+- `lib/dataset-rows.ts` - the conversion from a directory snapshot into the
+  published API rows, the facets and the creators
 - `lib/pool.ts` - bounded-concurrency mapping that preserves input order
 - `lib/incremental.ts` - the card cache decision: fetch, reuse or re-parse
 

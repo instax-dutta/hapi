@@ -9,13 +9,17 @@ JSON document, and a JSON document back into a response.
 ## Ownership
 
 - `index.ts` - the exported `fetch(request, env, ctx)` handler. The only entry point
+- `server-node.ts` - the Node entry point. The same handler over the filesystem store
 - `router.ts` - path matching and parameter extraction. No domain knowledge
 - `http.ts` - CORS, JSON responses, the error envelope, ETag and conditional
   requests
 - `store.ts` - the `DatasetStore` interface plus the R2 and filesystem
   implementations
 - `dataset.ts` - the published dataset shape and the lazy, memoized loader
-- `query.ts` - the filter, sort and paginate engine shared by the list endpoints
+- `hf.ts` - the Hugging Face Hub client: pagination, expansions, retries, the
+  README fetch. The one place that knows how to talk to the Hub
+- `store-file.ts` - the filesystem store, for the Node entry point and the tests.
+  It is never reachable from the Worker bundle
 - `types.ts` - the public API response types
 
 ## Local Contracts
@@ -36,7 +40,8 @@ JSON document, and a JSON document back into a response.
 - Every number the API returns comes from the published dataset. The handler
   never fetches the Hub, except on `GET /v1/parse`
 - The dataset is loaded lazily per entity family and memoized per isolate.
-  A request for `/v1/repos` must not pay the parse cost of the origin data
+  A request for `/v1/repos` must not pay the parse cost of the origin data.
+  The families are `meta`, `models`, `recipes`, `repos`, `creators` and `stats`
 - A dataset that is missing or unparseable answers `503 dataset_unavailable`
   with a plain sentence. It never answers with a partial document
 

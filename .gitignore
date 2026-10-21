@@ -3,6 +3,9 @@ dist/
 data/raw.json
 data/cache/
 data/snapshot.json
+data/publish-state.json
+data/*.log
+data/gate-raw.json
 *.log
 .DS_Store
 .env

@@ -10,8 +10,10 @@ proves the acceptance criteria in `GATES.md`.
 
 - `unit/` - the pure domain logic. Offline, deterministic, fast
 - `integration/` - the routes, driven through a real `Request` and a fake store
-- `fixtures/` - real Hugging Face model cards and a small synthetic dataset
-- `helpers/` - the fake store, the request builders, the dataset builders
+- `fixtures/cards/` - real Hugging Face model cards
+- `fixtures/dataset/` - a committed sample of the published dataset, cut from
+  a real snapshot. The dataset gate checks it
+- `helpers/` - the fake store and the dataset builders
 
 ## Local Contracts
 

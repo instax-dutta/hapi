@@ -62,16 +62,27 @@ Base path `/v1`. Every response is JSON. Every response carries CORS headers
 | --- | --- | --- |
 | GET | `/v1` | Service index: name, version, endpoint list, links |
 | GET | `/v1/health` | Liveness plus dataset version and age in seconds |
-| GET | `/v1/meta` | Dataset version, generation time, totals, family list, entity counts |
+| GET | `/v1/meta` | Dataset version, generation time, totals, families, counts, facets |
+| GET | `/v1/summary` | Everything a homepage needs, in one request |
 | GET | `/v1/families` | Model families with their origin and recipe counts |
+| GET | `/v1/families/{slug}` | One family with its models and its ablations |
+| GET | `/v1/versions` | The Heretic versions in use, with their counts |
+| GET | `/v1/formats` | The artifact formats in use, with their counts |
+| GET | `/v1/licenses` | The licenses in use, with their counts |
+| GET | `/v1/tags` | The Hub tags in use, with their counts |
+| GET | `/v1/kinds` | The repository kinds in use, with their counts |
+| GET | `/v1/sizes` | The size classes in use, with their counts |
 | GET | `/v1/models` | Origins. Filter, sort, paginate |
 | GET | `/v1/models/{id}` | One origin with its recipes and its artifacts |
 | GET | `/v1/recipes` | Ablation recipes. The leaderboard. Filter, sort, paginate |
 | GET | `/v1/recipes/{id}` | One recipe with its origin and its artifacts |
 | GET | `/v1/repos` | Artifacts. Filter, sort, paginate |
 | GET | `/v1/repos/{id}` | One artifact with its recipe and origin |
+| GET | `/v1/creators` | The creator leaderboard |
+| GET | `/v1/creators/{username}` | One creator with their artifacts and their ablations |
 | GET | `/v1/stats` | Global download totals, rate estimate, generation time |
 | GET | `/v1/stats/{username}` | One creator's download totals, rate estimate and models |
+| GET | `/v1/compare` | Two models side by side, with the difference spelled out |
 | GET | `/v1/simulate` | Seeded Poisson download events for a given rate and window |
 | GET | `/v1/parse` | Parse a live model card by repo id |
 | GET | `/v1/openapi.json` | OpenAPI 3.1 description of this surface |
@@ -83,7 +94,7 @@ Shared by `/v1/models`, `/v1/recipes`, `/v1/repos`:
 
 | Parameter | Applies to | Meaning |
 | --- | --- | --- |
-| `q` | all | Free-text over id, name, author and repo ids. Case-insensitive |
+| `q` | all | Free-text over id, name, author, tags and repo ids. Case-insensitive |
 | `family` | all | Family slug. Exact match |
 | `size` | all | Size class: `sub-1b`, `1-4b`, `4-9b`, `9-15b`, `15-32b`, `32-70b`, `70b-plus`, `unknown` |
 | `format` | recipes, repos | Format slug: `gguf`, `safetensors`, `mlx`, `fp8`, `nvfp4`, `mxfp4`, `awq`, `gptq`, `exl`, `onnx`, `lora`, `other` |
@@ -91,9 +102,20 @@ Shared by `/v1/models`, `/v1/recipes`, `/v1/repos`:
 | `version` | recipes | Heretic version string. Exact match |
 | `author` | repos | Creator id. Exact match |
 | `origin` | repos | Origin id. Exact match |
-| `minDownloads` | recipes | Minimum all-time downloads |
-| `bench` | recipes | `1` keeps only recipes that published benchmarks |
+| `license` | repos | License id. Exact match |
+| `quant` | repos | Quantization label. Exact match |
+| `verification` | recipes | `verified`, `unverified` or `publisher` |
+| `confidence` | recipes | `high`, `medium`, `inherited` or `none` |
+| `minDownloads` | all | Minimum all-time downloads |
+| `minScore` | models, recipes | Minimum quality score |
+| `maxKl` | models, recipes | Maximum divergence |
+| `minLikes` | all | Minimum likes |
+| `minParams`, `maxParams` | models, repos | Parameter bounds |
+| `bench` | recipes, repos | `1` keeps only rows that published benchmarks |
 | `ranked` | recipes | `0` includes unranked recipes. Default `1` |
+| `pareto`, `bestPick` | recipes | `1` keeps only the frontier or only the best pick |
+| `direct` | repos | `1` keeps only the direct conversions |
+| `updatedAfter` | all | An ISO date the row must be newer than |
 | `sort` | all | Sort key, see 3.3 |
 | `dir` | all | `asc` or `desc`. Default depends on the sort key |
 | `page` | all | 1-based page number |
@@ -106,14 +128,19 @@ that sends `sort=bogus` gets the default sort, not a 400.
 
 | Key | Applies to | Default direction |
 | --- | --- | --- |
-| `score` | recipes | desc |
+| `score` | recipes, models, creators | desc |
 | `kl` | recipes, models | asc |
 | `refusals` | recipes, models | asc |
-| `downloads` | recipes, models, repos | desc |
-| `params` | models, repos | asc |
-| `newest` | recipes, models, repos | desc |
-| `model` | models | asc |
-| `author` | repos | asc |
+| `downloads` | recipes, models, repos, creators | desc |
+| `params` | models, recipes, repos | asc |
+| `newest` | recipes, models, repos, creators | desc |
+| `model` | models, recipes | asc |
+| `author` | repos, creators | asc |
+| `likes` | models, recipes, repos, creators | desc |
+| `benchmarks` | recipes | desc |
+| `recipes`, `repos` | models, recipes | desc |
+| `models` | creators | desc |
+| `created` | repos | desc |
 
 ### 3.4 Response envelope
 
@@ -198,13 +225,13 @@ The pipeline publishes these objects:
 
 | Object | Contents | Approximate size |
 | --- | --- | --- |
-| `meta.json` | version, generation time, source, totals, families, counts | 40 KB |
-| `models.json` | origins | 300 KB |
-| `recipes.json` | recipes, plus the origin fields each row needs | 350 KB |
-| `repos.json` | artifacts | 1.2 MB |
-| `stats.json` | global download totals and rate | 2 KB |
-| `creators.json` | per-creator totals and models | 1 MB |
-| `dataset.json` | everything above in one document | 3 MB |
+| `meta.json` | version, generation time, source, totals, families, counts, facets | 60 KB |
+| `models.json` | origins | 700 KB |
+| `recipes.json` | recipes, plus the origin fields each row needs | 900 KB |
+| `repos.json` | artifacts | 2 MB |
+| `creators.json` | creators with their totals and their models | 400 KB |
+| `stats.json` | the indexed and the discovered download totals, and the rate | 2 KB |
+| `dataset.json` | everything above in one document | 4 MB |
 
 The store is split per entity family on purpose. A request for `/v1/repos` must
 not pay the parse cost of the recipe and origin data, and vice versa. The
@@ -234,7 +261,7 @@ Runs on the author's own server, never inside a request.
 | --- | --- | --- |
 | Crawl | `npm run crawl` | `data/raw.json` plus a per-repo card cache |
 | Build | `npm run build:dataset` | `data/snapshot.json` plus `dist/*.json` |
-| Stats | `npm run build:stats` | `dist/stats.json`, `dist/creators.json` |
+| Stats | `npm run build:stats` | `dist/stats.json` |
 | Publish | `npm run publish` | The dataset objects in the configured bucket |
 | Refresh | `npm run refresh` | Crawl, build, stats and publish in order |
 

@@ -7,14 +7,21 @@ its parameters, its document and its failure modes, and nothing else.
 
 ## Ownership
 
-- `meta.ts` - `/v1`, `/v1/health`, `/v1/meta`, `/v1/families`
+- `meta.ts` - `/v1`, `/v1/health`, `/v1/meta`, `/v1/families` and `/v1/families/{slug}`
 - `models.ts` - `/v1/models` and `/v1/models/{id}`
 - `recipes.ts` - `/v1/recipes` and `/v1/recipes/{id}`
 - `repos.ts` - `/v1/repos` and `/v1/repos/{id}`
+- `creators.ts` - `/v1/creators` and `/v1/creators/{username}`
 - `stats.ts` - `/v1/stats` and `/v1/stats/{username}`
+- `facets.ts` - `/v1/versions`, `/v1/formats`, `/v1/licenses`, `/v1/tags`,
+  `/v1/kinds` and `/v1/sizes`
+- `summary.ts` - `/v1/summary`
+- `compare.ts` - `/v1/compare`
 - `simulate.ts` - `/v1/simulate`
 - `parse.ts` - `/v1/parse`
 - `openapi.ts` - `/v1/openapi.json` and `/v1/dataset.json`
+- `openapi-spec.ts` - the OpenAPI document itself. The single source of truth
+  for the public surface
 
 ## Local Contracts
 
@@ -56,6 +63,8 @@ its parameters, its document and its failure modes, and nothing else.
 - Every route, parameter and response field appears in `docs/openapi.json`
 - A change to the public surface changes the OpenAPI description in the same
   commit
+- The description lives in `openapi-spec.ts`, not in the JSON file. The JSON is
+  generated from it, so there is one source of truth
 
 ## Work Guidance
 
