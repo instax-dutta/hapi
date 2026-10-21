@@ -154,7 +154,7 @@ test("a repository with no commit hash is always fetched", async () => {
   assert.equal(fetched, 1);
 });
 
-function snapshotFixture(): Snapshot {
+export function snapshotFixture(): Snapshot {
   return {
     schemaVersion: 1,
     updatedAt: "2026-10-21T00:00:00.000Z",
@@ -208,8 +208,8 @@ function snapshotFixture(): Snapshot {
         refusalTotal: 100,
         refusalRate: 0.1,
         score: 90,
-        pareto: false,
-        bestPick: false,
+        pareto: true,
+        bestPick: true,
         implausible: false,
         confidence: "medium",
         verification: "verified",
@@ -378,8 +378,12 @@ test("the version hash does not move when the data does not", () => {
   const first = apiRowsFromSnapshot(snapshotFixture());
   const second = apiRowsFromSnapshot(snapshotFixture());
   assert.equal(first.meta.version, second.meta.version);
-  first.models[0].displayName = "changed";
-  const third = apiRowsFromSnapshot(snapshotFixture());
+
+  // The hash covers the published rows, so the input has to change for it to
+  // move.
+  const changed = snapshotFixture();
+  changed.origins[0].displayName = "changed";
+  const third = apiRowsFromSnapshot(changed);
   assert.notEqual(first.meta.version, third.meta.version);
 });
 
@@ -389,7 +393,8 @@ test("the facets are derived from the rows", () => {
   assert.equal(facets.kinds.length, 2);
   assert.equal(facets.licenses.length, 1);
   assert.equal(facets.sizes.length, 1);
-  assert.equal(facets.tags.length, 2);
+  // The tags come from the crawl, so a snapshot alone carries none.
+  assert.equal(facets.tags.length, 0);
 });
 
 test("the model ranks are assigned over the models that lead with one", () => {

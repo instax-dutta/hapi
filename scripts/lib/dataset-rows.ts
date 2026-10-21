@@ -88,6 +88,10 @@ export function compareRecipes(a: RecipeRow, b: RecipeRow): number {
  * a model page shows.
  */
 export function assignRanks(recipes: RecipeRow[]): void {
+  for (const recipe of recipes) {
+    recipe.rank = null;
+    recipe.familyRank = null;
+  }
   const ranked = recipes.filter((recipe) => recipe.ranked).sort(compareRecipes);
   ranked.forEach((recipe, index) => {
     recipe.rank = index + 1;
@@ -106,6 +110,12 @@ export function assignRanks(recipes: RecipeRow[]): void {
   }
 }
 
+/**
+ * The API rows for a snapshot.
+ *
+ * The recipe's evidence snippet comes from the artifact it cites as evidence.
+ * That artifact published the numbers, so its card carries the snippet.
+ */
 export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}): ApiRows {
   const originById = new Map(snapshot.origins.map((origin) => [origin.id, origin]));
   const repoById = new Map(snapshot.repos.map((repo) => [repo.id, repo]));
@@ -326,6 +336,10 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
  * model whose conversions are all uncorroborated has no place on the board.
  */
 export function assignModelRanks(models: ModelRow[]): void {
+  // The rank is cleared first. A model that leads with no corroborated
+  // ablation has no place on the board, and a stale rank from an earlier pass
+  // would leave it there.
+  for (const model of models) model.rank = null;
   const ranked = models
     .filter((model) => model.bestRecipe !== null)
     .sort((a, b) => compareCanonicalModel(a, b));

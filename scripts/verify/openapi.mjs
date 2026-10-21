@@ -2,10 +2,16 @@
 /**
  * Prove the OpenAPI description and the implemented routes still agree.
  *
- * Three checks:
+ * Four checks:
  *   1. `docs/openapi.json` is exactly what the spec module generates
  *   2. every path in the description is a route the handler serves
  *   3. every route the handler serves is a path in the description
+ *   4. every parameter a route reads is described, and every parameter a
+ *      route describes is read
+ *
+ * The fourth check is the one that matters. A parameter the description
+ * advertises and the route ignores is a filter that silently returns
+ * everything, which is worse than a rejected request.
  *
  * The success marker is printed only after every check passes.
  */
@@ -36,31 +42,129 @@ if (committedText) {
 }
 
 // The route table, read from the handler module rather than a second copy.
-const routeSource = readFileSync(join(root, "src", "index.ts"), "utf8");
-const patterns = [...routeSource.matchAll(/pattern:\s*"([^"]+)"/g)].map((match) => match[1]);
+const indexSource = readFileSync(join(root, "src", "index.ts"), "utf8");
+const routePattern = /\{\s*method:\s*"(\w+)",\s*pattern:\s*"([^"]+)",\s*handler:\s*(\w+)\.(\w+)\s*\}/g;
+const routes = [...indexSource.matchAll(routePattern)].map((match) => ({
+  method: match[1],
+  pattern: match[2],
+  module: match[3],
+  handler: match[4],
+}));
 
-/** `/v1/models/:id*` and `/v1/models/{id}` are the same route. */
-const routeBase = (pattern) => pattern.replace(/:[a-zA-Z*]+$/, "").replace(/\/\*$/, "");
-const describedBase = (path) => path.replace(/\{[a-zA-Z]+\}$/, "");
+/** `/v1/models/:id*` and `/v1/models/{id}` name the same route. */
+const normalise = (pattern) => pattern.replace(/\{(\w+)\}/g, ":$1").replace(/\*$/, "");
 
 const described = Object.keys(openapiDocument.paths);
 
-for (const pattern of patterns) {
-  if (pattern === "/v1") {
-    if (!described.includes("/v1")) fail("The route /v1 is not described.");
+for (const route of routes) {
+  const path = normalise(route.pattern);
+  const describedPath = described.find((candidate) => normalise(candidate) === path);
+  if (!describedPath) {
+    fail(`The route ${route.pattern} is not described in the OpenAPI document.`);
     continue;
-  }
-  const base = routeBase(pattern);
-  if (!described.some((path) => describedBase(path) === base)) {
-    fail(`The route ${pattern} is not described in the OpenAPI document.`);
   }
 }
 
 for (const path of described) {
-  if (path === "/v1") continue;
-  const covered = patterns.some((pattern) => routeBase(pattern) === describedBase(path));
+  const covered = routes.some((route) => normalise(route.pattern) === normalise(path));
   if (!covered) {
     fail(`The described path ${path} has no route in src/index.ts.`);
+  }
+}
+
+/** The source of one route module. */
+function moduleSource(module) {
+  return readFileSync(join(root, "src", "routes", `${module}.ts`), "utf8");
+}
+
+/** The body of one exported route handler. */
+function handlerBody(module, handler) {
+  const source = moduleSource(module);
+  const start = source.indexOf(`export async function ${handler}(`);
+  if (start === -1) return null;
+  const next = source.indexOf("\nexport ", start + 1);
+  return source.slice(start, next === -1 ? source.length : next);
+}
+
+/**
+ * The query parameters a piece of code reads.
+ *
+ * Both shapes count: `query.family` reads a parsed parameter, and
+ * `query.get("repo")` reads a raw one.
+ */
+function readsQuery(body) {
+  const names = new Set();
+  // `query.family` reads a parsed parameter. The lookbehind keeps an import
+  // path such as "../lib/query.ts" from being read as a parameter.
+  for (const match of body.matchAll(/(?<![/\w'"])query\.(?!get\b|has\b|set\b)(\w+)\b/g)) {
+    names.add(match[1]);
+  }
+  // `query.get("repo")` reads a raw one.
+  for (const match of body.matchAll(/(?<![/\w'"])query\.(?:get|has)\(\s*"([^"]+)"/g)) {
+    names.add(match[1]);
+  }
+  // `numberParam(query, "seconds", 60)` reads one by name.
+  for (const match of body.matchAll(/\(\s*query\s*,\s*"([^"]+)"/g)) {
+    names.add(match[1]);
+  }
+  return names;
+}
+
+/**
+ * The parameters every list endpoint reads through the query engine.
+ *
+ * The engine parses them, so the route never names them.
+ */
+const SHARED = new Set(["sort", "dir", "page", "perPage"]);
+
+/** Every parameter name the API offers, across every path. */
+const vocabulary = new Set(
+  Object.values(openapiDocument.paths).flatMap((entry) =>
+    (entry.get?.parameters ?? [])
+      .filter((parameter) => parameter.in === "query")
+      .map((parameter) => parameter.name),
+  ),
+);
+
+for (const route of routes) {
+  const path = normalise(route.pattern);
+  const describedPath = described.find((candidate) => normalise(candidate) === path);
+  if (!describedPath) continue;
+
+  const body = handlerBody(route.module, route.handler);
+  if (body === null) {
+    fail(`The handler ${route.module}.${route.handler} was not found.`);
+    continue;
+  }
+
+  const declared = new Set(
+    (openapiDocument.paths[describedPath].get?.parameters ?? [])
+      .filter((parameter) => parameter.in === "query")
+      .map((parameter) => parameter.name),
+  );
+
+  // A list endpoint delegates the filters to a matching function in the same
+  // module, so the module's reads are the endpoint's reads.
+  const isList = body.includes("parseQuery(");
+  const read = readsQuery(body);
+  if (isList) {
+    for (const name of readsQuery(moduleSource(route.module))) read.add(name);
+    for (const name of SHARED) read.add(name);
+  }
+
+  for (const name of declared) {
+    if (!read.has(name)) {
+      fail(`The route ${route.pattern} describes the parameter "${name}" and does not read it.`);
+    }
+  }
+  // A read that is not a client parameter is an internal field, like the
+  // parsed boundary the query engine hands over. A read that IS a client
+  // parameter and is not described for this path is a filter the client
+  // cannot discover.
+  for (const name of read) {
+    if (vocabulary.has(name) && !declared.has(name)) {
+      fail(`The route ${route.pattern} reads the parameter "${name}" and does not describe it.`);
+    }
   }
 }
 
@@ -71,5 +175,5 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `OPENAPI VERIFIED: ${described.length} documented paths, ${patterns.length} implemented routes`,
+  `OPENAPI VERIFIED: ${described.length} documented paths, ${routes.length} implemented routes`,
 );

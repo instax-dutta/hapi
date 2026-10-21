@@ -56,6 +56,16 @@
         "responses": {
           "200": {
             "description": "The index."
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -70,6 +80,26 @@
         "responses": {
           "200": {
             "description": "The health document."
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be served.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -88,6 +118,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Meta"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -116,6 +156,16 @@
           "200": {
             "description": "The summary document."
           },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "503": {
             "description": "The request could not be served.",
             "content": {
@@ -139,6 +189,26 @@
         "responses": {
           "200": {
             "description": "The families."
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be served.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -166,6 +236,16 @@
           },
           "404": {
             "description": "The request could not be served.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
             "content": {
               "application/json": {
                 "schema": {
@@ -241,6 +321,26 @@
                 }
               }
             }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be served.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -296,6 +396,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be served.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -357,6 +477,26 @@
                 }
               }
             }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be served.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -412,6 +552,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be served.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -473,6 +633,26 @@
                 }
               }
             }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be served.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -531,6 +711,26 @@
                 }
               }
             }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be served.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -576,81 +776,6 @@
             "description": "Format slug."
           },
           {
-            "name": "kind",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Repository kind."
-          },
-          {
-            "name": "version",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Heretic version."
-          },
-          {
-            "name": "author",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Creator id."
-          },
-          {
-            "name": "origin",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Origin id."
-          },
-          {
-            "name": "license",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "License id."
-          },
-          {
-            "name": "quant",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Quantization label."
-          },
-          {
-            "name": "verification",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "verified",
-                "unverified",
-                "publisher"
-              ]
-            },
-            "description": "Corroboration state of a recipe."
-          },
-          {
-            "name": "confidence",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "high",
-                "medium",
-                "inherited",
-                "none"
-              ]
-            },
-            "description": "Confidence of the published numbers."
-          },
-          {
             "name": "minDownloads",
             "in": "query",
             "schema": {
@@ -661,6 +786,14 @@
           },
           {
             "name": "minScore",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "maxKl",
             "in": "query",
             "schema": {
               "type": "number",
@@ -692,47 +825,6 @@
             }
           },
           {
-            "name": "maxKl",
-            "in": "query",
-            "schema": {
-              "type": "number",
-              "minimum": 0
-            }
-          },
-          {
-            "name": "bench",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            },
-            "description": "Keep only rows that published benchmarks."
-          },
-          {
-            "name": "ranked",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "0",
-                "1"
-              ]
-            },
-            "description": "Set to 0 to include unranked recipes. Default 1."
-          },
-          {
-            "name": "pareto",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            }
-          },
-          {
             "name": "implausible",
             "in": "query",
             "schema": {
@@ -743,26 +835,6 @@
               ]
             },
             "description": "Set to 0 to drop the ablations whose divergence is below the floor. Default: keep both."
-          },
-          {
-            "name": "bestPick",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            }
-          },
-          {
-            "name": "direct",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            }
           },
           {
             "name": "updatedAfter",
@@ -777,9 +849,23 @@
             "name": "sort",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "score",
+                "kl",
+                "refusals",
+                "refusalRate",
+                "downloads",
+                "recent",
+                "params",
+                "newest",
+                "model",
+                "recipes",
+                "repos",
+                "likes"
+              ]
             },
-            "description": "Sort key."
+            "description": "The sort key. An unknown key falls back to the default."
           },
           {
             "name": "dir",
@@ -790,7 +876,8 @@
                 "asc",
                 "desc"
               ]
-            }
+            },
+            "description": "The direction. The default depends on the sort key."
           },
           {
             "name": "page",
@@ -823,6 +910,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ModelList"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -864,6 +961,16 @@
           },
           "404": {
             "description": "The request could not be served.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
             "content": {
               "application/json": {
                 "schema": {
@@ -942,38 +1049,6 @@
             "description": "Heretic version."
           },
           {
-            "name": "author",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Creator id."
-          },
-          {
-            "name": "origin",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Origin id."
-          },
-          {
-            "name": "license",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "License id."
-          },
-          {
-            "name": "quant",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Quantization label."
-          },
-          {
             "name": "verification",
             "in": "query",
             "schema": {
@@ -984,7 +1059,7 @@
                 "publisher"
               ]
             },
-            "description": "Corroboration state of a recipe."
+            "description": "The corroboration state of an ablation."
           },
           {
             "name": "confidence",
@@ -998,7 +1073,7 @@
                 "none"
               ]
             },
-            "description": "Confidence of the published numbers."
+            "description": "The confidence of the published numbers."
           },
           {
             "name": "minDownloads",
@@ -1018,34 +1093,18 @@
             }
           },
           {
-            "name": "minLikes",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 0
-            }
-          },
-          {
-            "name": "minParams",
-            "in": "query",
-            "schema": {
-              "type": "number",
-              "minimum": 0
-            }
-          },
-          {
-            "name": "maxParams",
-            "in": "query",
-            "schema": {
-              "type": "number",
-              "minimum": 0
-            }
-          },
-          {
             "name": "maxKl",
             "in": "query",
             "schema": {
               "type": "number",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "minLikes",
+            "in": "query",
+            "schema": {
+              "type": "integer",
               "minimum": 0
             }
           },
@@ -1070,10 +1129,20 @@
                 "1"
               ]
             },
-            "description": "Set to 0 to include unranked recipes. Default 1."
+            "description": "Set to 0 to include unranked ablations. Default 1."
           },
           {
             "name": "pareto",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          },
+          {
+            "name": "bestPick",
             "in": "query",
             "schema": {
               "type": "string",
@@ -1095,26 +1164,6 @@
             "description": "Set to 0 to drop the ablations whose divergence is below the floor. Default: keep both."
           },
           {
-            "name": "bestPick",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            }
-          },
-          {
-            "name": "direct",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            }
-          },
-          {
             "name": "updatedAfter",
             "in": "query",
             "schema": {
@@ -1127,9 +1176,23 @@
             "name": "sort",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "score",
+                "kl",
+                "refusals",
+                "refusalRate",
+                "downloads",
+                "recent",
+                "params",
+                "newest",
+                "model",
+                "likes",
+                "benchmarks",
+                "repos"
+              ]
             },
-            "description": "Sort key."
+            "description": "The sort key. An unknown key falls back to the default."
           },
           {
             "name": "dir",
@@ -1140,7 +1203,8 @@
                 "asc",
                 "desc"
               ]
-            }
+            },
+            "description": "The direction. The default depends on the sort key."
           },
           {
             "name": "page",
@@ -1173,6 +1237,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RecipeList"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -1214,6 +1288,16 @@
           },
           "404": {
             "description": "The request could not be served.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1324,33 +1408,6 @@
             "description": "Quantization label."
           },
           {
-            "name": "verification",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "verified",
-                "unverified",
-                "publisher"
-              ]
-            },
-            "description": "Corroboration state of a recipe."
-          },
-          {
-            "name": "confidence",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "high",
-                "medium",
-                "inherited",
-                "none"
-              ]
-            },
-            "description": "Confidence of the published numbers."
-          },
-          {
             "name": "minDownloads",
             "in": "query",
             "schema": {
@@ -1358,14 +1415,6 @@
               "minimum": 0
             },
             "description": "Minimum all-time downloads."
-          },
-          {
-            "name": "minScore",
-            "in": "query",
-            "schema": {
-              "type": "number",
-              "minimum": 0
-            }
           },
           {
             "name": "minLikes",
@@ -1392,14 +1441,6 @@
             }
           },
           {
-            "name": "maxKl",
-            "in": "query",
-            "schema": {
-              "type": "number",
-              "minimum": 0
-            }
-          },
-          {
             "name": "bench",
             "in": "query",
             "schema": {
@@ -1411,50 +1452,6 @@
             "description": "Keep only rows that published benchmarks."
           },
           {
-            "name": "ranked",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "0",
-                "1"
-              ]
-            },
-            "description": "Set to 0 to include unranked recipes. Default 1."
-          },
-          {
-            "name": "pareto",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            }
-          },
-          {
-            "name": "implausible",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "0",
-                "1"
-              ]
-            },
-            "description": "Set to 0 to drop the ablations whose divergence is below the floor. Default: keep both."
-          },
-          {
-            "name": "bestPick",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            }
-          },
-          {
             "name": "direct",
             "in": "query",
             "schema": {
@@ -1462,7 +1459,8 @@
               "enum": [
                 "1"
               ]
-            }
+            },
+            "description": "Keep only the direct conversions."
           },
           {
             "name": "updatedAfter",
@@ -1477,9 +1475,19 @@
             "name": "sort",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "downloads",
+                "recent",
+                "likes",
+                "params",
+                "newest",
+                "created",
+                "author",
+                "model"
+              ]
             },
-            "description": "Sort key."
+            "description": "The sort key. An unknown key falls back to the default."
           },
           {
             "name": "dir",
@@ -1490,7 +1498,8 @@
                 "asc",
                 "desc"
               ]
-            }
+            },
+            "description": "The direction. The default depends on the sort key."
           },
           {
             "name": "page",
@@ -1523,6 +1532,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RepoList"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -1572,6 +1591,16 @@
               }
             }
           },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "503": {
             "description": "The request could not be served.",
             "content": {
@@ -1602,105 +1631,6 @@
             "description": "Free-text search."
           },
           {
-            "name": "family",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Family slug."
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Size class."
-          },
-          {
-            "name": "format",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Format slug."
-          },
-          {
-            "name": "kind",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Repository kind."
-          },
-          {
-            "name": "version",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Heretic version."
-          },
-          {
-            "name": "author",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Creator id."
-          },
-          {
-            "name": "origin",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Origin id."
-          },
-          {
-            "name": "license",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "License id."
-          },
-          {
-            "name": "quant",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Quantization label."
-          },
-          {
-            "name": "verification",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "verified",
-                "unverified",
-                "publisher"
-              ]
-            },
-            "description": "Corroboration state of a recipe."
-          },
-          {
-            "name": "confidence",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "high",
-                "medium",
-                "inherited",
-                "none"
-              ]
-            },
-            "description": "Confidence of the published numbers."
-          },
-          {
             "name": "minDownloads",
             "in": "query",
             "schema": {
@@ -1708,14 +1638,6 @@
               "minimum": 0
             },
             "description": "Minimum all-time downloads."
-          },
-          {
-            "name": "minScore",
-            "in": "query",
-            "schema": {
-              "type": "number",
-              "minimum": 0
-            }
           },
           {
             "name": "minLikes",
@@ -1726,110 +1648,30 @@
             }
           },
           {
-            "name": "minParams",
+            "name": "minScore",
             "in": "query",
             "schema": {
               "type": "number",
               "minimum": 0
             }
-          },
-          {
-            "name": "maxParams",
-            "in": "query",
-            "schema": {
-              "type": "number",
-              "minimum": 0
-            }
-          },
-          {
-            "name": "maxKl",
-            "in": "query",
-            "schema": {
-              "type": "number",
-              "minimum": 0
-            }
-          },
-          {
-            "name": "bench",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            },
-            "description": "Keep only rows that published benchmarks."
-          },
-          {
-            "name": "ranked",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "0",
-                "1"
-              ]
-            },
-            "description": "Set to 0 to include unranked recipes. Default 1."
-          },
-          {
-            "name": "pareto",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            }
-          },
-          {
-            "name": "implausible",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "0",
-                "1"
-              ]
-            },
-            "description": "Set to 0 to drop the ablations whose divergence is below the floor. Default: keep both."
-          },
-          {
-            "name": "bestPick",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            }
-          },
-          {
-            "name": "direct",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            }
-          },
-          {
-            "name": "updatedAfter",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "description": "Keep only rows modified at or after this instant."
           },
           {
             "name": "sort",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "downloads",
+                "recent",
+                "models",
+                "recipes",
+                "score",
+                "likes",
+                "newest",
+                "author"
+              ]
             },
-            "description": "Sort key."
+            "description": "The sort key. An unknown key falls back to the default."
           },
           {
             "name": "dir",
@@ -1840,7 +1682,8 @@
                 "asc",
                 "desc"
               ]
-            }
+            },
+            "description": "The direction. The default depends on the sort key."
           },
           {
             "name": "page",
@@ -1873,6 +1716,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CreatorList"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -1921,6 +1774,16 @@
               }
             }
           },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "503": {
             "description": "The request could not be served.",
             "content": {
@@ -1948,6 +1811,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Stats"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -1988,6 +1861,16 @@
           },
           "404": {
             "description": "The request could not be served.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2051,6 +1934,26 @@
             }
           },
           "404": {
+            "description": "The request could not be served.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
             "description": "The request could not be served.",
             "content": {
               "application/json": {
@@ -2127,6 +2030,16 @@
                 }
               }
             }
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -2173,6 +2086,16 @@
               }
             }
           },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "502": {
             "description": "The request could not be served.",
             "content": {
@@ -2196,6 +2119,16 @@
         "responses": {
           "200": {
             "description": "The OpenAPI description."
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -2210,6 +2143,26 @@
         "responses": {
           "200": {
             "description": "The dataset."
+          },
+          "405": {
+            "description": "The method is not allowed. The API is read-only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be served.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -2802,12 +2755,6 @@
           "classificationEvidence": {
             "type": "string"
           },
-          "baseModels": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
           "parentIds": {
             "type": "array",
             "items": {
@@ -3192,6 +3139,17 @@
           },
           "source": {
             "type": "string"
+          },
+          "indexed": {
+            "type": "object",
+            "description": "The artifacts the directory publishes."
+          },
+          "discovered": {
+            "type": "object",
+            "description": "Every model the tag-and-name index found."
+          },
+          "discoveredRate": {
+            "type": "object"
           }
         }
       }

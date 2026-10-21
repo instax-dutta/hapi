@@ -70,47 +70,55 @@ The full description, with every parameter and every field, is at
 
 ## Querying
 
-The three list endpoints share one parameter set. An unknown value falls back to
-the default rather than failing, so a client never has to guess.
+Four paginated list endpoints: `/v1/models`, `/v1/recipes`, `/v1/repos` and
+`/v1/creators`. A parameter is honoured only where it is listed below, and the
+OpenAPI description says the same thing. An unknown value falls back to the
+default rather than failing, so a client never has to guess.
 
-| Parameter | Applies to | Meaning |
+| Parameter | Endpoints | Meaning |
 | --- | --- | --- |
-| `q` | all | Free-text over id, name, author, tags and repo ids |
-| `family` | all | Family slug |
-| `size` | all | `sub-1b`, `1-4b`, `4-9b`, `9-15b`, `15-32b`, `32-70b`, `70b-plus`, `unknown` |
+| `q` | all four | Free-text over id, name, author, tags and repo ids |
+| `family` | models, recipes, repos | Family slug |
+| `size` | models, recipes, repos | `sub-1b`, `1-4b`, `4-9b`, `9-15b`, `15-32b`, `32-70b`, `70b-plus`, `unknown` |
 | `format` | models, recipes, repos | `gguf`, `safetensors`, `mlx`, `fp8`, `nvfp4`, `mxfp4`, `awq`, `gptq`, `exl`, `onnx`, `lora` |
 | `kind` | recipes, repos | `heretic`, `quant`, `finetune`, `merge`, `lora`, `unknown` |
-| `version` | recipes | The Heretic version |
+| `version` | recipes, repos | The Heretic version |
 | `author` | repos | The creator id |
 | `origin` | repos | The origin id |
 | `license` | repos | The license id |
 | `quant` | repos | The quantization label, for example `Q4_K_M` |
 | `verification` | recipes | `verified`, `unverified`, `publisher` |
 | `confidence` | recipes | `high`, `medium`, `inherited`, `none` |
-| `minDownloads` | all | Minimum all-time downloads |
-| `minScore`, `maxKl`, `minLikes` | models, recipes | Numeric floors and ceilings |
+| `minDownloads` | all four | Minimum all-time downloads |
+| `minScore` | models, recipes, creators | Minimum quality score |
+| `maxKl` | models, recipes | Maximum divergence |
+| `minLikes` | all four | Minimum likes |
 | `minParams`, `maxParams` | models, repos | Parameter bounds |
 | `bench` | recipes, repos | `1` keeps only rows that published benchmarks |
-| `ranked` | recipes | `0` includes unranked recipes. Default `1` |
+| `ranked` | recipes | `0` includes unranked ablations. Default `1` |
 | `pareto`, `bestPick` | recipes | `1` keeps only the frontier or only the best pick |
 | `implausible` | models, recipes | `0` drops the rows whose divergence is below the floor. `1` keeps only those |
 | `direct` | repos | `1` keeps only the direct conversions |
-| `updatedAfter` | all | An ISO date the row must be newer than |
-| `sort` | all | See below |
-| `dir` | all | `asc` or `desc`. The default depends on the sort key |
-| `page`, `perPage` | all | `perPage` is 25, 50, 100 or 200. Default 50 |
+| `updatedAfter` | models, recipes, repos | An ISO date the row must be newer than |
+| `sort` | all four | See below |
+| `dir` | all four | `asc` or `desc`. The default depends on the sort key |
+| `page`, `perPage` | all four | `perPage` is 25, 50, 100 or 200. Default 50 |
 
 Sort keys:
 
 | Endpoint | Keys |
 | --- | --- |
-| `/v1/models` | `score`, `kl`, `refusals`, `downloads`, `recent`, `params`, `newest`, `model`, `recipes`, `repos`, `likes` |
-| `/v1/recipes` | `score`, `kl`, `refusals`, `downloads`, `recent`, `params`, `newest`, `model`, `likes`, `benchmarks`, `repos` |
+| `/v1/models` | `score`, `kl`, `refusals`, `refusalRate`, `downloads`, `recent`, `params`, `newest`, `model`, `recipes`, `repos`, `likes` |
+| `/v1/recipes` | `score`, `kl`, `refusals`, `refusalRate`, `downloads`, `recent`, `params`, `newest`, `model`, `likes`, `benchmarks`, `repos` |
 | `/v1/repos` | `downloads`, `recent`, `likes`, `params`, `newest`, `created`, `author`, `model` |
 | `/v1/creators` | `downloads`, `recent`, `models`, `recipes`, `score`, `likes`, `newest`, `author` |
 
 `downloads` is the all-time total. `recent` is the last thirty days, which is
-the honest answer to "what is hot right now".
+the honest answer to "what is hot right now". `refusals` is the count of
+refused tests and `refusalRate` is the share of them.
+
+The default sort of `/v1/recipes` is the canonical leaderboard order, so the
+`rank` column and the row order always agree.
 
 ## What the numbers mean
 
@@ -184,9 +192,10 @@ the client.
 
 | Surface | `Cache-Control` |
 | --- | --- |
-| `/v1/meta`, `/v1/health`, `/v1/summary` | `public, max-age=60, s-maxage=60, stale-while-revalidate=300` |
+| `/v1`, `/v1/health`, `/v1/meta`, `/v1/summary`, `/v1/families`, the six facet endpoints, `/v1/openapi.json` | `public, max-age=60, s-maxage=60, stale-while-revalidate=300` |
 | The list and detail endpoints | `public, max-age=300, s-maxage=600, stale-while-revalidate=3600` |
 | `/v1/stats` | `public, max-age=60, s-maxage=300, stale-while-revalidate=600` |
+| `/v1/parse` | `public, max-age=300, s-maxage=3600` |
 | `/v1/dataset.json` | `public, max-age=300, s-maxage=3600, stale-while-revalidate=86400` |
 | Any error | `no-store` |
 

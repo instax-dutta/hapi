@@ -26,7 +26,7 @@ const REQUIRED_SECTIONS = [
   "## Child DOX Index",
 ];
 
-const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/u;
+const EMOJI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{2B00}-\u{2BFF}]/u;
 
 function findDocs(directory) {
   const found = [];

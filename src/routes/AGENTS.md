@@ -30,22 +30,29 @@ its parameters, its document and its failure modes, and nothing else.
 - A detail endpoint returns the entity together with its context. A client
   reading one origin gets its recipes and its artifacts in the same document
   and never needs a second round trip
-- A list endpoint returns the standard envelope: `updatedAt`, `total`, `page`,
-  `pageCount`, `perPage`, `rows`
+- A paginated list endpoint returns the standard envelope: `updatedAt`, `total`,
+  `page`, `pageCount`, `perPage`, `rows`. The families and the facet endpoints
+  are not paginated, and they say which they are
 
 ### Never invent a metric
 
 - An unranked recipe is returned with `ranked: false` and `score: 0`. It is
   never dropped silently and never given a score
 - A recipe whose KL is below the floor is returned with `implausible: true`
-- A repo that inherited its metrics from another repo is returned with
-  `metricsSource` naming the repo it inherited from
+- An artifact that inherited its numbers from another artifact is returned
+  with `inheritedFrom` naming the artifact it inherited them from. The numbers
+  themselves sit at the top level, under the same names the ablation uses
 
 ### Ordering
 
 - Corroboration outranks score in every ordering, including a sort the client
-  asked for. An unverified row can never sit at the top of any list
-- The sort key, the direction and the rank column always agree
+  asked for, and including the lists a detail document carries. An unverified
+  row can never sit at the top of any list
+- The default sort of `/v1/recipes` is the canonical leaderboard order, so the
+  sort key, the direction and the rank column always agree
+- The canonical order lives in `src/core/scoring.ts` and is shared with the
+  publisher. A second copy of it would let the rank column and the row order
+  drift apart
 
 ### Failure
 
@@ -58,6 +65,13 @@ its parameters, its document and its failure modes, and nothing else.
   answers `502 upstream_unavailable` with a plain sentence, never the upstream
   message
 
+### Parameters
+
+- A parameter is documented only where the route honours it. A parameter the
+  description advertises and the route ignores is a filter that silently
+  returns everything, which is worse than a rejected request
+- `npm run gates:openapi` proves the two agree, in both directions
+
 ### OpenAPI
 
 - Every route, parameter and response field appears in `docs/openapi.json`
@@ -65,6 +79,8 @@ its parameters, its document and its failure modes, and nothing else.
   commit
 - The description lives in `openapi-spec.ts`, not in the JSON file. The JSON is
   generated from it, so there is one source of truth
+- Every path documents 405, and every path that reads the dataset documents
+  503
 
 ## Work Guidance
 

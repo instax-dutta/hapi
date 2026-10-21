@@ -8,7 +8,8 @@ proves the acceptance criteria in `GATES.md`.
 
 ## Ownership
 
-- `unit/` - the pure domain logic. Offline, deterministic, fast
+- `unit/` - the pure domain logic and the pipeline helpers. Offline,
+  deterministic, fast
 - `integration/` - the routes, driven through a real `Request` and a fake store
 - `fixtures/cards/` - real Hugging Face model cards
 - `fixtures/dataset/` - a committed sample of the published dataset, cut from
@@ -71,7 +72,7 @@ proves the acceptance criteria in `GATES.md`.
 ## Verification
 
 - `npm run verify` - the whole thing. This is the command that must pass
-- `npm run test:unit` - the pure core only
+- `npm run test:unit` - the pure core and the pipeline helpers
 - `npm run test:integration` - the routes only
 - `npm run gates` - the acceptance gates in `GATES.md`
 

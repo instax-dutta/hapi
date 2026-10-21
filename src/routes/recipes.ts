@@ -60,7 +60,7 @@ function matches(row: RecipeRow, query: CommonQuery): boolean {
   if (query.bench && row.benchmarks.length === 0) return false;
   if (query.implausible === "0" && row.implausible) return false;
   if (query.implausible === "1" && !row.implausible) return false;
-  if (!isUpdatedAfter(row.lastModified, query.updatedAfterTime)) return false;
+  if (!isUpdatedAfter(row.lastModified, query.updatedAfter)) return false;
   if (query.q) {
     const haystack = `${row.id} ${row.originId} ${row.originName} ${row.author} ${row.authors.join(" ")} ${row.bestRepoId} ${row.evidenceRepoId}`;
     if (!matchesText(haystack, query.q)) return false;

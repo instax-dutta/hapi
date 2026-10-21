@@ -13,69 +13,14 @@ const errorResponse = {
   },
 } as const;
 
-const listParameters = [
-  { name: "q", in: "query", schema: { type: "string" }, description: "Free-text search." },
-  { name: "family", in: "query", schema: { type: "string" }, description: "Family slug." },
-  { name: "size", in: "query", schema: { type: "string" }, description: "Size class." },
-  { name: "format", in: "query", schema: { type: "string" }, description: "Format slug." },
-  { name: "kind", in: "query", schema: { type: "string" }, description: "Repository kind." },
-  { name: "version", in: "query", schema: { type: "string" }, description: "Heretic version." },
-  { name: "author", in: "query", schema: { type: "string" }, description: "Creator id." },
-  { name: "origin", in: "query", schema: { type: "string" }, description: "Origin id." },
-  { name: "license", in: "query", schema: { type: "string" }, description: "License id." },
-  { name: "quant", in: "query", schema: { type: "string" }, description: "Quantization label." },
-  {
-    name: "verification",
-    in: "query",
-    schema: { type: "string", enum: ["verified", "unverified", "publisher"] },
-    description: "Corroboration state of a recipe.",
-  },
-  {
-    name: "confidence",
-    in: "query",
-    schema: { type: "string", enum: ["high", "medium", "inherited", "none"] },
-    description: "Confidence of the published numbers.",
-  },
-  {
-    name: "minDownloads",
-    in: "query",
-    schema: { type: "integer", minimum: 0 },
-    description: "Minimum all-time downloads.",
-  },
-  { name: "minScore", in: "query", schema: { type: "number", minimum: 0 } },
-  { name: "minLikes", in: "query", schema: { type: "integer", minimum: 0 } },
-  { name: "minParams", in: "query", schema: { type: "number", minimum: 0 } },
-  { name: "maxParams", in: "query", schema: { type: "number", minimum: 0 } },
-  { name: "maxKl", in: "query", schema: { type: "number", minimum: 0 } },
-  {
-    name: "bench",
-    in: "query",
-    schema: { type: "string", enum: ["1"] },
-    description: "Keep only rows that published benchmarks.",
-  },
-  {
-    name: "ranked",
-    in: "query",
-    schema: { type: "string", enum: ["0", "1"] },
-    description: "Set to 0 to include unranked recipes. Default 1.",
-  },
-  { name: "pareto", in: "query", schema: { type: "string", enum: ["1"] } },
-  {
-    name: "implausible",
-    in: "query",
-    schema: { type: "string", enum: ["0", "1"] },
-    description: "Set to 0 to drop the ablations whose divergence is below the floor. Default: keep both.",
-  },
-  { name: "bestPick", in: "query", schema: { type: "string", enum: ["1"] } },
-  { name: "direct", in: "query", schema: { type: "string", enum: ["1"] } },
-  {
-    name: "updatedAfter",
-    in: "query",
-    schema: { type: "string", format: "date-time" },
-    description: "Keep only rows modified at or after this instant.",
-  },
-  { name: "sort", in: "query", schema: { type: "string" }, description: "Sort key." },
-  { name: "dir", in: "query", schema: { type: "string", enum: ["asc", "desc"] } },
+/**
+ * The parameters each list endpoint honours.
+ *
+ * A parameter is advertised only where it is honoured. A client that builds a
+ * filter menu from this description must not send a filter the endpoint
+ * silently ignores.
+ */
+const pagination = [
   { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
   {
     name: "perPage",
@@ -83,6 +28,91 @@ const listParameters = [
     schema: { type: "integer", enum: [25, 50, 100, 200], default: 50 },
   },
 ];
+
+const text = {
+  name: "q",
+  in: "query",
+  schema: { type: "string" },
+  description: "Free-text search.",
+};
+const family = { name: "family", in: "query", schema: { type: "string" }, description: "Family slug." };
+const size = { name: "size", in: "query", schema: { type: "string" }, description: "Size class." };
+const format = { name: "format", in: "query", schema: { type: "string" }, description: "Format slug." };
+const kind = { name: "kind", in: "query", schema: { type: "string" }, description: "Repository kind." };
+const version = { name: "version", in: "query", schema: { type: "string" }, description: "Heretic version." };
+const author = { name: "author", in: "query", schema: { type: "string" }, description: "Creator id." };
+const origin = { name: "origin", in: "query", schema: { type: "string" }, description: "Origin id." };
+const license = { name: "license", in: "query", schema: { type: "string" }, description: "License id." };
+const quant = { name: "quant", in: "query", schema: { type: "string" }, description: "Quantization label." };
+const minDownloads = {
+  name: "minDownloads",
+  in: "query",
+  schema: { type: "integer", minimum: 0 },
+  description: "Minimum all-time downloads.",
+};
+const minScore = { name: "minScore", in: "query", schema: { type: "number", minimum: 0 } };
+const maxKl = { name: "maxKl", in: "query", schema: { type: "number", minimum: 0 } };
+const minLikes = { name: "minLikes", in: "query", schema: { type: "integer", minimum: 0 } };
+const minParams = { name: "minParams", in: "query", schema: { type: "number", minimum: 0 } };
+const maxParams = { name: "maxParams", in: "query", schema: { type: "number", minimum: 0 } };
+const bench = {
+  name: "bench",
+  in: "query",
+  schema: { type: "string", enum: ["1"] },
+  description: "Keep only rows that published benchmarks.",
+};
+const ranked = {
+  name: "ranked",
+  in: "query",
+  schema: { type: "string", enum: ["0", "1"] },
+  description: "Set to 0 to include unranked ablations. Default 1.",
+};
+const pareto = { name: "pareto", in: "query", schema: { type: "string", enum: ["1"] } };
+const bestPick = { name: "bestPick", in: "query", schema: { type: "string", enum: ["1"] } };
+const implausible = {
+  name: "implausible",
+  in: "query",
+  schema: { type: "string", enum: ["0", "1"] },
+  description:
+    "Set to 0 to drop the ablations whose divergence is below the floor. Default: keep both.",
+};
+const direct = {
+  name: "direct",
+  in: "query",
+  schema: { type: "string", enum: ["1"] },
+  description: "Keep only the direct conversions.",
+};
+const updatedAfter = {
+  name: "updatedAfter",
+  in: "query",
+  schema: { type: "string", format: "date-time" },
+  description: "Keep only rows modified at or after this instant.",
+};
+const verification = {
+  name: "verification",
+  in: "query",
+  schema: { type: "string", enum: ["verified", "unverified", "publisher"] },
+  description: "The corroboration state of an ablation.",
+};
+const confidence = {
+  name: "confidence",
+  in: "query",
+  schema: { type: "string", enum: ["high", "medium", "inherited", "none"] },
+  description: "The confidence of the published numbers.",
+};
+
+const sortParameter = (keys: readonly string[]) => ({
+  name: "sort",
+  in: "query",
+  schema: { type: "string", enum: keys },
+  description: "The sort key. An unknown key falls back to the default.",
+});
+const direction = {
+  name: "dir",
+  in: "query",
+  schema: { type: "string", enum: ["asc", "desc"] },
+  description: "The direction. The default depends on the sort key.",
+};
 
 const paginationFields = {
   updatedAt: { type: "string", format: "date-time" },
@@ -113,7 +143,46 @@ const facetDocument = (name: string) => ({
   },
 });
 
-export const openapiDocument = {
+const methodNotAllowed = {
+  description: "The method is not allowed. The API is read-only.",
+  content: {
+    "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+  },
+} as const;
+
+/**
+ * The paths that read the published dataset.
+ *
+ * Each of them can answer 503 while the dataset is being rebuilt, so each of
+ * them has to say so.
+ */
+const DATASET_PATHS = new Set([
+  "/v1/health",
+  "/v1/meta",
+  "/v1/summary",
+  "/v1/families",
+  "/v1/families/{slug}",
+  "/v1/versions",
+  "/v1/formats",
+  "/v1/licenses",
+  "/v1/tags",
+  "/v1/kinds",
+  "/v1/sizes",
+  "/v1/models",
+  "/v1/models/{id}",
+  "/v1/recipes",
+  "/v1/recipes/{id}",
+  "/v1/repos",
+  "/v1/repos/{id}",
+  "/v1/creators",
+  "/v1/creators/{username}",
+  "/v1/stats",
+  "/v1/stats/{username}",
+  "/v1/compare",
+  "/v1/dataset.json",
+]);
+
+const document = {
   openapi: "3.1.0",
   info: {
     title: "hapi - Heretic API",
@@ -298,7 +367,23 @@ export const openapiDocument = {
         tags: ["models"],
         summary: "List the origins.",
         operationId: "listModels",
-        parameters: listParameters,
+        parameters: [
+          text,
+          family,
+          size,
+          format,
+          minDownloads,
+          minScore,
+          maxKl,
+          minLikes,
+          minParams,
+          maxParams,
+          implausible,
+          updatedAfter,
+          sortParameter(["score", "kl", "refusals", "refusalRate", "downloads", "recent", "params", "newest", "model", "recipes", "repos", "likes"]),
+          direction,
+          ...pagination,
+        ],
         responses: {
           "200": {
             description: "A page of origins.",
@@ -336,7 +421,29 @@ export const openapiDocument = {
         tags: ["recipes"],
         summary: "List the ablation recipes. The leaderboard.",
         operationId: "listRecipes",
-        parameters: listParameters,
+        parameters: [
+          text,
+          family,
+          size,
+          format,
+          kind,
+          version,
+          verification,
+          confidence,
+          minDownloads,
+          minScore,
+          maxKl,
+          minLikes,
+          bench,
+          ranked,
+          pareto,
+          bestPick,
+          implausible,
+          updatedAfter,
+          sortParameter(["score", "kl", "refusals", "refusalRate", "downloads", "recent", "params", "newest", "model", "likes", "benchmarks", "repos"]),
+          direction,
+          ...pagination,
+        ],
         responses: {
           "200": {
             description: "A page of recipes.",
@@ -374,7 +481,28 @@ export const openapiDocument = {
         tags: ["repos"],
         summary: "List the published artifacts.",
         operationId: "listRepos",
-        parameters: listParameters,
+        parameters: [
+          text,
+          family,
+          size,
+          format,
+          kind,
+          version,
+          author,
+          origin,
+          license,
+          quant,
+          minDownloads,
+          minLikes,
+          minParams,
+          maxParams,
+          bench,
+          direct,
+          updatedAfter,
+          sortParameter(["downloads", "recent", "likes", "params", "newest", "created", "author", "model"]),
+          direction,
+          ...pagination,
+        ],
         responses: {
           "200": {
             description: "A page of artifacts.",
@@ -412,7 +540,15 @@ export const openapiDocument = {
         tags: ["creators"],
         summary: "The creator leaderboard.",
         operationId: "listCreators",
-        parameters: listParameters,
+        parameters: [
+          text,
+          minDownloads,
+          minLikes,
+          minScore,
+          sortParameter(["downloads", "recent", "models", "recipes", "score", "likes", "newest", "author"]),
+          direction,
+          ...pagination,
+        ],
         responses: {
           "200": {
             description: "A page of creators.",
@@ -733,7 +869,6 @@ export const openapiDocument = {
           verified: { type: "boolean" },
           isDirectConversion: { type: "boolean" },
           classificationEvidence: { type: "string" },
-          baseModels: { type: "array", items: { type: "string" } },
           parentIds: { type: "array", items: { type: "string" } },
           tags: { type: "array", items: { type: "string" } },
           safetensorsTotal: { type: ["number", "null"] },
@@ -839,10 +974,30 @@ export const openapiDocument = {
             },
           },
           source: { type: "string" },
+          indexed: { type: "object", description: "The artifacts the directory publishes." },
+          discovered: { type: "object", description: "Every model the tag-and-name index found." },
+          discoveredRate: { type: "object" },
         },
       },
     },
   },
-} as const;
+};
+
+/**
+ * Every path answers 405 for a method it does not have, and the paths that
+ * read the dataset can answer 503 while it is being rebuilt. The descriptions
+ * say so rather than leaving a client to guess.
+ */
+export const openapiDocument = {
+  ...document,
+  paths: Object.fromEntries(
+    Object.entries(document.paths).map(([path, entry]) => {
+      const responses = { ...entry.get.responses };
+      if (!responses["405"]) responses["405"] = methodNotAllowed;
+      if (DATASET_PATHS.has(path) && !responses["503"]) responses["503"] = errorResponse;
+      return [path, { ...entry, get: { ...entry.get, responses } }];
+    }),
+  ),
+};
 
 export type OpenApiDocument = typeof openapiDocument;

@@ -291,6 +291,17 @@ export function fixtureStore(options: FixtureOptions = {}): FakeStore {
       repos: repos.length,
       creators: creators.length,
     },
+    totals: {
+      repos: repos.length,
+      verifiedRepos: repos.length,
+      unverifiedRepos: 0,
+      origins: models.length,
+      recipes: recipes.length,
+      rankedRecipes: recipes.filter((recipe) => recipe.ranked).length,
+      directConversions: repos.filter((repo) => repo.isDirectConversion).length,
+      downloadsAllTime: repos.reduce((sum, repo) => sum + repo.downloadsAllTime, 0),
+      downloads30d: repos.reduce((sum, repo) => sum + repo.downloads30d, 0),
+    },
   });
 
   return new FakeStore({

@@ -48,7 +48,7 @@ function matches(row: RepoRow, query: CommonQuery): boolean {
   if (query.maxParams > 0 && (row.paramsB ?? Infinity) > query.maxParams) return false;
   if (query.bench && row.benchmarkCount === 0) return false;
   if (query.direct && !row.isDirectConversion) return false;
-  if (!isUpdatedAfter(row.lastModified, query.updatedAfterTime)) return false;
+  if (!isUpdatedAfter(row.lastModified, query.updatedAfter)) return false;
   if (query.q) {
     const haystack = `${row.id} ${row.author} ${row.originId} ${row.family} ${row.tags.join(" ")} ${row.parentIds.join(" ")}`;
     if (!matchesText(haystack, query.q)) return false;

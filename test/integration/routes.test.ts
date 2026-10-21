@@ -1,14 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import handler from "../../src/index.ts";
-import {
-  creatorRow,
-  emptyStore,
-  fixtureStore,
-  modelRow,
-  recipeRow,
-  repoRow,
-} from "../helpers/fixtures.ts";
+import { emptyStore, fixtureStore, modelRow, recipeRow } from "../helpers/fixtures.ts";
 import type { DatasetStore } from "../../src/lib/store.ts";
 
 function call(path: string, store: DatasetStore = fixtureStore(), init: RequestInit = {}) {

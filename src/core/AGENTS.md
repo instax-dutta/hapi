@@ -93,8 +93,11 @@ why the code is here rather than in `src/lib`.
 
 - `npm run test:unit` covers every module in this folder offline
 - `npm run typecheck` must be clean
-- A change to the parser bumps `PARSER_VERSION` in `recipes.ts` so cached
-  markdown is re-parsed rather than reused
+- A change to the parser bumps `PARSER_VERSION` in `scripts/lib/incremental.ts`
+  so cached markdown is re-parsed rather than reused
+- The canonical leaderboard order lives in `scoring.ts` and is shared with the
+  publisher. A second copy of it would let the rank column and the row order
+  drift apart
 
 ## Child DOX Index
 

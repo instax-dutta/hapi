@@ -34,9 +34,8 @@ export interface CommonQuery {
   bestPick: boolean;
   implausible: string;
   direct: boolean;
-  updatedAfter: string;
   /** The parsed boundary, so it is not parsed once per row. */
-  updatedAfterTime: number;
+  updatedAfter: number;
   sort: string;
   dir: SortDir;
   page: number;
@@ -102,9 +101,7 @@ export function parseQuery(
 
   // An ISO date the row must be newer than. An unparseable value is ignored
   // rather than treated as a filter that matches nothing.
-  const updatedAfterRaw = one(params, "updatedAfter").trim();
-  const updatedAfterTime = Date.parse(updatedAfterRaw);
-  const updatedAfter = Number.isFinite(updatedAfterTime) ? updatedAfterRaw : "";
+  const updatedAfterTime = Date.parse(one(params, "updatedAfter").trim());
 
   return {
     q: one(params, "q").trim().slice(0, 120),
@@ -131,8 +128,7 @@ export function parseQuery(
     bestPick: one(params, "bestPick") === "1",
     implausible: one(params, "implausible").trim().toLowerCase(),
     direct: one(params, "direct") === "1",
-    updatedAfter,
-    updatedAfterTime: Number.isFinite(updatedAfterTime) ? updatedAfterTime : Number.NEGATIVE_INFINITY,
+    updatedAfter: Number.isFinite(updatedAfterTime) ? updatedAfterTime : Number.NEGATIVE_INFINITY,
     sort,
     dir,
     page,

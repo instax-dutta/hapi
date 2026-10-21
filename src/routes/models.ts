@@ -51,7 +51,7 @@ function matches(row: ModelRow, query: CommonQuery): boolean {
   if (query.implausible === "0" && row.bestRecipe?.implausible) return false;
   if (query.implausible === "1" && !row.bestRecipe?.implausible) return false;
   if (query.maxParams > 0 && (row.paramsB ?? Infinity) > query.maxParams) return false;
-  if (!isUpdatedAfter(row.lastModified, query.updatedAfterTime)) return false;
+  if (!isUpdatedAfter(row.lastModified, query.updatedAfter)) return false;
   if (query.q) {
     const haystack = `${row.id} ${row.name} ${row.displayName} ${row.owner} ${row.authors.join(" ")}`;
     if (!matchesText(haystack, query.q)) return false;

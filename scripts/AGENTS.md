@@ -18,9 +18,11 @@ request.
 - `build-stats.ts` - compute the global download statistics into
   `dist/stats.json`. It publishes two scopes: the indexed artifacts and the
   wider discovered set
+- `build-openapi.mjs` - generate `docs/openapi.json` from the spec module
 - `publish.ts` - upload the dataset objects to the configured store
 - `make-sample.mjs` - cut a committed sample dataset out of a directory
-  snapshot, for the gate that checks the dataset invariants
+  snapshot, for the gate that checks the dataset invariants. Everything the
+  sample publishes is re-derived from the slice
 - `build-openapi.mjs` - generate `docs/openapi.json` from the spec module
 - `lib/dataset-rows.ts` - the conversion from a directory snapshot into the
   published API rows, the facets and the creators
@@ -48,14 +50,22 @@ request.
 - The build refuses to write a snapshot with no origins or no recipes. An empty
   index is a failure, not a result
 - The build is deterministic. The same input produces the same bytes, so a
-  refresh that changed nothing publishes nothing
+  refresh that changed nothing publishes nothing. The timestamp comes from the
+  crawl, never from the clock, and the published ordering never depends on the
+  runtime's locale
 - The dataset objects are written atomically. A half-written object is never
   visible
+- `build-stats` refuses to publish a measurement when the artifact list is
+  missing or empty
 
 ### Publishing is content addressed
 
 - An object whose bytes did not change is not re-uploaded
 - Publishing is idempotent. Running it twice changes nothing the second time
+- The state is kept per bucket, so publishing to one bucket never cancels a
+  publish to another
+- Without a bucket the script does nothing and says so: the dataset is already
+  in `dist/`, which is where the Node server reads it from
 - Credentials come from the environment at publish time only. Nothing secret
   reaches the repository, the dataset or the API
 
@@ -77,7 +87,8 @@ request.
 
 ## Verification
 
-- `npm run test:unit` covers the pipeline helpers that hold logic
+- `npm run test:unit` covers the pipeline helpers that hold logic: the card
+  cache decision, the bounded pool and the conversion into the published rows
 - `npm run crawl -- --limit 20` against the live Hub is the smoke test for the
   crawl
 - `npm run build:dataset` against a committed `data/raw.json` proves the build
