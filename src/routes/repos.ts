@@ -48,7 +48,7 @@ function matches(row: RepoRow, query: CommonQuery): boolean {
   if (query.direct && !row.isDirectConversion) return false;
   if (!isUpdatedAfter(row.lastModified, query.updatedAfter)) return false;
   if (query.q) {
-    const haystack = `${row.id} ${row.author} ${row.originId} ${row.family} ${row.tags.join(" ")} ${row.baseModels.join(" ")}`;
+    const haystack = `${row.id} ${row.author} ${row.originId} ${row.family} ${row.tags.join(" ")} ${row.parentIds.join(" ")}`;
     if (!matchesText(haystack, query.q)) return false;
   }
   return true;
