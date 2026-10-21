@@ -36,8 +36,12 @@ test("the refusal rate is the refusals over the total", () => {
 
 test("capability retention falls smoothly as the divergence grows", () => {
   assert.equal(capabilityRetention(0), 1);
-  assert.ok(Math.abs(capabilityRetention(1) - 0.5) < 1e-9);
-  assert.ok(Math.abs(capabilityRetention(9) - 0.1) < 1e-9);
+  const half = capabilityRetention(1);
+  const tenth = capabilityRetention(9);
+  assert.ok(half !== null);
+  assert.ok(tenth !== null);
+  assert.ok(Math.abs(half - 0.5) < 1e-9);
+  assert.ok(Math.abs(tenth - 0.1) < 1e-9);
   assert.equal(capabilityRetention(-1), null);
   assert.equal(capabilityRetention(null), null);
 });
