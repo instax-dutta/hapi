@@ -72,11 +72,17 @@ for (const recipe of recipes) {
     fail(`The recipe ${recipe.id} names an unknown evidence repo ${recipe.evidenceRepoId}.`);
   }
   if (recipe.ranked) {
-    if (!(recipe.kl > 0)) fail(`The ranked recipe ${recipe.id} has a non-positive KL.`);
+    // A divergence of zero is allowed: it is below the floor an ablation can
+    // produce, so the row is flagged implausible rather than dropped. What is
+    // not allowed is a negative divergence.
+    if (!(recipe.kl >= 0)) fail(`The ranked recipe ${recipe.id} has a negative KL.`);
     if (recipe.refusals > recipe.refusalTotal) {
       fail(`The ranked recipe ${recipe.id} has more refusals than tests.`);
     }
     if (!(recipe.score > 0)) fail(`The ranked recipe ${recipe.id} has no score.`);
+    if (recipe.kl === 0 && !recipe.implausible) {
+      fail(`The recipe ${recipe.id} has a zero divergence but is not flagged implausible.`);
+    }
   } else if (recipe.score !== 0) {
     fail(`The unranked recipe ${recipe.id} has a score of ${recipe.score}.`);
   }
