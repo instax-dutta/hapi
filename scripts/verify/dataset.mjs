@@ -69,9 +69,21 @@ if (meta.counts.creators !== creators.length) fail("meta.counts.creators does no
 
 // The totals must be derivable from the rows. A dataset that claims a
 // thousand artifacts while holding ten is lying to every client.
+//
+// The totals describe the whole crawl. The published rows are the verified
+// part of it, so the indexed count is the larger one and the two differ by
+// the artifacts the directory could not place.
 if (meta.totals.origins !== models.length) fail("meta.totals.origins does not match the rows.");
 if (meta.totals.recipes !== recipes.length) fail("meta.totals.recipes does not match the rows.");
-if (meta.totals.repos !== repos.length) fail("meta.totals.repos does not match the rows.");
+if (meta.totals.verifiedRepos !== repos.length) {
+  fail("meta.totals.verifiedRepos does not match the published artifacts.");
+}
+if (meta.totals.repos < repos.length) {
+  fail("meta.totals.repos is smaller than the published artifacts.");
+}
+if (meta.totals.unverifiedRepos !== meta.totals.repos - meta.totals.verifiedRepos) {
+  fail("meta.totals.unverifiedRepos does not match the difference of the two counts.");
+}
 if (meta.totals.rankedRecipes !== recipes.filter((recipe) => recipe.ranked).length) {
   fail("meta.totals.rankedRecipes does not match the rows.");
 }
