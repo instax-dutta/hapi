@@ -227,15 +227,20 @@ the offline test suite is fast and deterministic.
 
 The pipeline publishes these objects:
 
-| Object | Contents | Approximate size |
+| Object | Contents | Measured size, 6272 artifacts |
 | --- | --- | --- |
-| `meta.json` | version, generation time, source, totals, families, counts, facets | 60 KB |
-| `models.json` | origins | 700 KB |
-| `recipes.json` | recipes, plus the origin fields each row needs | 900 KB |
-| `repos.json` | artifacts | 2 MB |
-| `creators.json` | creators with their totals and their models | 400 KB |
-| `stats.json` | the indexed and the discovered download totals, and the rate | 2 KB |
-| `dataset.json` | every entity family in one document | 4 MB |
+| `meta.json` | version, generation time, source, totals, families, counts, facets | 620 KB |
+| `models.json` | origins | 1.0 MB |
+| `recipes.json` | recipes, plus the origin fields each row needs | 1.4 MB |
+| `repos.json` | artifacts | 8.6 MB |
+| `creators.json` | creators with their totals and their models | 1.8 MB |
+| `stats.json` | the indexed and the discovered download totals, and the rate | 600 B |
+| `dataset.json` | every entity family in one document | 13.4 MB |
+
+The sizes are the real ones, measured against a crawl of 8317 discovered
+models and 6272 published artifacts. The artifact list is the large one: it
+carries the Hub tags, the base chain and the numbers of every artifact, which
+is what a client needs to describe one.
 
 The store is split per entity family on purpose. A request for `/v1/repos` must
 not pay the parse cost of the recipe and origin data, and vice versa. The

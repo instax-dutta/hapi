@@ -24,6 +24,10 @@ command that produced it.
   the committed sample and a live build of 1021 artifacts
 - The build is deterministic: two builds of the same input produced identical
   bytes, so a refresh that changed nothing publishes nothing
+- A full crawl with a Hugging Face token discovered 8317 models and read
+  8317 cards with 0 fetch errors, and the published dataset holds 1056 models,
+  1012 ablations and 6272 artifacts. Every invariant holds against it
+- The refresh chain runs end to end on the server: crawl, build, stats, publish
 
 The full corpus needs a Hugging Face token for the crawl. The token is a
 secret and never reaches the repository, the dataset or the API.
