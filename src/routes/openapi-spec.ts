@@ -992,7 +992,7 @@ export const openapiDocument = {
   ...document,
   paths: Object.fromEntries(
     Object.entries(document.paths).map(([path, entry]) => {
-      const responses = { ...entry.get.responses };
+      const responses = { ...entry.get.responses } as Record<string, unknown>;
       if (!responses["405"]) responses["405"] = methodNotAllowed;
       if (DATASET_PATHS.has(path) && !responses["503"]) responses["503"] = errorResponse;
       return [path, { ...entry, get: { ...entry.get, responses } }];
