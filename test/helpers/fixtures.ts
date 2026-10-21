@@ -275,10 +275,15 @@ export function fixtureStore(options: FixtureOptions = {}): FakeStore {
     repoRow({ id: "coder3101/gemma-3-12b-it-heretic-GGUF", kind: "quant", formats: ["gguf"], quant: "Q4_K_M" }),
     repoRow({ id: "mradermacher/gemma-3-12b-it-heretic-GGUF", author: "mradermacher", kind: "quant", formats: ["gguf"], recipeId: null }),
   ];
-  const meta = metaRow({
-    counts: { models: models.length, recipes: recipes.length, repos: repos.length },
-  });
   const creators = options.creators ?? [creatorRow("coder3101")];
+  const meta = metaRow({
+    counts: {
+      models: models.length,
+      recipes: recipes.length,
+      repos: repos.length,
+      creators: creators.length,
+    },
+  });
 
   return new FakeStore({
     "meta.json": JSON.stringify(meta),
@@ -287,7 +292,7 @@ export function fixtureStore(options: FixtureOptions = {}): FakeStore {
     "repos.json": JSON.stringify({ repos }),
     "stats.json": JSON.stringify(statsRow()),
     "creators.json": JSON.stringify({ creators }),
-    "dataset.json": JSON.stringify({ meta, models, recipes, repos }),
+    "dataset.json": JSON.stringify({ meta, models, recipes, repos, creators }),
   });
 }
 

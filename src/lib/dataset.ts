@@ -36,7 +36,7 @@ export interface DatasetFamilies {
   recipes: RecipeRow[];
   repos: RepoRow[];
   stats: StatsScope;
-  creators: Record<string, CreatorStats>;
+  creators: CreatorRow[];
 }
 
 export class DatasetLoader {
