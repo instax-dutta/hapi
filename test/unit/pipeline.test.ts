@@ -265,6 +265,7 @@ function snapshotFixture(): Snapshot {
         verified: true,
         classificationEvidence: "card states the weights were abliterated with Heretic",
         firstSeenAt: "2026-01-01T00:00:00.000Z",
+        license: "apache-2.0",
       },
       {
         id: "b/two",
@@ -306,6 +307,7 @@ function snapshotFixture(): Snapshot {
         verified: true,
         classificationEvidence: "quantized artifact of a Heretic model",
         firstSeenAt: "2026-01-02T00:00:00.000Z",
+        license: null,
       },
     ],
     families: [
