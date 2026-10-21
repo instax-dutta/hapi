@@ -24,7 +24,8 @@
     "publish": "node scripts/verify/run.mjs scripts/publish.ts",
     "publish:r2": "node scripts/verify/run.mjs scripts/publish.ts --r2 hapi",
     "refresh": "npm run crawl && npm run build:dataset && npm run build:stats && npm run publish",
-    "dev": "node scripts/verify/run.mjs src/server-node.ts"
+    "dev": "node scripts/verify/run.mjs src/server-node.ts",
+    "gates:live": "node scripts/verify/live.mjs"
   },
   "dependencies": {
     "yaml": "^2.9.1"
