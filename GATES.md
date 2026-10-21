@@ -10,7 +10,7 @@ Every gate below was executed on the author's own server (Node 22.23.3, Linux
 x86_64) against this exact tree, and the recorded evidence is bound to the
 command that produced it.
 
-- 91 unit tests and 74 integration tests pass, with no network and no clock
+- 92 unit tests and 74 integration tests pass, with no network and no clock
 - 27 routes are implemented and 27 are documented, the two agree on the paths and
   on every parameter, and every response field is described
 - The committed sample dataset satisfies every invariant: a ranked recipe has a
@@ -33,6 +33,12 @@ command that produced it.
   numbers match it too, for a prolific re-uploader and for a small one
 - The leaderboard order of every shared ablation is identical to the live
   ranking site, the ties broken the same way
+- Fifty-six hostile requests against the live corpus: no 5xx, every error in
+  the standard envelope, CORS on every response
+- Every consistency check holds against the live corpus: the pages continue
+  without a gap or a repeat, the counts agree across the metadata, the lists
+  and the summary, the filters really filter, the rank column follows the
+  canonical order, and the two download scopes are consistent
 
 The full corpus needs a Hugging Face token for the crawl. The token is a
 secret and never reaches the repository, the dataset or the API.
