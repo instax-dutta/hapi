@@ -114,6 +114,7 @@ Shared by `/v1/models`, `/v1/recipes`, `/v1/repos`:
 | `bench` | recipes, repos | `1` keeps only rows that published benchmarks |
 | `ranked` | recipes | `0` includes unranked recipes. Default `1` |
 | `pareto`, `bestPick` | recipes | `1` keeps only the frontier or only the best pick |
+| `implausible` | models, recipes | `0` drops the rows below the divergence floor |
 | `direct` | repos | `1` keeps only the direct conversions |
 | `updatedAfter` | all | An ISO date the row must be newer than |
 | `sort` | all | Sort key, see 3.3 |
@@ -132,6 +133,7 @@ that sends `sort=bogus` gets the default sort, not a 400.
 | `kl` | recipes, models | asc |
 | `refusals` | recipes, models | asc |
 | `downloads` | recipes, models, repos, creators | desc |
+| `recent` | recipes, models, repos, creators | desc |
 | `params` | models, recipes, repos | asc |
 | `newest` | recipes, models, repos, creators | desc |
 | `model` | models, recipes | asc |

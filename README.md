@@ -61,7 +61,7 @@ Base path `/v1`. Every response is JSON.
 | GET | `/v1/stats/{username}` | One creator's download totals, rate and models |
 | GET | `/v1/compare` | Two models side by side, with the difference |
 | GET | `/v1/simulate` | Seeded Poisson download events for a rate and a window |
-| GET | `/v1/parse` | Parse a live model card by repository id |
+| GET | `/v1/parse` | Parse a live model card by repository id. Cached per isolate |
 | GET | `/v1/openapi.json` | The OpenAPI 3.1 description of this surface |
 | GET | `/v1/dataset.json` | The whole dataset in one document |
 
@@ -93,6 +93,7 @@ the default rather than failing, so a client never has to guess.
 | `bench` | recipes, repos | `1` keeps only rows that published benchmarks |
 | `ranked` | recipes | `0` includes unranked recipes. Default `1` |
 | `pareto`, `bestPick` | recipes | `1` keeps only the frontier or only the best pick |
+| `implausible` | models, recipes | `0` drops the rows whose divergence is below the floor. `1` keeps only those |
 | `direct` | repos | `1` keeps only the direct conversions |
 | `updatedAfter` | all | An ISO date the row must be newer than |
 | `sort` | all | See below |
@@ -103,10 +104,13 @@ Sort keys:
 
 | Endpoint | Keys |
 | --- | --- |
-| `/v1/models` | `score`, `kl`, `refusals`, `downloads`, `params`, `newest`, `model`, `recipes`, `repos`, `likes` |
-| `/v1/recipes` | `score`, `kl`, `refusals`, `downloads`, `params`, `newest`, `model`, `likes`, `benchmarks`, `repos` |
-| `/v1/repos` | `downloads`, `likes`, `params`, `newest`, `created`, `author`, `model` |
-| `/v1/creators` | `downloads`, `models`, `recipes`, `score`, `likes`, `newest`, `author` |
+| `/v1/models` | `score`, `kl`, `refusals`, `downloads`, `recent`, `params`, `newest`, `model`, `recipes`, `repos`, `likes` |
+| `/v1/recipes` | `score`, `kl`, `refusals`, `downloads`, `recent`, `params`, `newest`, `model`, `likes`, `benchmarks`, `repos` |
+| `/v1/repos` | `downloads`, `recent`, `likes`, `params`, `newest`, `created`, `author`, `model` |
+| `/v1/creators` | `downloads`, `recent`, `models`, `recipes`, `score`, `likes`, `newest`, `author` |
+
+`downloads` is the all-time total. `recent` is the last thirty days, which is
+the honest answer to "what is hot right now".
 
 ## What the numbers mean
 
@@ -121,7 +125,9 @@ measurement.
   unverified recipe still ranks, but it never holds the top slot. A fabricated
   card cannot win by writing two numbers.
 - **`implausible`** marks a divergence below the floor an ablation can produce.
-  Below it the number is not a measurement.
+  Below it the number is not a measurement. The row is still served and still
+  ranked, because hiding it would hide a real card. `?implausible=0` drops
+  those rows for a client that wants only the measurements.
 - **`downloadsAllTime` and `downloads30d`** are measurements, straight from the
   Hub.
 - **`downloadsPerSecond`, `downloadsPerDay` and `refusalReduction`** are
@@ -132,6 +138,13 @@ measurement.
   the ablation was measured against.
 - **`evidence`** is the exact snippet the numbers were read from. Every number
   can be traced back to a line of a card.
+- **`rank` and `familyRank`** are the position among the ablations and the
+  position among the ablations of the same model. A model page shows the
+  family rank, a leaderboard shows the global one.
+- **`url`** is the address on the Hub. A client never has to build one.
+- **An artifact publishes the same fields as an ablation**: `kl`, `refusals`,
+  `refusalTotal`, `confidence` and `evidence` sit at the top level, and
+  `inheritedFrom` names the artifact an artifact inherited them from.
 
 ## The response envelope
 
