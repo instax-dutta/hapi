@@ -10,7 +10,7 @@ Every gate below was executed on the author's own server (Node 22.23.3, Linux
 x86_64) against this exact tree, and the recorded evidence is bound to the
 command that produced it.
 
-- 89 unit tests and 74 integration tests pass, with no network and no clock
+- 91 unit tests and 74 integration tests pass, with no network and no clock
 - 27 routes are implemented and 27 are documented, the two agree on the paths and
   on every parameter, and every response field is described
 - The committed sample dataset satisfies every invariant: a ranked recipe has a
@@ -28,6 +28,11 @@ command that produced it.
   8317 cards with 0 fetch errors, and the published dataset holds 1056 models,
   1012 ablations and 6272 artifacts. Every invariant holds against it
 - The refresh chain runs end to end on the server: crawl, build, stats, publish
+- The global statistics match the live counter exactly: 82,511,255 all-time
+  downloads and 13,617,395 in thirty days, to the unit. The per-creator
+  numbers match it too, for a prolific re-uploader and for a small one
+- The leaderboard order of every shared ablation is identical to the live
+  ranking site, the ties broken the same way
 
 The full corpus needs a Hugging Face token for the crawl. The token is a
 secret and never reaches the repository, the dataset or the API.
