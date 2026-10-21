@@ -33,13 +33,43 @@ export interface ModelRow {
   moe: boolean;
   recipeCount: number;
   rankedCount: number;
+  /** How many artifacts publish this model. */
+  repoCount: number;
   bestRecipeId: string | null;
   bestScore: number | null;
   bestKl: number | null;
   bestRefusalRate: number | null;
+  /** The corroborated ablation that leads this model, in one object. */
+  bestRecipe: BestRecipeSummary | null;
   verifiedRepoCount: number;
   downloadsAllTime: number;
   downloads30d: number;
+  /** Derived from the 30-day mean. Not a measurement. */
+  downloadsPerDay: number;
+  likes: number;
+  lastModified: string;
+  createdAt: string;
+  formats: string[];
+  licenses: string[];
+  /** The Heretic versions used by the artifacts of this model. */
+  hereticVersions: string[];
+  /** Everyone who published an artifact of this model. */
+  authors: string[];
+}
+
+/** The corroborated ablation that leads a model. */
+export interface BestRecipeSummary {
+  id: string;
+  author: string;
+  score: number;
+  kl: number;
+  refusals: number;
+  refusalTotal: number;
+  refusalRate: number;
+  verification: Verification;
+  confidence: MetricConfidence;
+  hereticVersion: string | null;
+  downloadsAllTime: number;
   lastModified: string;
 }
 
@@ -71,14 +101,32 @@ export interface RecipeRow {
   paramsB: number | null;
   downloadsAllTime: number;
   downloads30d: number;
+  /** Derived from the 30-day mean. Not a measurement. */
+  downloadsPerDay: number;
   likes: number;
   lastModified: string;
+  createdAt: string;
   repoCount: number;
+  /** Every artifact that carries this ablation. */
+  repoIds: string[];
   bestRepoId: string;
   evidenceRepoId: string;
   benchmarks: Benchmark[];
+  benchmarkCount: number;
   /** The exact snippet the numbers came from. */
   evidence: string | null;
+  /** The base model's numbers, when the card published them side by side. */
+  originalKl: number | null;
+  originalRefusals: number | null;
+  originalRefusalTotal: number | null;
+  /** The base model's refusal rate. */
+  baseRefusalRate: number | null;
+  /** How much of the refusal rate the ablation removed. */
+  refusalReduction: number | null;
+  licenses: string[];
+  quantizations: string[];
+  /** Everyone who re-uploaded this same ablation. */
+  authors: string[];
 }
 
 /** One published artifact. */
@@ -105,7 +153,19 @@ export interface RepoRow {
   lastModified: string;
   hereticVersion: string | null;
   verified: boolean;
+  /** True when the artifact is the ablation itself, not a derivative of one. */
+  isDirectConversion: boolean;
   classificationEvidence: string;
+  /** The base models the artifact declares. */
+  baseModels: string[];
+  /** The immediate parents in the base chain. */
+  parentIds: string[];
+  /** The Hub's own tags. */
+  tags: string[];
+  /** The total parameter count the Hub reports, in parameters. */
+  safetensorsTotal: number | null;
+  benchmarkCount: number;
+  sha: string;
   metrics: {
     kl: number | null;
     refusals: number | null;
@@ -124,6 +184,23 @@ export interface FamilyRow {
   rankedRecipeCount: number;
   bestRecipeId: string | null;
   downloadsAllTime: number;
+}
+
+/** One value of a facet, with how often it occurs. */
+export interface FacetCount {
+  value: string;
+  count: number;
+  downloadsAllTime: number;
+}
+
+/** The values a client can filter by, with their counts. */
+export interface DatasetFacets {
+  versions: FacetCount[];
+  formats: FacetCount[];
+  licenses: FacetCount[];
+  tags: FacetCount[];
+  kinds: FacetCount[];
+  sizes: FacetCount[];
 }
 
 export interface DatasetTotals {
@@ -147,7 +224,8 @@ export interface DatasetMeta {
   source: string;
   totals: DatasetTotals;
   families: FamilyRow[];
-  counts: { models: number; recipes: number; repos: number };
+  counts: { models: number; recipes: number; repos: number; creators: number };
+  facets: DatasetFacets;
 }
 
 /** The measured download totals. */
@@ -174,9 +252,22 @@ export interface StatsScope {
   source: string;
 }
 
-export interface CreatorStats extends StatsScope {
+/** One creator. */
+export interface CreatorRow {
   scope: "user";
   username: string;
+  updatedAt: string;
+  totals: DownloadTotals;
+  rate: DownloadRate;
+  source: string;
+  recipeCount: number;
+  originCount: number;
+  likes: number;
+  bestScore: number | null;
+  bestKl: number | null;
+  bestRefusalRate: number | null;
+  verifiedCount: number;
+  lastModified: string;
   models: Array<{
     id: string;
     url: string;

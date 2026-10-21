@@ -6,6 +6,11 @@
  * measured at build time so every client sees the same numbers and the request
  * path never touches the Hub.
  *
+ * Two scopes are published:
+ *   indexed    - the artifacts the directory actually publishes
+ *   discovered - every model the tag-and-name index found, whether or not the
+ *                directory could place it under a model
+ *
  *   node scripts/build-stats.ts
  */
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
@@ -16,13 +21,13 @@ import {
   estimateDownloadsPerSecond,
   LIVE_RATE_WINDOW_DAYS,
   type HubModel,
-  type TrackedModel,
 } from "../src/core/live.ts";
 import type { RawRepo } from "../src/core/types.ts";
-import type { CreatorStats, DownloadTotals, StatsScope } from "../src/lib/types.ts";
+import type { DownloadTotals, StatsScope } from "../src/lib/types.ts";
 
 const ROOT = process.cwd();
 const RAW_PATH = join(ROOT, "data", "raw.json");
+const REPOS_PATH = join(ROOT, "dist", "repos.json");
 const DIST = join(ROOT, "dist");
 
 interface RawFile {
@@ -70,62 +75,54 @@ function main(): void {
   }
 
   // The same merge the live endpoint used: the tagged pass wins a duplicate.
-  const all = collectModels(tagged, named);
+  const discovered = collectModels(tagged, named);
+  const discoveredTotals = aggregate(discovered);
 
-  const totals = aggregate(all);
+  // The indexed scope: the artifacts the directory publishes.
+  let indexedTotals: DownloadTotals = {
+    modelCount: 0,
+    allTimeDownloads: 0,
+    last30DaysDownloads: 0,
+  };
+  if (existsSync(REPOS_PATH)) {
+    const repos = (JSON.parse(readFileSync(REPOS_PATH, "utf8")) as { repos: RawRepo[] }).repos;
+    indexedTotals = aggregate(
+      repos.map((repo) => ({
+        id: repo.id,
+        url: `https://huggingface.co/${repo.id}`,
+        downloads: repo.downloads30d,
+        downloadsAllTime: repo.downloadsAllTime,
+        likes: repo.likes,
+        source: "tagged" as const,
+      })),
+    );
+  }
+
   const updatedAt = raw.crawledAt;
   const scope: StatsScope = {
     scope: "global",
     username: null,
     updatedAt,
-    totals,
-    rate: rateOf(totals),
+    totals: indexedTotals,
+    rate: rateOf(indexedTotals),
     source: "Hugging Face Hub API · heretic tag + name index",
   };
 
-  // Per creator. The discovery already covered the whole Hub with the same two
-  // passes the live endpoint used, so a creator's models are the ones this
-  // crawl found. No extra Hub request is needed, and none is made.
-  const byAuthor = new Map<string, TrackedModel[]>();
-  for (const model of all) {
-    const author = model.id.split("/")[0] ?? "";
-    if (!author) continue;
-    const list = byAuthor.get(author) ?? [];
-    list.push(model);
-    byAuthor.set(author, list);
-  }
+  const document = {
+    ...scope,
+    indexed: indexedTotals,
+    discovered: discoveredTotals,
+    discoveredRate: rateOf(discoveredTotals),
+  };
 
-  const creators: Record<string, CreatorStats> = {};
-  for (const [author, models] of byAuthor) {
-    const creatorTotals = aggregate(models);
-    creators[author] = {
-      scope: "user",
-      username: author,
-      updatedAt,
-      totals: creatorTotals,
-      rate: rateOf(creatorTotals),
-      source: "Hugging Face Hub API · heretic tag + name index",
-      models: models.map((model) => ({
-        id: model.id,
-        url: model.url,
-        downloads: model.downloads,
-        downloadsAllTime: model.downloadsAllTime,
-        likes: model.likes,
-      })),
-    };
-  }
-
-  writeAtomic(join(DIST, "stats.json"), JSON.stringify(scope));
-  writeAtomic(join(DIST, "creators.json"), JSON.stringify({ creators }));
+  writeAtomic(join(DIST, "stats.json"), JSON.stringify(document));
 
   console.log(
     [
       `Stats written to ${DIST}`,
-      `  models      ${totals.modelCount}`,
-      `  all time    ${totals.allTimeDownloads.toLocaleString("en-US")}`,
-      `  30 days     ${totals.last30DaysDownloads.toLocaleString("en-US")}`,
-      `  rate        ${scope.rate.downloadsPerSecond.toFixed(4)}/s (derived)`,
-      `  creators    ${Object.keys(creators).length}`,
+      `  indexed      ${indexedTotals.modelCount} artifacts, ${indexedTotals.allTimeDownloads.toLocaleString("en-US")} all time`,
+      `  discovered   ${discoveredTotals.modelCount} models, ${discoveredTotals.allTimeDownloads.toLocaleString("en-US")} all time`,
+      `  rate         ${scope.rate.downloadsPerSecond.toFixed(4)}/s (derived)`,
     ].join("\n"),
   );
 }

@@ -9,6 +9,7 @@ import { errorResponse, json } from "../lib/http.ts";
 import {
   compareNullable,
   compareText,
+  isUpdatedAfter,
   matchesText,
   parseQuery,
   runQuery,
@@ -23,6 +24,7 @@ export const REPO_SORTS = [
   "likes",
   "params",
   "newest",
+  "created",
   "author",
   "model",
 ] as const;
@@ -36,9 +38,17 @@ function matches(row: RepoRow, query: CommonQuery): boolean {
   if (query.kind && row.kind !== query.kind) return false;
   if (query.author && row.author !== query.author) return false;
   if (query.origin && row.originId !== query.origin) return false;
+  if (query.license && (row.license ?? "").toLowerCase() !== query.license) return false;
+  if (query.quant && (row.quant ?? "").toUpperCase() !== query.quant) return false;
   if (query.minDownloads > 0 && row.downloadsAllTime < query.minDownloads) return false;
+  if (query.minLikes > 0 && row.likes < query.minLikes) return false;
+  if (query.minParams > 0 && (row.paramsB ?? 0) < query.minParams) return false;
+  if (query.maxParams > 0 && (row.paramsB ?? Infinity) > query.maxParams) return false;
+  if (query.bench && row.benchmarkCount === 0) return false;
+  if (query.direct && !row.isDirectConversion) return false;
+  if (!isUpdatedAfter(row.lastModified, query.updatedAfter)) return false;
   if (query.q) {
-    const haystack = `${row.id} ${row.author} ${row.originId} ${row.family}`;
+    const haystack = `${row.id} ${row.author} ${row.originId} ${row.family} ${row.tags.join(" ")} ${row.baseModels.join(" ")}`;
     if (!matchesText(haystack, query.q)) return false;
   }
   return true;
@@ -51,6 +61,7 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Repo
   const byLikes: RowComparator<RepoRow> = (a, b) => compareNullable(a.likes, b.likes, dir);
   const byParams: RowComparator<RepoRow> = (a, b) => compareNullable(a.paramsB, b.paramsB, dir);
   const byNewest: RowComparator<RepoRow> = (a, b) => compareText(a.lastModified, b.lastModified, dir);
+  const byCreated: RowComparator<RepoRow> = (a, b) => compareText(a.createdAt, b.createdAt, dir);
   const byAuthor: RowComparator<RepoRow> = (a, b) => compareText(a.author, b.author, dir);
   const byModel: RowComparator<RepoRow> = (a, b) => compareText(a.id, b.id, dir);
   const byId: RowComparator<RepoRow> = (a, b) => a.id.localeCompare(b.id);
@@ -60,6 +71,7 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Repo
     likes: byLikes,
     params: byParams,
     newest: byNewest,
+    created: byCreated,
     author: byAuthor,
     model: byModel,
     id: byId,
@@ -86,9 +98,10 @@ export async function listRepos(context: RouteContext, deps: RouteDeps): Promise
 
 export async function getRepo(context: RouteContext, deps: RouteDeps): Promise<Response> {
   const id = context.params.id;
-  const [repos, recipes, meta] = await Promise.all([
+  const [repos, recipes, models, meta] = await Promise.all([
     deps.dataset.repos(),
     deps.dataset.recipes(),
+    deps.dataset.models(),
     deps.dataset.meta(),
   ]);
 
@@ -100,12 +113,14 @@ export async function getRepo(context: RouteContext, deps: RouteDeps): Promise<R
   const recipe: RecipeRow | null = repo.recipeId
     ? (recipes.find((row) => row.id === repo.recipeId) ?? null)
     : null;
+  const model = models.find((row) => row.id === repo.originId) ?? null;
 
   return json(
     {
       updatedAt: meta.generatedAt,
       repo,
       recipe,
+      model,
       url: `https://huggingface.co/${repo.id}`,
     },
     { cache: "list" },

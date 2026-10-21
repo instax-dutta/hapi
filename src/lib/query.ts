@@ -18,9 +18,22 @@ export interface CommonQuery {
   version: string;
   author: string;
   origin: string;
+  license: string;
+  quant: string;
+  verification: string;
+  confidence: string;
   minDownloads: number;
+  minScore: number;
+  minLikes: number;
+  minParams: number;
+  maxParams: number;
+  maxKl: number;
   bench: boolean;
   ranked: boolean;
+  pareto: boolean;
+  bestPick: boolean;
+  direct: boolean;
+  updatedAfter: string;
   sort: string;
   dir: SortDir;
   page: number;
@@ -66,8 +79,22 @@ export function parseQuery(
     ? perPageRaw
     : DEFAULT_PER_PAGE;
 
-  const minDownloadsRaw = Math.floor(Number(one(params, "minDownloads")) || 0);
-  const minDownloads = Number.isFinite(minDownloadsRaw) && minDownloadsRaw > 0 ? minDownloadsRaw : 0;
+  const number = (key: string): number => {
+    const raw = Math.floor(Number(one(params, key)) || 0);
+    return Number.isFinite(raw) && raw > 0 ? raw : 0;
+  };
+  const minDownloads = number("minDownloads");
+  const minScore = number("minScore");
+  const minLikes = number("minLikes");
+  const minParams = number("minParams");
+  const maxParams = number("maxParams");
+  const maxKl = number("maxKl");
+
+  // An ISO date the row must be newer than. An unparseable value is ignored
+  // rather than treated as a filter that matches nothing.
+  const updatedAfterRaw = one(params, "updatedAfter").trim();
+  const updatedAfterTime = Date.parse(updatedAfterRaw);
+  const updatedAfter = Number.isFinite(updatedAfterTime) ? updatedAfterRaw : "";
 
   return {
     q: one(params, "q").trim().slice(0, 120),
@@ -78,14 +105,36 @@ export function parseQuery(
     version: one(params, "version").trim(),
     author: one(params, "author").trim(),
     origin: one(params, "origin").trim(),
+    license: one(params, "license").trim().toLowerCase(),
+    quant: one(params, "quant").trim().toUpperCase(),
+    verification: one(params, "verification").trim().toLowerCase(),
+    confidence: one(params, "confidence").trim().toLowerCase(),
     minDownloads,
+    minScore,
+    minLikes,
+    minParams,
+    maxParams,
+    maxKl,
     bench: one(params, "bench") === "1",
     ranked: one(params, "ranked") !== "0",
+    pareto: one(params, "pareto") === "1",
+    bestPick: one(params, "bestPick") === "1",
+    direct: one(params, "direct") === "1",
+    updatedAfter,
     sort,
     dir,
     page,
     perPage,
   };
+}
+
+/** True when a row is newer than the requested date. */
+export function isUpdatedAfter(lastModified: string, updatedAfter: string): boolean {
+  if (!updatedAfter) return true;
+  const time = Date.parse(lastModified);
+  const boundary = Date.parse(updatedAfter);
+  if (!Number.isFinite(time) || !Number.isFinite(boundary)) return true;
+  return time >= boundary;
 }
 
 /** A filter decides whether one row belongs in the result. */

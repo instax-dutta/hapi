@@ -10,6 +10,7 @@ import { errorResponse, json } from "../lib/http.ts";
 import {
   compareNullable,
   compareText,
+  isUpdatedAfter,
   matchesText,
   parseQuery,
   runQuery,
@@ -27,6 +28,9 @@ export const MODEL_SORTS = [
   "params",
   "newest",
   "model",
+  "recipes",
+  "repos",
+  "likes",
 ] as const;
 
 const DEFAULT_SORT = "score";
@@ -34,9 +38,16 @@ const DEFAULT_SORT = "score";
 function matches(row: ModelRow, query: CommonQuery): boolean {
   if (query.family && row.familySlug !== query.family) return false;
   if (query.size && row.sizeClass !== query.size) return false;
+  if (query.format && !row.formats.includes(query.format)) return false;
   if (query.minDownloads > 0 && row.downloadsAllTime < query.minDownloads) return false;
+  if (query.minLikes > 0 && row.likes < query.minLikes) return false;
+  if (query.minScore > 0 && (row.bestScore ?? 0) < query.minScore) return false;
+  if (query.maxKl > 0 && (row.bestKl ?? Infinity) > query.maxKl) return false;
+  if (query.minParams > 0 && (row.paramsB ?? 0) < query.minParams) return false;
+  if (query.maxParams > 0 && (row.paramsB ?? Infinity) > query.maxParams) return false;
+  if (!isUpdatedAfter(row.lastModified, query.updatedAfter)) return false;
   if (query.q) {
-    const haystack = `${row.id} ${row.name} ${row.displayName} ${row.owner}`.replace(/_/g, " ");
+    const haystack = `${row.id} ${row.name} ${row.displayName} ${row.owner} ${row.authors.join(" ")}`;
     if (!matchesText(haystack, query.q)) return false;
   }
   return true;
@@ -44,15 +55,19 @@ function matches(row: ModelRow, query: CommonQuery): boolean {
 
 function buildComparators(query: CommonQuery): Record<string, RowComparator<ModelRow>> {
   const dir = query.dir;
-  const byScore: RowComparator<ModelRow> = (a, b) =>
-    compareNullable(a.bestScore, b.bestScore, dir);
+  const byScore: RowComparator<ModelRow> = (a, b) => compareNullable(a.bestScore, b.bestScore, dir);
   const byKl: RowComparator<ModelRow> = (a, b) => compareNullable(a.bestKl, b.bestKl, dir);
   const byRefusals: RowComparator<ModelRow> = (a, b) =>
     compareNullable(a.bestRefusalRate, b.bestRefusalRate, dir);
-  const byDownloads: RowComparator<ModelRow> = (a, b) => compareNullable(a.downloadsAllTime, b.downloadsAllTime, dir);
+  const byDownloads: RowComparator<ModelRow> = (a, b) =>
+    compareNullable(a.downloadsAllTime, b.downloadsAllTime, dir);
   const byParams: RowComparator<ModelRow> = (a, b) => compareNullable(a.paramsB, b.paramsB, dir);
   const byNewest: RowComparator<ModelRow> = (a, b) => compareText(a.lastModified, b.lastModified, dir);
   const byName: RowComparator<ModelRow> = (a, b) => compareText(a.displayName, b.displayName, dir);
+  const byRecipes: RowComparator<ModelRow> = (a, b) =>
+    compareNullable(a.recipeCount, b.recipeCount, dir);
+  const byRepos: RowComparator<ModelRow> = (a, b) => compareNullable(a.repoCount, b.repoCount, dir);
+  const byLikes: RowComparator<ModelRow> = (a, b) => compareNullable(a.likes, b.likes, dir);
   const byId: RowComparator<ModelRow> = (a, b) => a.id.localeCompare(b.id);
 
   return {
@@ -63,6 +78,9 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Mode
     params: byParams,
     newest: byNewest,
     model: byName,
+    recipes: byRecipes,
+    repos: byRepos,
+    likes: byLikes,
     id: byId,
   };
 }
@@ -102,7 +120,9 @@ export async function getModel(context: RouteContext, deps: RouteDeps): Promise<
   const modelRecipes: RecipeRow[] = recipes
     .filter((recipe) => recipe.originId === model.id)
     .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
-  const modelRepos: RepoRow[] = repos.filter((repo) => repo.originId === model.id);
+  const modelRepos: RepoRow[] = repos
+    .filter((repo) => repo.originId === model.id)
+    .sort((a, b) => b.downloadsAllTime - a.downloadsAllTime);
 
   return json(
     {

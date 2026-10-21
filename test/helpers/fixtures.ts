@@ -5,7 +5,7 @@
  * share. Everything here is deterministic and offline.
  */
 import type {
-  CreatorStats,
+  CreatorRow,
   DatasetMeta,
   ModelRow,
   RecipeRow,
@@ -47,14 +47,36 @@ export function modelRow(overrides: Partial<ModelRow> = {}): ModelRow {
     moe: false,
     recipeCount: 2,
     rankedCount: 2,
+    repoCount: 3,
     bestRecipeId: "rcp_a",
     bestScore: 91.2,
     bestKl: 0.012,
     bestRefusalRate: 0.01,
+    bestRecipe: {
+      id: "rcp_a",
+      author: "coder3101",
+      score: 91.2,
+      kl: 0.012,
+      refusals: 1,
+      refusalTotal: 100,
+      refusalRate: 0.01,
+      verification: "verified",
+      confidence: "medium",
+      hereticVersion: "1.2.0",
+      downloadsAllTime: 500,
+      lastModified: "2026-10-20T00:00:00.000Z",
+    },
     verifiedRepoCount: 3,
     downloadsAllTime: 1000,
     downloads30d: 100,
+    downloadsPerDay: 3.333,
+    likes: 3,
     lastModified: "2026-10-20T00:00:00.000Z",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    formats: ["gguf", "safetensors"],
+    licenses: ["gemma"],
+    hereticVersions: ["1.2.0"],
+    authors: ["coder3101", "mradermacher"],
     ...overrides,
   };
 }
@@ -85,13 +107,25 @@ export function recipeRow(overrides: Partial<RecipeRow> = {}): RecipeRow {
     paramsB: 12,
     downloadsAllTime: 500,
     downloads30d: 50,
+    downloadsPerDay: 1.667,
     likes: 3,
     lastModified: "2026-10-20T00:00:00.000Z",
+    createdAt: "2026-01-01T00:00:00.000Z",
     repoCount: 2,
+    repoIds: ["coder3101/gemma-3-12b-it-heretic", "coder3101/gemma-3-12b-it-heretic-GGUF"],
     bestRepoId: "coder3101/gemma-3-12b-it-heretic",
     evidenceRepoId: "coder3101/gemma-3-12b-it-heretic",
     benchmarks: [{ metric: "MMLU-Pro", value: 0.6 }],
+    benchmarkCount: 1,
     evidence: "| KL divergence | 0.012 |",
+    originalKl: 0.4,
+    originalRefusals: 40,
+    originalRefusalTotal: 100,
+    baseRefusalRate: 0.4,
+    refusalReduction: 0.39,
+    licenses: ["gemma"],
+    quantizations: [],
+    authors: ["coder3101"],
     ...overrides,
   };
 }
@@ -120,7 +154,14 @@ export function repoRow(overrides: Partial<RepoRow> = {}): RepoRow {
     lastModified: "2026-10-20T00:00:00.000Z",
     hereticVersion: "1.2.0",
     verified: true,
+    isDirectConversion: true,
     classificationEvidence: "card states the weights were abliterated with Heretic",
+    baseModels: ["google/gemma-3-12b-it"],
+    parentIds: ["google/gemma-3-12b-it"],
+    tags: ["heretic", "uncensored"],
+    safetensorsTotal: 12_000_000_000,
+    benchmarkCount: 1,
+    sha: "abc123",
     metrics: {
       kl: 0.012,
       refusals: 1,
@@ -160,7 +201,15 @@ export function metaRow(overrides: Partial<DatasetMeta> = {}): DatasetMeta {
         downloadsAllTime: 1000,
       },
     ],
-    counts: { models: 1, recipes: 1, repos: 3 },
+    counts: { models: 1, recipes: 1, repos: 3, creators: 1 },
+    facets: {
+      versions: [{ value: "1.2.0", count: 3, downloadsAllTime: 1000 }],
+      formats: [{ value: "gguf", count: 2, downloadsAllTime: 1000 }],
+      licenses: [{ value: "gemma", count: 3, downloadsAllTime: 1000 }],
+      tags: [{ value: "heretic", count: 3, downloadsAllTime: 1000 }],
+      kinds: [{ value: "heretic", count: 1, downloadsAllTime: 500 }],
+      sizes: [{ value: "9-15b", count: 1, downloadsAllTime: 1000 }],
+    },
     ...overrides,
   };
 }
@@ -181,7 +230,7 @@ export function statsRow(overrides: Partial<StatsScope> = {}): StatsScope {
   };
 }
 
-export function creatorRow(username: string, overrides: Partial<CreatorStats> = {}): CreatorStats {
+export function creatorRow(username: string, overrides: Partial<CreatorRow> = {}): CreatorRow {
   return {
     scope: "user",
     username,
@@ -189,6 +238,14 @@ export function creatorRow(username: string, overrides: Partial<CreatorStats> = 
     totals: { modelCount: 1, allTimeDownloads: 500, last30DaysDownloads: 50 },
     rate: { downloadsPerSecond: 50 / (30 * 24 * 60 * 60), windowDays: 30, basis: "derived" },
     source: "Hugging Face Hub API",
+    recipeCount: 1,
+    originCount: 1,
+    likes: 3,
+    bestScore: 91.2,
+    bestKl: 0.012,
+    bestRefusalRate: 0.01,
+    verifiedCount: 1,
+    lastModified: "2026-10-20T00:00:00.000Z",
     models: [
       {
         id: `${username}/gemma-3-12b-it-heretic`,
@@ -206,7 +263,7 @@ export interface FixtureOptions {
   models?: ModelRow[];
   recipes?: RecipeRow[];
   repos?: RepoRow[];
-  creators?: Record<string, CreatorStats>;
+  creators?: CreatorRow[];
 }
 
 /** A store holding a whole dataset. */
@@ -221,7 +278,7 @@ export function fixtureStore(options: FixtureOptions = {}): FakeStore {
   const meta = metaRow({
     counts: { models: models.length, recipes: recipes.length, repos: repos.length },
   });
-  const creators = options.creators ?? { coder3101: creatorRow("coder3101") };
+  const creators = options.creators ?? [creatorRow("coder3101")];
 
   return new FakeStore({
     "meta.json": JSON.stringify(meta),

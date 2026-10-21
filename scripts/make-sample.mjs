@@ -12,6 +12,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { apiRowsFromSnapshot } from "./lib/dataset-rows.ts";
+import { aggregate, estimateDownloadsPerSecond, LIVE_RATE_WINDOW_DAYS } from "../src/core/live.ts";
 
 const source = process.argv[2];
 if (!source) {
@@ -33,6 +34,9 @@ const keptRecipeIds = new Set(keptRecipes.map((recipe) => recipe.id));
 const keptRepos = full.repos.filter(
   (repo) => repo.recipeId && keptRecipeIds.has(repo.recipeId),
 );
+const keptCreators = full.creators.filter((creator) =>
+  keptRepos.some((repo) => repo.author === creator.username),
+);
 
 const families = snapshot.families.filter((family) =>
   keptModels.some((model) => model.familySlug === family.slug),
@@ -52,6 +56,7 @@ const meta = {
     models: keptModels.length,
     recipes: keptRecipes.length,
     repos: keptRepos.length,
+    creators: keptCreators.length,
   },
 };
 
@@ -61,6 +66,35 @@ writeFileSync(join(out, "models.json"), JSON.stringify({ origins: keptModels }))
 writeFileSync(join(out, "recipes.json"), JSON.stringify({ recipes: keptRecipes }));
 writeFileSync(join(out, "repos.json"), JSON.stringify({ repos: keptRepos }));
 
+// The download statistics, derived from the same rows. The rate is a
+// derivation, so it is labelled as one.
+const measured = keptRepos.map((repo) => ({
+  id: repo.id,
+  downloads: repo.downloads30d,
+  downloadsAllTime: repo.downloadsAllTime,
+  likes: repo.likes,
+  source: "tagged",
+}));
+const totals = aggregate(measured);
+writeFileSync(
+  join(out, "stats.json"),
+  JSON.stringify({
+    scope: "global",
+    username: null,
+    updatedAt: snapshot.updatedAt,
+    totals,
+    rate: {
+      downloadsPerSecond: estimateDownloadsPerSecond(totals.last30DaysDownloads),
+      windowDays: LIVE_RATE_WINDOW_DAYS,
+      basis: "derived",
+    },
+    source: "Hugging Face Hub API",
+    indexed: totals,
+    discovered: totals,
+  }),
+);
+writeFileSync(join(out, "creators.json"), JSON.stringify({ creators: keptCreators }));
+
 console.log(
-  `Sample written to ${out}: ${keptModels.length} models, ${keptRecipes.length} recipes, ${keptRepos.length} artifacts`,
+  `Sample written to ${out}: ${keptModels.length} models, ${keptRecipes.length} recipes, ${keptRepos.length} artifacts, ${keptCreators.length} creators`,
 );

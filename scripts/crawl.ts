@@ -32,7 +32,6 @@ function arg(name: string, fallback: string): string {
   if (index === -1) return fallback;
   return process.argv[index + 1] ?? fallback;
 }
-
 function flag(name: string): boolean {
   return process.argv.includes(`--${name}`);
 }
@@ -61,6 +60,8 @@ async function main(): Promise<void> {
   const concurrency = Number(arg("concurrency", "10"));
   const refresh = flag("refresh");
   const token = process.env.HF_TOKEN;
+  const outPath = arg("out", RAW_PATH);
+  const rawPath = outPath.startsWith("/") ? outPath : join(ROOT, outPath);
 
   console.log("Discovering Heretic models (tag pass, then name pass)…");
   const discovery = await discoverHereticModels({
@@ -145,11 +146,11 @@ async function main(): Promise<void> {
     cards,
   };
 
-  mkdirSync(dirname(RAW_PATH), { recursive: true });
-  const tmp = `${RAW_PATH}.tmp`;
+  mkdirSync(dirname(rawPath), { recursive: true });
+  const tmp = `${rawPath}.tmp`;
   writeFileSync(tmp, JSON.stringify(output));
-  renameSync(tmp, RAW_PATH);
-  console.log(`Wrote ${RAW_PATH} (${output.repos.length} repos, ${errors} fetch errors)`);
+  renameSync(tmp, rawPath);
+  console.log(`Wrote ${rawPath} (${output.repos.length} repos, ${errors} fetch errors)`);
 }
 
 main().catch((error) => {

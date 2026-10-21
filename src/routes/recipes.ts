@@ -9,6 +9,7 @@ import { errorResponse, json } from "../lib/http.ts";
 import {
   compareNullable,
   compareText,
+  isUpdatedAfter,
   matchesText,
   parseQuery,
   runQuery,
@@ -27,6 +28,9 @@ export const RECIPE_SORTS = [
   "params",
   "newest",
   "model",
+  "likes",
+  "benchmarks",
+  "repos",
 ] as const;
 
 const DEFAULT_SORT = "score";
@@ -42,10 +46,18 @@ function matches(row: RecipeRow, query: CommonQuery): boolean {
   if (query.format && !row.formats.includes(query.format)) return false;
   if (query.kind && row.kind !== query.kind) return false;
   if (query.version && row.hereticVersion !== query.version) return false;
+  if (query.verification && row.verification !== query.verification) return false;
+  if (query.confidence && row.confidence !== query.confidence) return false;
+  if (query.pareto && !row.pareto) return false;
+  if (query.bestPick && !row.bestPick) return false;
   if (query.minDownloads > 0 && row.downloadsAllTime < query.minDownloads) return false;
+  if (query.minScore > 0 && row.score < query.minScore) return false;
+  if (query.minLikes > 0 && row.likes < query.minLikes) return false;
+  if (query.maxKl > 0 && row.kl > query.maxKl) return false;
   if (query.bench && row.benchmarks.length === 0) return false;
+  if (!isUpdatedAfter(row.lastModified, query.updatedAfter)) return false;
   if (query.q) {
-    const haystack = `${row.id} ${row.originId} ${row.originName} ${row.author} ${row.bestRepoId} ${row.evidenceRepoId}`;
+    const haystack = `${row.id} ${row.originId} ${row.originName} ${row.author} ${row.authors.join(" ")} ${row.bestRepoId} ${row.evidenceRepoId}`;
     if (!matchesText(haystack, query.q)) return false;
   }
   return true;
@@ -62,6 +74,10 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Reci
   const byParams: RowComparator<RecipeRow> = (a, b) => compareNullable(a.paramsB, b.paramsB, dir);
   const byNewest: RowComparator<RecipeRow> = (a, b) => compareText(a.lastModified, b.lastModified, dir);
   const byName: RowComparator<RecipeRow> = (a, b) => compareText(a.originName, b.originName, dir);
+  const byLikes: RowComparator<RecipeRow> = (a, b) => compareNullable(a.likes, b.likes, dir);
+  const byBenchmarks: RowComparator<RecipeRow> = (a, b) =>
+    compareNullable(a.benchmarkCount, b.benchmarkCount, dir);
+  const byRepos: RowComparator<RecipeRow> = (a, b) => compareNullable(a.repoCount, b.repoCount, dir);
   const byId: RowComparator<RecipeRow> = (a, b) => a.id.localeCompare(b.id);
 
   // Corroboration outranks the requested sort. A fabricated card that claims
@@ -77,6 +93,9 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Reci
     params: verified(byParams),
     newest: verified(byNewest),
     model: verified(byName),
+    likes: verified(byLikes),
+    benchmarks: verified(byBenchmarks),
+    repos: verified(byRepos),
     id: byId,
   };
 }
@@ -114,7 +133,9 @@ export async function getRecipe(context: RouteContext, deps: RouteDeps): Promise
   }
 
   const model = models.find((row) => row.id === recipe.originId) ?? null;
-  const recipeRepos = repos.filter((repo) => repo.recipeId === recipe.id);
+  const recipeRepos = repos
+    .filter((repo) => repo.recipeId === recipe.id)
+    .sort((a, b) => b.downloadsAllTime - a.downloadsAllTime);
 
   return json(
     {

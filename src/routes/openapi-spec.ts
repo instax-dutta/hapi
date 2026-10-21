@@ -22,12 +22,31 @@ const listParameters = [
   { name: "version", in: "query", schema: { type: "string" }, description: "Heretic version." },
   { name: "author", in: "query", schema: { type: "string" }, description: "Creator id." },
   { name: "origin", in: "query", schema: { type: "string" }, description: "Origin id." },
+  { name: "license", in: "query", schema: { type: "string" }, description: "License id." },
+  { name: "quant", in: "query", schema: { type: "string" }, description: "Quantization label." },
+  {
+    name: "verification",
+    in: "query",
+    schema: { type: "string", enum: ["verified", "unverified", "publisher"] },
+    description: "Corroboration state of a recipe.",
+  },
+  {
+    name: "confidence",
+    in: "query",
+    schema: { type: "string", enum: ["high", "medium", "inherited", "none"] },
+    description: "Confidence of the published numbers.",
+  },
   {
     name: "minDownloads",
     in: "query",
     schema: { type: "integer", minimum: 0 },
     description: "Minimum all-time downloads.",
   },
+  { name: "minScore", in: "query", schema: { type: "number", minimum: 0 } },
+  { name: "minLikes", in: "query", schema: { type: "integer", minimum: 0 } },
+  { name: "minParams", in: "query", schema: { type: "number", minimum: 0 } },
+  { name: "maxParams", in: "query", schema: { type: "number", minimum: 0 } },
+  { name: "maxKl", in: "query", schema: { type: "number", minimum: 0 } },
   {
     name: "bench",
     in: "query",
@@ -40,12 +59,16 @@ const listParameters = [
     schema: { type: "string", enum: ["0", "1"] },
     description: "Set to 0 to include unranked recipes. Default 1.",
   },
+  { name: "pareto", in: "query", schema: { type: "string", enum: ["1"] } },
+  { name: "bestPick", in: "query", schema: { type: "string", enum: ["1"] } },
+  { name: "direct", in: "query", schema: { type: "string", enum: ["1"] } },
   {
-    name: "sort",
+    name: "updatedAfter",
     in: "query",
-    schema: { type: "string" },
-    description: "Sort key. An unknown key falls back to the default.",
+    schema: { type: "string", format: "date-time" },
+    description: "Keep only rows modified at or after this instant.",
   },
+  { name: "sort", in: "query", schema: { type: "string" }, description: "Sort key." },
   { name: "dir", in: "query", schema: { type: "string", enum: ["asc", "desc"] } },
   { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
   {
@@ -62,6 +85,27 @@ const paginationFields = {
   pageCount: { type: "integer" },
   perPage: { type: "integer" },
 } as const;
+
+const facetDocument = (name: string) => ({
+  type: "object",
+  required: ["facet", "total", "values"],
+  properties: {
+    updatedAt: { type: "string", format: "date-time" },
+    facet: { type: "string", examples: [name] },
+    total: { type: "integer" },
+    values: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          value: { type: "string" },
+          count: { type: "integer" },
+          downloadsAllTime: { type: "integer" },
+        },
+      },
+    },
+  },
+});
 
 export const openapiDocument = {
   openapi: "3.1.0",
@@ -81,17 +125,22 @@ export const openapiDocument = {
       "",
       "A metric is never invented. A model card that does not publish KL and",
       "refusals yields an unranked recipe, and the response says so.",
+      "",
+      "Numbers that are derived rather than measured are named as such:",
+      "`downloadsPerDay`, `downloadsPerSecond` and `refusalReduction` are",
+      "calculations, and the API says which.",
     ].join("\n"),
     license: { name: "MIT" },
   },
   servers: [{ url: "https://hapi.sdad.pro", description: "Production" }],
   tags: [
-    { name: "meta", description: "Service, health, dataset metadata and families." },
+    { name: "meta", description: "Service, health, dataset metadata, summary and facets." },
     { name: "models", description: "Origins: the canonical upstream models." },
     { name: "recipes", description: "Ablation recipes. The leaderboard." },
     { name: "repos", description: "Published artifacts." },
+    { name: "creators", description: "The people who published the artifacts." },
     { name: "stats", description: "Download measurements and the derived rate." },
-    { name: "tools", description: "Simulation and live card parsing." },
+    { name: "tools", description: "Comparison, simulation and live card parsing." },
   ],
   paths: {
     "/v1": {
@@ -113,7 +162,7 @@ export const openapiDocument = {
     "/v1/meta": {
       get: {
         tags: ["meta"],
-        summary: "Dataset version, totals and families.",
+        summary: "Dataset version, totals, families and facets.",
         operationId: "getMeta",
         responses: {
           "200": {
@@ -126,12 +175,116 @@ export const openapiDocument = {
         },
       },
     },
+    "/v1/summary": {
+      get: {
+        tags: ["meta"],
+        summary: "Everything a homepage needs, in one request.",
+        operationId: "getSummary",
+        responses: {
+          "200": { description: "The summary document." },
+          "503": errorResponse,
+        },
+      },
+    },
     "/v1/families": {
       get: {
         tags: ["meta"],
         summary: "The model families.",
         operationId: "getFamilies",
         responses: { "200": { description: "The families." } },
+      },
+    },
+    "/v1/families/{slug}": {
+      get: {
+        tags: ["meta"],
+        summary: "One family with its models and its ablations.",
+        operationId: "getFamily",
+        parameters: [
+          { name: "slug", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          "200": { description: "The family document." },
+          "404": errorResponse,
+          "503": errorResponse,
+        },
+      },
+    },
+    "/v1/versions": {
+      get: {
+        tags: ["meta"],
+        summary: "The Heretic versions in use.",
+        operationId: "getVersions",
+        responses: {
+          "200": {
+            description: "The versions.",
+            content: { "application/json": { schema: facetDocument("versions") } },
+          },
+        },
+      },
+    },
+    "/v1/formats": {
+      get: {
+        tags: ["meta"],
+        summary: "The artifact formats in use.",
+        operationId: "getFormats",
+        responses: {
+          "200": {
+            description: "The formats.",
+            content: { "application/json": { schema: facetDocument("formats") } },
+          },
+        },
+      },
+    },
+    "/v1/licenses": {
+      get: {
+        tags: ["meta"],
+        summary: "The licenses in use.",
+        operationId: "getLicenses",
+        responses: {
+          "200": {
+            description: "The licenses.",
+            content: { "application/json": { schema: facetDocument("licenses") } },
+          },
+        },
+      },
+    },
+    "/v1/tags": {
+      get: {
+        tags: ["meta"],
+        summary: "The Hub tags in use.",
+        operationId: "getTags",
+        responses: {
+          "200": {
+            description: "The tags.",
+            content: { "application/json": { schema: facetDocument("tags") } },
+          },
+        },
+      },
+    },
+    "/v1/kinds": {
+      get: {
+        tags: ["meta"],
+        summary: "The repository kinds in use.",
+        operationId: "getKinds",
+        responses: {
+          "200": {
+            description: "The kinds.",
+            content: { "application/json": { schema: facetDocument("kinds") } },
+          },
+        },
+      },
+    },
+    "/v1/sizes": {
+      get: {
+        tags: ["meta"],
+        summary: "The size classes in use.",
+        operationId: "getSizes",
+        responses: {
+          "200": {
+            description: "The size classes.",
+            content: { "application/json": { schema: facetDocument("sizes") } },
+          },
+        },
       },
     },
     "/v1/models": {
@@ -230,7 +383,7 @@ export const openapiDocument = {
     "/v1/repos/{id}": {
       get: {
         tags: ["repos"],
-        summary: "One artifact with its recipe.",
+        summary: "One artifact with its recipe and origin.",
         operationId: "getRepo",
         parameters: [
           {
@@ -243,6 +396,38 @@ export const openapiDocument = {
         ],
         responses: {
           "200": { description: "The artifact document." },
+          "404": errorResponse,
+          "503": errorResponse,
+        },
+      },
+    },
+    "/v1/creators": {
+      get: {
+        tags: ["creators"],
+        summary: "The creator leaderboard.",
+        operationId: "listCreators",
+        parameters: listParameters,
+        responses: {
+          "200": {
+            description: "A page of creators.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/CreatorList" } },
+            },
+          },
+          "503": errorResponse,
+        },
+      },
+    },
+    "/v1/creators/{username}": {
+      get: {
+        tags: ["creators"],
+        summary: "One creator with their artifacts and their ablations.",
+        operationId: "getCreator",
+        parameters: [
+          { name: "username", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          "200": { description: "The creator document." },
           "404": errorResponse,
           "503": errorResponse,
         },
@@ -270,18 +455,28 @@ export const openapiDocument = {
         summary: "One creator's download totals, rate and models.",
         operationId: "getCreatorStats",
         parameters: [
-          {
-            name: "username",
-            in: "path",
-            required: true,
-            schema: { type: "string" },
-            description: "The Hugging Face username.",
-          },
+          { name: "username", in: "path", required: true, schema: { type: "string" } },
         ],
         responses: {
           "200": { description: "The creator document." },
           "404": errorResponse,
           "503": errorResponse,
+        },
+      },
+    },
+    "/v1/compare": {
+      get: {
+        tags: ["tools"],
+        summary: "Compare two models side by side.",
+        operationId: "compareModels",
+        parameters: [
+          { name: "a", in: "query", required: true, schema: { type: "string" } },
+          { name: "b", in: "query", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          "200": { description: "The comparison document." },
+          "400": errorResponse,
+          "404": errorResponse,
         },
       },
     },
@@ -396,14 +591,23 @@ export const openapiDocument = {
           moe: { type: "boolean" },
           recipeCount: { type: "integer" },
           rankedCount: { type: "integer" },
+          repoCount: { type: "integer" },
           bestRecipeId: { type: ["string", "null"] },
           bestScore: { type: ["number", "null"] },
           bestKl: { type: ["number", "null"] },
           bestRefusalRate: { type: ["number", "null"] },
+          bestRecipe: { type: ["object", "null"] },
           verifiedRepoCount: { type: "integer" },
           downloadsAllTime: { type: "integer" },
           downloads30d: { type: "integer" },
+          downloadsPerDay: { type: "number", description: "Derived from the 30-day mean." },
+          likes: { type: "integer" },
           lastModified: { type: "string", format: "date-time" },
+          createdAt: { type: "string", format: "date-time" },
+          formats: { type: "array", items: { type: "string" } },
+          licenses: { type: "array", items: { type: "string" } },
+          hereticVersions: { type: "array", items: { type: "string" } },
+          authors: { type: "array", items: { type: "string" } },
         },
       },
       Recipe: {
@@ -434,13 +638,25 @@ export const openapiDocument = {
           paramsB: { type: ["number", "null"] },
           downloadsAllTime: { type: "integer" },
           downloads30d: { type: "integer" },
+          downloadsPerDay: { type: "number", description: "Derived from the 30-day mean." },
           likes: { type: "integer" },
           lastModified: { type: "string", format: "date-time" },
+          createdAt: { type: "string", format: "date-time" },
           repoCount: { type: "integer" },
+          repoIds: { type: "array", items: { type: "string" } },
           bestRepoId: { type: "string" },
           evidenceRepoId: { type: "string" },
           benchmarks: { type: "array", items: { type: "object" } },
+          benchmarkCount: { type: "integer" },
           evidence: { type: ["string", "null"] },
+          originalKl: { type: ["number", "null"] },
+          originalRefusals: { type: ["integer", "null"] },
+          originalRefusalTotal: { type: ["integer", "null"] },
+          baseRefusalRate: { type: ["number", "null"] },
+          refusalReduction: { type: ["number", "null"] },
+          licenses: { type: "array", items: { type: "string" } },
+          quantizations: { type: "array", items: { type: "string" } },
+          authors: { type: "array", items: { type: "string" } },
         },
       },
       Repo: {
@@ -469,8 +685,36 @@ export const openapiDocument = {
           lastModified: { type: "string", format: "date-time" },
           hereticVersion: { type: ["string", "null"] },
           verified: { type: "boolean" },
+          isDirectConversion: { type: "boolean" },
           classificationEvidence: { type: "string" },
+          baseModels: { type: "array", items: { type: "string" } },
+          parentIds: { type: "array", items: { type: "string" } },
+          tags: { type: "array", items: { type: "string" } },
+          safetensorsTotal: { type: ["number", "null"] },
+          benchmarkCount: { type: "integer" },
+          sha: { type: "string" },
           metrics: { type: "object" },
+        },
+      },
+      Creator: {
+        type: "object",
+        required: ["username", "totals", "rate"],
+        properties: {
+          scope: { type: "string", enum: ["user"] },
+          username: { type: "string" },
+          updatedAt: { type: "string", format: "date-time" },
+          totals: { type: "object" },
+          rate: { type: "object" },
+          source: { type: "string" },
+          recipeCount: { type: "integer" },
+          originCount: { type: "integer" },
+          likes: { type: "integer" },
+          bestScore: { type: ["number", "null"] },
+          bestKl: { type: ["number", "null"] },
+          bestRefusalRate: { type: ["number", "null"] },
+          verifiedCount: { type: "integer" },
+          lastModified: { type: "string", format: "date-time" },
+          models: { type: "array", items: { type: "object" } },
         },
       },
       ModelList: {
@@ -497,9 +741,17 @@ export const openapiDocument = {
           rows: { type: "array", items: { $ref: "#/components/schemas/Repo" } },
         },
       },
+      CreatorList: {
+        type: "object",
+        required: ["updatedAt", "total", "page", "pageCount", "perPage", "rows"],
+        properties: {
+          ...paginationFields,
+          rows: { type: "array", items: { $ref: "#/components/schemas/Creator" } },
+        },
+      },
       Meta: {
         type: "object",
-        required: ["version", "generatedAt", "totals", "families"],
+        required: ["version", "generatedAt", "totals", "families", "facets"],
         properties: {
           version: { type: "string", description: "A content hash of the published dataset." },
           generatedAt: { type: "string", format: "date-time" },
@@ -508,6 +760,7 @@ export const openapiDocument = {
           totals: { type: "object" },
           families: { type: "array", items: { type: "object" } },
           counts: { type: "object" },
+          facets: { type: "object" },
         },
       },
       Stats: {

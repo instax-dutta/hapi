@@ -18,6 +18,10 @@ import * as stats from "./routes/stats.ts";
 import * as simulate from "./routes/simulate.ts";
 import * as parse from "./routes/parse.ts";
 import * as openapi from "./routes/openapi.ts";
+import * as creators from "./routes/creators.ts";
+import * as facets from "./routes/facets.ts";
+import * as summary from "./routes/summary.ts";
+import * as compare from "./routes/compare.ts";
 
 export interface Env {
   /** The bucket that holds the published dataset. */
@@ -31,15 +35,26 @@ const routes: readonly Route[] = [
   { method: "GET", pattern: "/v1", handler: meta.serviceIndex },
   { method: "GET", pattern: "/v1/health", handler: meta.health },
   { method: "GET", pattern: "/v1/meta", handler: meta.meta },
+  { method: "GET", pattern: "/v1/summary", handler: summary.summary },
   { method: "GET", pattern: "/v1/families", handler: meta.families },
+  { method: "GET", pattern: "/v1/families/:slug", handler: meta.family },
+  { method: "GET", pattern: "/v1/versions", handler: facets.versions },
+  { method: "GET", pattern: "/v1/formats", handler: facets.formats },
+  { method: "GET", pattern: "/v1/licenses", handler: facets.licenses },
+  { method: "GET", pattern: "/v1/tags", handler: facets.tags },
+  { method: "GET", pattern: "/v1/kinds", handler: facets.kinds },
+  { method: "GET", pattern: "/v1/sizes", handler: facets.sizes },
   { method: "GET", pattern: "/v1/models", handler: models.listModels },
   { method: "GET", pattern: "/v1/models/:id*", handler: models.getModel },
   { method: "GET", pattern: "/v1/recipes", handler: recipes.listRecipes },
   { method: "GET", pattern: "/v1/recipes/:id", handler: recipes.getRecipe },
   { method: "GET", pattern: "/v1/repos", handler: repos.listRepos },
   { method: "GET", pattern: "/v1/repos/:id*", handler: repos.getRepo },
+  { method: "GET", pattern: "/v1/creators", handler: creators.listCreators },
+  { method: "GET", pattern: "/v1/creators/:username", handler: creators.getCreator },
   { method: "GET", pattern: "/v1/stats", handler: stats.globalStats },
   { method: "GET", pattern: "/v1/stats/:username", handler: stats.creatorStats },
+  { method: "GET", pattern: "/v1/compare", handler: compare.compare },
   { method: "GET", pattern: "/v1/simulate", handler: simulate.simulate },
   { method: "GET", pattern: "/v1/parse", handler: parse.parseRepo },
   { method: "GET", pattern: "/v1/openapi.json", handler: openapi.openapi },

@@ -7,6 +7,7 @@
  * per isolate, so a warm isolate pays the parse once.
  */
 import type {
+  CreatorRow,
   DatasetMeta,
   ModelRow,
   RecipeRow,
@@ -14,7 +15,6 @@ import type {
   StatsScope,
 } from "./types.ts";
 import { KEYS, type DatasetStore } from "./store.ts";
-import type { CreatorStats } from "./types.ts";
 
 /** How long a memoized family stays fresh before it is read again. */
 const MEMO_TTL_MS = 30_000;
@@ -92,8 +92,8 @@ export class DatasetLoader {
     return this.load<StatsScope>(KEYS.stats);
   }
 
-  async creators(): Promise<Record<string, CreatorStats>> {
-    const body = await this.load<{ creators: Record<string, CreatorStats> }>(KEYS.creators);
+  async creators(): Promise<CreatorRow[]> {
+    const body = await this.load<{ creators: CreatorRow[] }>(KEYS.creators);
     return body.creators;
   }
 
@@ -103,6 +103,7 @@ export class DatasetLoader {
     models: ModelRow[];
     recipes: RecipeRow[];
     repos: RepoRow[];
+    creators: CreatorRow[];
   }> {
     return this.load(KEYS.dataset);
   }

@@ -7,7 +7,6 @@
  * labelled as derived.
  */
 import { errorResponse, json } from "../lib/http.ts";
-import type { CreatorStats } from "../lib/types.ts";
 import type { RouteContext, RouteDeps } from "../router.ts";
 
 export async function globalStats(_context: RouteContext, deps: RouteDeps): Promise<Response> {
@@ -22,11 +21,10 @@ export async function creatorStats(context: RouteContext, deps: RouteDeps): Prom
   // Hugging Face usernames are case-insensitive for lookup, so a client that
   // typed `Coder3101` must not get a 404 for `coder3101`.
   const wanted = username.toLowerCase();
-  const entry = Object.entries(creators).find(([name]) => name.toLowerCase() === wanted);
-  if (!entry) {
+  const creator = creators.find((row) => row.username.toLowerCase() === wanted);
+  if (!creator) {
     return errorResponse(404, "not_found", `No creator matches the username "${username}".`);
   }
 
-  const [name, stats] = entry as [string, CreatorStats];
-  return json({ ...stats, username: stats.username || name }, { cache: "stats" });
+  return json(creator, { cache: "stats" });
 }
