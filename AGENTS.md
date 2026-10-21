@@ -142,6 +142,7 @@ The API serves three entity levels, matching the domain:
 - `GATES.md` - acceptance gates with their measured evidence
 - `docs/openapi.json` - the OpenAPI 3.1 description of the public surface
 - `docs/cloudflare.md` - hosting the API on Cloudflare Workers and R2
+- `docs/node.md` - hosting the API on a plain Node process
 - `AGENTS.md` tree - per-directory contracts
 
 ## Child DOX Index

@@ -7,8 +7,6 @@
 import { API_VERSION, DOCS_URL, errorResponse, json } from "../lib/http.ts";
 import type { RouteContext, RouteDeps } from "../router.ts";
 
-export const META_SORTS = [] as const;
-
 export async function serviceIndex(_context: RouteContext, _deps: RouteDeps): Promise<Response> {
   return json(
     {

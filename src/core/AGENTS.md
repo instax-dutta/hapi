@@ -26,6 +26,8 @@ why the code is here rather than in `src/lib`.
   merge that folds re-uploads of one ablation together
 - `live.ts` - the live download statistics core: discovery merging,
   deduplication, aggregation, rate estimation, Poisson event sampling
+- `snapshot.ts` - the snapshot builder: classification, recipe grouping and
+  origins assembled into one published document
 - `types.ts` - the domain types shared by the whole project
 
 ## Local Contracts
