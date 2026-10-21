@@ -48,8 +48,12 @@ if (docs.length === 0) fail("No AGENTS.md was found in the repository.");
 for (const path of docs) {
   const relativePath = relative(root, path);
   const text = readFileSync(path, "utf8");
+  const isRoot = path === join(root, "AGENTS.md");
 
-  for (const section of REQUIRED_SECTIONS) {
+  // The root is the rail. It carries the DOX contract and the project rules,
+  // so it is exempt from the child section shape.
+  const required = isRoot ? ["## Child DOX Index"] : REQUIRED_SECTIONS;
+  for (const section of required) {
     if (!text.includes(section)) {
       fail(`${relativePath} is missing the section "${section}".`);
     }

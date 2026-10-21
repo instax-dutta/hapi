@@ -39,6 +39,10 @@ if (committedText) {
 const routeSource = readFileSync(join(root, "src", "index.ts"), "utf8");
 const patterns = [...routeSource.matchAll(/pattern:\s*"([^"]+)"/g)].map((match) => match[1]);
 
+/** `/v1/models/:id*` and `/v1/models/{id}` are the same route. */
+const routeBase = (pattern) => pattern.replace(/:[a-zA-Z*]+$/, "").replace(/\/\*$/, "");
+const describedBase = (path) => path.replace(/\{[a-zA-Z]+\}$/, "");
+
 const described = Object.keys(openapiDocument.paths);
 
 for (const pattern of patterns) {
@@ -46,19 +50,15 @@ for (const pattern of patterns) {
     if (!described.includes("/v1")) fail("The route /v1 is not described.");
     continue;
   }
-  const base = pattern.replace(/:[a-zA-Z*]+$/, "").replace(/\/\*$/, "");
-  const describedPath = described.find((path) => path.startsWith(base));
-  if (!describedPath) {
+  const base = routeBase(pattern);
+  if (!described.some((path) => describedBase(path) === base)) {
     fail(`The route ${pattern} is not described in the OpenAPI document.`);
   }
 }
 
 for (const path of described) {
   if (path === "/v1") continue;
-  const covered = patterns.some((pattern) => {
-    const base = pattern.replace(/:[a-zA-Z*]+$/, "").replace(/\/\*$/, "");
-    return base === path;
-  });
+  const covered = patterns.some((pattern) => routeBase(pattern) === describedBase(path));
   if (!covered) {
     fail(`The described path ${path} has no route in src/index.ts.`);
   }
