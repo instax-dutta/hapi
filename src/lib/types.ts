@@ -41,6 +41,8 @@ export interface ModelRow {
   bestScore: number | null;
   bestKl: number | null;
   bestRefusalRate: number | null;
+  /** The refusal count of the leading ablation. */
+  bestRefusals: number | null;
   /** The position among the models, best first. Null when it leads with none. */
   rank: number | null;
   /** The corroborated ablation that leads this model, in one object. */
@@ -265,6 +267,12 @@ export interface StatsScope {
   totals: DownloadTotals;
   rate: DownloadRate;
   source: string;
+  /** The artifacts the directory publishes. The global scope only. */
+  indexed?: DownloadTotals;
+  /** Every model the tag-and-name index found. The global scope only. */
+  discovered?: DownloadTotals;
+  /** The derived rate for the discovered scope. The global scope only. */
+  discoveredRate?: DownloadRate;
 }
 
 /** One creator. */
@@ -298,10 +306,6 @@ export interface Page<T> {
   page: number;
   pageCount: number;
   perPage: number;
-}
-
-export interface ListEnvelope<T> extends Page<T> {
-  updatedAt: string;
 }
 
 export interface ApiError {

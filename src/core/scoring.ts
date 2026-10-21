@@ -145,3 +145,69 @@ export function bestPickId<T extends ScoreInput>(items: T[]): string | null {
   if (!ranked.some(isVerified)) return null;
   return ranked.find(isVerified)?.id ?? null;
 }
+
+/**
+ * A row that can be ranked.
+ *
+ * The canonical order is the one the publisher uses to assign the ranks and
+ * the one the API uses to sort. They must be the same order, or the rank
+ * column reads out of sequence.
+ */
+export interface RankedRow {
+  id: string;
+  score: number;
+  kl: number;
+  refusalRate: number;
+  verification: Verification;
+}
+
+/** A locale-independent id comparison. The published bytes must not depend on the runtime's locale. */
+export function compareIds(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/**
+ * Corroboration first.
+ *
+ * An uncorroborated row never leads, in any direction. The partition is not a
+ * tiebreaker: it is the first thing the order looks at.
+ */
+export function compareVerification(a: RankedRow, b: RankedRow): number {
+  const va = a.verification === "verified" || a.verification === "publisher" ? 0 : 1;
+  const vb = b.verification === "verified" || b.verification === "publisher" ? 0 : 1;
+  return va - vb;
+}
+
+/** Inside a cohort: the best score, then the cheapest ablation, then the id. */
+export function compareCohort(a: RankedRow, b: RankedRow): number {
+  return (
+    b.score - a.score ||
+    a.kl - b.kl ||
+    a.refusalRate - b.refusalRate ||
+    compareIds(a.id, b.id)
+  );
+}
+
+/** The canonical leaderboard order. */
+export function compareCanonical(a: RankedRow, b: RankedRow): number {
+  return compareVerification(a, b) || compareCohort(a, b);
+}
+
+/** A model, as the leaderboard of models sees it. */
+export interface RankedModelRow {
+  id: string;
+  bestScore: number | null;
+  bestKl: number | null;
+  bestRefusalRate: number | null;
+}
+
+/** The canonical order of models: the best score, then the cheapest, then the id. */
+export function compareCanonicalModel(a: RankedModelRow, b: RankedModelRow): number {
+  return (
+    (b.bestScore ?? 0) - (a.bestScore ?? 0) ||
+    (a.bestKl ?? Number.POSITIVE_INFINITY) - (b.bestKl ?? Number.POSITIVE_INFINITY) ||
+    (a.bestRefusalRate ?? Number.POSITIVE_INFINITY) -
+      (b.bestRefusalRate ?? Number.POSITIVE_INFINITY) ||
+    compareIds(a.id, b.id)
+  );
+}

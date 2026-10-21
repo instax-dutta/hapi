@@ -14,7 +14,7 @@ import type {
   RepoRow,
   StatsScope,
 } from "./types.ts";
-import { KEYS, type DatasetStore } from "./store.ts";
+import { DatasetUnavailableError, KEYS, type DatasetStore, type StoredObject } from "./store.ts";
 
 /** How long a memoized family stays fresh before it is read again. */
 const MEMO_TTL_MS = 30_000;
@@ -38,15 +38,6 @@ let memos = new WeakMap<object, Map<string, MemoEntry>>();
  * holding every family at once would not fit in an isolate.
  */
 const MEMO_FAMILIES = 2;
-
-export interface DatasetFamilies {
-  meta: DatasetMeta;
-  models: ModelRow[];
-  recipes: RecipeRow[];
-  repos: RepoRow[];
-  stats: StatsScope;
-  creators: CreatorRow[];
-}
 
 export class DatasetLoader {
   private readonly store: DatasetStore;
@@ -73,11 +64,23 @@ export class DatasetLoader {
       return hit.value as T;
     }
 
-    const raw = await this.store.get(key);
-    if (raw === null) {
-      throw new Error(`The dataset object "${key}" is missing.`);
+    const stored = await this.store.get(key);
+    if (stored === null) {
+      throw new DatasetUnavailableError(`The dataset object "${key}" is missing.`);
     }
-    const value = JSON.parse(raw) as T;
+
+    let value: T;
+    try {
+      value = JSON.parse(stored.text) as T;
+    } catch (error) {
+      throw new DatasetUnavailableError(
+        `The dataset object "${key}" is not valid JSON.`,
+      );
+    }
+
+    // Refresh the position, so the family that was just re-read is not the
+    // first one to be dropped.
+    perStore.delete(key);
     perStore.set(key, { value, at: now });
     while (perStore.size > MEMO_FAMILIES) {
       const oldest = perStore.keys().next();
@@ -85,6 +88,21 @@ export class DatasetLoader {
       perStore.delete(oldest.value);
     }
     return value;
+  }
+
+  /**
+   * One dataset object, as the store holds it.
+   *
+   * The bulk endpoint serves the published bytes without parsing them. A
+   * multi-megabyte document that is only downloaded does not need to be
+   * understood by the server.
+   */
+  async raw(key: string): Promise<StoredObject> {
+    const stored = await this.store.get(key);
+    if (stored === null) {
+      throw new DatasetUnavailableError(`The dataset object "${key}" is missing.`);
+    }
+    return stored;
   }
 
   async meta(): Promise<DatasetMeta> {
@@ -115,16 +133,6 @@ export class DatasetLoader {
     return body.creators;
   }
 
-  /** The whole dataset in one document, for bulk consumers. */
-  async dataset(): Promise<{
-    meta: DatasetMeta;
-    models: ModelRow[];
-    recipes: RecipeRow[];
-    repos: RepoRow[];
-    creators: CreatorRow[];
-  }> {
-    return this.load(KEYS.dataset);
-  }
 }
 
 /** Drops every memoized family. Used by the tests. */

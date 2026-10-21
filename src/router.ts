@@ -38,6 +38,34 @@ export interface RouteMatch {
   params: Record<string, string>;
 }
 
+/**
+ * True when a path segment carries a broken percent escape.
+ *
+ * The client sent a malformed URI, which is a bad request rather than a
+ * missing resource.
+ */
+export function hasMalformedEncoding(pathname: string): boolean {
+  return pathname
+    .split("/")
+    .filter((part) => part.length > 0)
+    .some((part) => decodeSegment(part) === null);
+}
+
+/**
+ * Decode one path segment.
+ *
+ * A malformed escape is a bad request, not a crash. `decodeURIComponent`
+ * throws on a broken sequence, and the router runs before the handler's
+ * error handling, so an uncaught throw would escape the error envelope.
+ */
+function decodeSegment(segment: string): string | null {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return null;
+  }
+}
+
 function matchPattern(pattern: string, pathname: string): Record<string, string> | null {
   const patternParts = pattern.split("/").filter((part) => part.length > 0);
   const pathParts = pathname.split("/").filter((part) => part.length > 0);
@@ -56,15 +84,17 @@ function matchPattern(pattern: string, pathname: string): Record<string, string>
   for (let i = 0; i < patternParts.length; i += 1) {
     const expected = patternParts[i];
     if (expected.startsWith(":") && expected.endsWith("*")) {
-      const value = pathParts.slice(i).map(decodeURIComponent).join("/");
+      const tail = pathParts.slice(i).map(decodeSegment);
+      if (tail.some((part) => part === null)) return null;
+      const value = tail.join("/");
       if (value.length === 0) return null;
       params[expected.slice(1, -1)] = value;
       return params;
     }
     const actual = pathParts[i];
     if (expected.startsWith(":")) {
-      const value = decodeURIComponent(actual);
-      if (value.length === 0) return null;
+      const value = decodeSegment(actual);
+      if (value === null || value.length === 0) return null;
       params[expected.slice(1)] = value;
       continue;
     }

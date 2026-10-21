@@ -25,11 +25,27 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-function numberParam(query: URLSearchParams, key: string, fallback: number): number {
+/**
+ * Read a number.
+ *
+ * An absent parameter takes the fallback. A parameter that is present but not
+ * a number is a bad request, and it is not the same as an absent one: a rate
+ * of zero is a real answer and a rate of "abc" is a mistake.
+ */
+function numberParam(
+  query: URLSearchParams,
+  key: string,
+  fallback: number,
+): { value: number; present: boolean; valid: boolean } {
   const raw = query.get(key);
-  if (raw === null || raw.trim() === "") return fallback;
+  if (raw === null || raw.trim() === "") {
+    return { value: fallback, present: false, valid: true };
+  }
   const value = Number(raw);
-  return Number.isFinite(value) ? value : fallback;
+  if (!Number.isFinite(value)) {
+    return { value: fallback, present: true, valid: false };
+  }
+  return { value, present: true, valid: true };
 }
 
 export async function simulate(context: RouteContext, _deps: RouteDeps): Promise<Response> {
@@ -43,11 +59,22 @@ export async function simulate(context: RouteContext, _deps: RouteDeps): Promise
   let source: "rate" | "last30DaysDownloads";
 
   if (rateRaw !== null && rateRaw.trim() !== "") {
-    rate = numberParam(query, "rate", 0);
+    const parsed = numberParam(query, "rate", 0);
+    if (!parsed.valid) {
+      return errorResponse(400, "bad_request", "The rate must be a number.");
+    }
+    rate = parsed.value;
     source = "rate";
   } else if (totalRaw !== null && totalRaw.trim() !== "") {
+    const parsed = numberParam(query, "last30DaysDownloads", 0);
+    if (!parsed.valid) {
+      return errorResponse(400, "bad_request", "The 30-day total must be a number.");
+    }
     const days = numberParam(query, "windowDays", 30);
-    rate = estimateDownloadsPerSecond(numberParam(query, "last30DaysDownloads", 0), days);
+    if (!days.valid) {
+      return errorResponse(400, "bad_request", "The window must be a number of days.");
+    }
+    rate = estimateDownloadsPerSecond(parsed.value, days.value);
     source = "last30DaysDownloads";
   } else {
     return errorResponse(
@@ -62,22 +89,26 @@ export async function simulate(context: RouteContext, _deps: RouteDeps): Promise
   }
 
   const seconds = numberParam(query, "seconds", 60);
-  if (!Number.isFinite(seconds) || seconds <= 0 || seconds > 86_400) {
+  if (!seconds.valid || !Number.isFinite(seconds.value) || seconds.value <= 0 || seconds.value > 86_400) {
     return errorResponse(400, "bad_request", "The window must be between 1 second and 24 hours.");
   }
 
-  const seed = Math.floor(numberParam(query, "seed", 1));
+  const seedRaw = numberParam(query, "seed", 1);
+  if (!seedRaw.valid) {
+    return errorResponse(400, "bad_request", "The seed must be a number.");
+  }
+  const seed = Math.floor(seedRaw.value);
   const random = mulberry32(seed);
-  const events = sampleDownloadEvents(rate, seconds, random);
+  const events = sampleDownloadEvents(rate, seconds.value, random);
 
   return json(
     {
       source,
       rate,
-      seconds,
+      seconds: seconds.value,
       seed,
       events,
-      expected: rate * seconds,
+      expected: rate * seconds.value,
       method: "poisson",
       note: "Synthetic events drawn from a Poisson distribution. Not a measurement.",
     },

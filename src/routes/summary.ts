@@ -23,14 +23,14 @@ export async function summary(_context: RouteContext, deps: RouteDeps): Promise<
     deps.dataset.creators(),
   ]);
 
-  const topModels = [...models]
+  const topModels = models
     .filter((model) => model.bestRecipe !== null)
     .sort((a, b) => (b.bestScore ?? 0) - (a.bestScore ?? 0) || b.downloadsAllTime - a.downloadsAllTime)
     .slice(0, TOP);
 
   // Corroboration outranks score here too. A fabricated card must never lead
   // the payload a homepage renders.
-  const topRecipes = [...recipes]
+  const topRecipes = recipes
     .filter((recipe) => recipe.ranked)
     .sort(
       verificationFirst(
@@ -41,7 +41,7 @@ export async function summary(_context: RouteContext, deps: RouteDeps): Promise<
     )
     .slice(0, TOP);
 
-  const topCreators = [...creators]
+  const topCreators = creators
     .sort((a, b) => b.totals.allTimeDownloads - a.totals.allTimeDownloads)
     .slice(0, TOP)
     .map((creator) => ({
@@ -52,7 +52,7 @@ export async function summary(_context: RouteContext, deps: RouteDeps): Promise<
       bestScore: creator.bestScore,
     }));
 
-  const topFamilies = [...meta.families]
+  const topFamilies = meta.families
     .sort((a, b) => b.originCount - a.originCount || a.label.localeCompare(b.label))
     .slice(0, TOP);
 
@@ -68,6 +68,6 @@ export async function summary(_context: RouteContext, deps: RouteDeps): Promise<
       topFamilies,
       versions: meta.facets.versions.slice(0, TOP),
     },
-    { cache: "list" },
+    { cache: "meta" },
   );
 }

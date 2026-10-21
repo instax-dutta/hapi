@@ -12,7 +12,7 @@ import type {
   RepoRow,
   StatsScope,
 } from "../../src/lib/types.ts";
-import type { DatasetStore } from "../../src/lib/store.ts";
+import type { DatasetStore, StoredObject } from "../../src/lib/store.ts";
 
 /** A store backed by a plain object. */
 export class FakeStore implements DatasetStore {
@@ -24,10 +24,11 @@ export class FakeStore implements DatasetStore {
     this.objects = objects;
   }
 
-  async get(key: string): Promise<string | null> {
+  async get(key: string): Promise<StoredObject | null> {
     this.reads.push(key);
     const value = this.objects[key];
-    return value === undefined ? null : value;
+    if (value === undefined) return null;
+    return { text: value, etag: `"${value.length.toString(16)}"` };
   }
 }
 
@@ -54,6 +55,7 @@ export function modelRow(overrides: Partial<ModelRow> = {}): ModelRow {
     bestScore: 91.2,
     bestKl: 0.012,
     bestRefusalRate: 0.01,
+    bestRefusals: 1,
     bestRecipe: {
       id: "rcp_a",
       author: "coder3101",
@@ -250,6 +252,7 @@ export function creatorRow(username: string, overrides: Partial<CreatorRow> = {}
     bestScore: 91.2,
     bestKl: 0.012,
     bestRefusalRate: 0.01,
+    bestRefusals: 1,
     verifiedCount: 1,
     lastModified: "2026-10-20T00:00:00.000Z",
     models: [

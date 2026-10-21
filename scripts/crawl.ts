@@ -52,7 +52,12 @@ function readCache(id: string): CardCacheEntry | null {
 
 function writeCache(id: string, value: CardCacheEntry): void {
   mkdirSync(dirname(cachePath(id)), { recursive: true });
-  writeFileSync(cachePath(id), JSON.stringify(value));
+  // A crash mid-write must not leave a truncated cache entry. A truncated
+  // entry is silently refetched, so the damage is invisible.
+  const path = cachePath(id);
+  const tmp = `${path}.tmp`;
+  writeFileSync(tmp, JSON.stringify(value));
+  renameSync(tmp, path);
 }
 
 async function main(): Promise<void> {
@@ -80,8 +85,8 @@ async function main(): Promise<void> {
   // every repository whose README failed, which silently shrinks the index.
   if (!token) {
     console.warn(
-      "  ! HF_TOKEN is not set. The Hub will rate-limit this crawl and repos whose\n" +
-        "    README fails are dropped from the index. Set the HF_TOKEN secret.",
+      "  ! HF_TOKEN is not set. The Hub will rate-limit this crawl, and a repo whose\n" +
+        "    README cannot be read is indexed but never published. Set the HF_TOKEN secret.",
     );
   }
 
@@ -109,8 +114,12 @@ async function main(): Promise<void> {
           }),
       );
       card = result.card;
-      if (result.fetched) {
+      if (result.changed) {
+        // A re-parsed entry is written too. Without this the cached parser
+        // version never advances, and every crawl re-parses every card.
         writeCache(raw.id, result.entry);
+      }
+      if (result.fetched) {
         fetched += 1;
       } else {
         reused += 1;
@@ -143,7 +152,12 @@ async function main(): Promise<void> {
     crawledAt: new Date().toISOString(),
     discovery: { tagged: discovery.tagged.length, named: discovery.named.length },
     repos: repos.filter(Boolean),
-    cards,
+    // The cards are keyed in the discovery order, not in the order the
+    // workers finished, so two crawls of the same data produce the same
+    // bytes and the raw snapshot can be diffed.
+    cards: Object.fromEntries(
+      models.map((model) => [model.id, cards[model.id] ?? null]),
+    ),
   };
 
   mkdirSync(dirname(rawPath), { recursive: true });

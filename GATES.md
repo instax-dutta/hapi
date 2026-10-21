@@ -76,7 +76,7 @@ secret and never reaches the repository, the dataset or the API.
   EXPECT: DOX VERIFIED
   EVIDENCE: automatic-evidence=v1; definition-sha256=d712affde7f6c9c30b387119e7f8a2b8e5e9080d285f995ba20cdced9bdccf23; exit=0; EXPECT=matched; output-sha256=82b4f0c17d825f1d11c23a520803a989608c7ee35b60e28137a92b2f13feb5b7; output-bytes=60; shell=/bin/sh; cwd=/home/tejes/work/hapi; path=f5a00065660f/9 entries
 
-- [x] G7: The whole verification passes in one run
+- [x] G7: The whole offline verification passes in one run
   CHECK: node scripts/verify/gate.mjs all
   EXPECT: ALL GATES PASSED
   EVIDENCE: automatic-evidence=v1; definition-sha256=670a164541c6c699d6bb3717e5ccf17b80f09e62347f6fb0218bf8941876db6e; exit=0; EXPECT=matched; output-sha256=9a140c5703b9d32b7b3ab2bf2d485da0403b79b06d3c95907c73fccd94feafd8; output-bytes=24124; shell=/bin/sh; cwd=/home/tejes/work/hapi; path=f5a00065660f/9 entries

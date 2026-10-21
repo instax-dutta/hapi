@@ -38,7 +38,11 @@ function main(): void {
   }
 
   const raw = JSON.parse(readFileSync(RAW_PATH, "utf8")) as RawFile;
-  const snapshot = buildSnapshot(raw, { updatedAt: new Date().toISOString() });
+  // The timestamp comes from the crawl, not from the clock. A build that
+  // stamps the wall clock produces different bytes every run, so the version
+  // hash changes when the data did not, and a refresh publishes nothing
+  // useful.
+  const snapshot = buildSnapshot(raw, { updatedAt: raw.crawledAt });
 
   if (snapshot.origins.length === 0 || snapshot.recipes.length === 0) {
     console.error("Snapshot is empty; refusing to publish it.");
@@ -46,15 +50,18 @@ function main(): void {
   }
 
   // The Hub metadata the snapshot does not carry.
-  const extras: RawExtras = { tags: {}, safetensorsTotal: {}, sha: {} };
+  const extras: RawExtras = { tags: {}, safetensorsTotal: {} };
   for (const repo of raw.repos) {
     extras.tags![repo.id] = repo.tags;
     if (repo.safetensorsTotal !== null) extras.safetensorsTotal![repo.id] = repo.safetensorsTotal;
-    if (repo.sha) extras.sha![repo.id] = repo.sha;
   }
 
   const { meta, models, recipes, repos, creators } = apiRowsFromSnapshot(snapshot, extras);
   const dataset = { meta, models, recipes, repos, creators };
+
+  // The snapshot is written too, so the sample builder and a human can read
+  // the full document without rebuilding it.
+  writeAtomic(join(ROOT, "data", "snapshot.json"), JSON.stringify(snapshot));
 
   writeAtomic(join(DIST, "meta.json"), JSON.stringify(meta));
   writeAtomic(join(DIST, "models.json"), JSON.stringify({ origins: models }));

@@ -1,18 +1,18 @@
 {
-  "version": "18c33847c088",
+  "version": "eb59442b7331",
   "generatedAt": "2026-10-20T17:11:09.429Z",
   "generator": "hapi",
   "source": "huggingface-hub",
   "totals": {
     "repos": 81,
-    "verifiedRepos": 6250,
-    "unverifiedRepos": 2036,
+    "verifiedRepos": 81,
+    "unverifiedRepos": 0,
     "origins": 40,
     "recipes": 29,
-    "rankedRecipes": 1010,
-    "directConversions": 1266,
-    "downloadsAllTime": 63891588,
-    "downloads30d": 12003899
+    "rankedRecipes": 29,
+    "directConversions": 30,
+    "downloadsAllTime": 305209,
+    "downloads30d": 28572
   },
   "families": [
     {
@@ -241,298 +241,163 @@
   "facets": {
     "versions": [
       {
-        "value": "0.1.1",
-        "count": 1,
-        "downloadsAllTime": 73
-      },
-      {
-        "value": "1.0.0",
-        "count": 1,
-        "downloadsAllTime": 92559
-      },
-      {
-        "value": "1.0.1",
-        "count": 1,
-        "downloadsAllTime": 386888
-      },
-      {
-        "value": "1.0.2",
-        "count": 1,
-        "downloadsAllTime": 173
-      },
-      {
-        "value": "1.0.3",
-        "count": 1,
-        "downloadsAllTime": 128
-      },
-      {
-        "value": "1.1",
-        "count": 1,
-        "downloadsAllTime": 3561
+        "value": "1.2.0",
+        "count": 14,
+        "downloadsAllTime": 20610
       },
       {
         "value": "1.1.0",
-        "count": 1,
-        "downloadsAllTime": 265643
+        "count": 10,
+        "downloadsAllTime": 4711
       },
       {
-        "value": "1.2",
-        "count": 1,
-        "downloadsAllTime": 493
-      },
-      {
-        "value": "1.2.0",
-        "count": 1,
-        "downloadsAllTime": 14548762
-      },
-      {
-        "value": "1.2.1",
-        "count": 1,
-        "downloadsAllTime": 1095
+        "value": "1.0.1",
+        "count": 4,
+        "downloadsAllTime": 1094
       },
       {
         "value": "1.3.0",
-        "count": 1,
-        "downloadsAllTime": 2050950
-      },
-      {
-        "value": "1.4",
-        "count": 1,
-        "downloadsAllTime": 0
+        "count": 3,
+        "downloadsAllTime": 7911
       },
       {
         "value": "1.4.0",
-        "count": 1,
-        "downloadsAllTime": 923944
+        "count": 3,
+        "downloadsAllTime": 15399
       },
       {
         "value": "2.0.0",
         "count": 1,
-        "downloadsAllTime": 147753
-      },
-      {
-        "value": "2.1.0",
-        "count": 1,
-        "downloadsAllTime": 88105
+        "downloadsAllTime": 504
       }
     ],
     "formats": [
       {
         "value": "safetensors",
-        "count": 927,
-        "downloadsAllTime": 36728580
+        "count": 29,
+        "downloadsAllTime": 305209
       },
       {
         "value": "gguf",
-        "count": 736,
-        "downloadsAllTime": 45627028
-      },
-      {
-        "value": "mlx",
-        "count": 97,
-        "downloadsAllTime": 19386444
-      },
-      {
-        "value": "lora",
-        "count": 82,
-        "downloadsAllTime": 13774347
-      },
-      {
-        "value": "nvfp4",
-        "count": 77,
-        "downloadsAllTime": 23026356
-      },
-      {
-        "value": "fp8",
-        "count": 65,
-        "downloadsAllTime": 16782852
-      },
-      {
-        "value": "gptq",
-        "count": 55,
-        "downloadsAllTime": 15625610
-      },
-      {
-        "value": "exl",
-        "count": 49,
-        "downloadsAllTime": 14100872
-      },
-      {
-        "value": "mxfp4",
-        "count": 47,
-        "downloadsAllTime": 15221351
+        "count": 26,
+        "downloadsAllTime": 304392
       },
       {
         "value": "awq",
-        "count": 41,
-        "downloadsAllTime": 10086744
+        "count": 1,
+        "downloadsAllTime": 7802
+      },
+      {
+        "value": "exl",
+        "count": 1,
+        "downloadsAllTime": 7802
+      },
+      {
+        "value": "gptq",
+        "count": 1,
+        "downloadsAllTime": 7802
+      },
+      {
+        "value": "mlx",
+        "count": 1,
+        "downloadsAllTime": 471
+      },
+      {
+        "value": "nvfp4",
+        "count": 1,
+        "downloadsAllTime": 12159
       }
     ],
     "licenses": [
       {
         "value": "apache-2.0",
-        "count": 4011,
-        "downloadsAllTime": 51831373
-      },
-      {
-        "value": "other",
-        "count": 449,
-        "downloadsAllTime": 1926337
+        "count": 31,
+        "downloadsAllTime": 141759
       },
       {
         "value": "mit",
-        "count": 321,
-        "downloadsAllTime": 2184568
-      },
-      {
-        "value": "gemma",
-        "count": 265,
-        "downloadsAllTime": 2122296
-      },
-      {
-        "value": "llama3.1",
-        "count": 62,
-        "downloadsAllTime": 292966
+        "count": 18,
+        "downloadsAllTime": 53286
       },
       {
         "value": "cc-by-nc-4.0",
-        "count": 59,
-        "downloadsAllTime": 278601
-      },
-      {
-        "value": "llama3.2",
-        "count": 41,
-        "downloadsAllTime": 102231
-      },
-      {
-        "value": "llama3.3",
-        "count": 39,
-        "downloadsAllTime": 333437
+        "count": 7,
+        "downloadsAllTime": 35218
       },
       {
         "value": "llama3",
-        "count": 29,
-        "downloadsAllTime": 196602
-      },
-      {
-        "value": "wtfpl",
-        "count": 22,
-        "downloadsAllTime": 230182
-      },
-      {
-        "value": "cc-by-4.0",
-        "count": 9,
-        "downloadsAllTime": 13769
-      },
-      {
-        "value": "openmdw-1.1",
-        "count": 7,
-        "downloadsAllTime": 18233
-      },
-      {
-        "value": "agpl-3.0",
         "count": 3,
-        "downloadsAllTime": 11854
+        "downloadsAllTime": 15825
       },
       {
-        "value": "gpl-3.0",
+        "value": "llama3.2",
         "count": 3,
-        "downloadsAllTime": 4740
+        "downloadsAllTime": 4379
       },
       {
-        "value": "llama2",
+        "value": "other",
         "count": 3,
-        "downloadsAllTime": 3915
+        "downloadsAllTime": 7123
       },
       {
-        "value": "mpl-2.0",
-        "count": 3,
-        "downloadsAllTime": 66
-      },
-      {
-        "value": "unknown",
-        "count": 3,
-        "downloadsAllTime": 5936
-      },
-      {
-        "value": "artistic-2.0",
+        "value": "llama3.3",
         "count": 2,
-        "downloadsAllTime": 6288
+        "downloadsAllTime": 7614
       },
       {
-        "value": "cc-by-nc-sa-4.0",
-        "count": 2,
-        "downloadsAllTime": 24615
+        "value": "llama3.1",
+        "count": 1,
+        "downloadsAllTime": 62
       }
     ],
     "tags": [],
     "kinds": [
       {
         "value": "quant",
-        "count": 4332,
-        "downloadsAllTime": 48336648
+        "count": 50,
+        "downloadsAllTime": 283272
       },
       {
         "value": "heretic",
-        "count": 1266,
-        "downloadsAllTime": 8096466
+        "count": 30,
+        "downloadsAllTime": 21809
       },
       {
         "value": "finetune",
-        "count": 551,
-        "downloadsAllTime": 7292202
-      },
-      {
-        "value": "merge",
-        "count": 74,
-        "downloadsAllTime": 123043
-      },
-      {
-        "value": "lora",
-        "count": 27,
-        "downloadsAllTime": 43229
+        "count": 1,
+        "downloadsAllTime": 128
       }
     ],
     "sizes": [
       {
         "value": "4-9b",
-        "count": 232,
-        "downloadsAllTime": 7119263
-      },
-      {
-        "value": "15-32b",
-        "count": 218,
-        "downloadsAllTime": 30601429
-      },
-      {
-        "value": "1-4b",
-        "count": 204,
-        "downloadsAllTime": 2461960
+        "count": 18,
+        "downloadsAllTime": 129456
       },
       {
         "value": "9-15b",
-        "count": 167,
-        "downloadsAllTime": 13048485
+        "count": 8,
+        "downloadsAllTime": 35670
+      },
+      {
+        "value": "1-4b",
+        "count": 4,
+        "downloadsAllTime": 26885
+      },
+      {
+        "value": "15-32b",
+        "count": 4,
+        "downloadsAllTime": 106267
       },
       {
         "value": "32-70b",
-        "count": 76,
-        "downloadsAllTime": 7045834
+        "count": 3,
+        "downloadsAllTime": 68371
       },
       {
         "value": "70b-plus",
-        "count": 67,
-        "downloadsAllTime": 2875504
-      },
-      {
-        "value": "sub-1b",
-        "count": 45,
-        "downloadsAllTime": 438119
-      },
-      {
-        "value": "unknown",
-        "count": 44,
-        "downloadsAllTime": 300994
+        "count": 3,
+        "downloadsAllTime": 86139
       }
     ]
   }

@@ -48,7 +48,7 @@ function matches(row: RepoRow, query: CommonQuery): boolean {
   if (query.maxParams > 0 && (row.paramsB ?? Infinity) > query.maxParams) return false;
   if (query.bench && row.benchmarkCount === 0) return false;
   if (query.direct && !row.isDirectConversion) return false;
-  if (!isUpdatedAfter(row.lastModified, query.updatedAfter)) return false;
+  if (!isUpdatedAfter(row.lastModified, query.updatedAfterTime)) return false;
   if (query.q) {
     const haystack = `${row.id} ${row.author} ${row.originId} ${row.family} ${row.tags.join(" ")} ${row.parentIds.join(" ")}`;
     if (!matchesText(haystack, query.q)) return false;
@@ -67,7 +67,10 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Repo
   const byNewest: RowComparator<RepoRow> = (a, b) => compareText(a.lastModified, b.lastModified, dir);
   const byCreated: RowComparator<RepoRow> = (a, b) => compareText(a.createdAt, b.createdAt, dir);
   const byAuthor: RowComparator<RepoRow> = (a, b) => compareText(a.author, b.author, dir);
-  const byModel: RowComparator<RepoRow> = (a, b) => compareText(a.id, b.id, dir);
+  // The model, not the repository. A repository id starts with the author, so
+  // sorting by it would be the author sort under another name.
+  const byModel: RowComparator<RepoRow> = (a, b) =>
+    compareText(a.originId, b.originId, dir) || compareText(a.id, b.id, dir);
   const byId: RowComparator<RepoRow> = (a, b) => a.id.localeCompare(b.id);
 
   return {

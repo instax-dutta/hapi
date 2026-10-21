@@ -4,7 +4,10 @@
  * These are the cheapest reads in the API and the ones a client polls, so they
  * share the short cache policy.
  */
+import { compareIds } from "../core/scoring.ts";
 import { API_VERSION, DOCS_URL, errorResponse, json } from "../lib/http.ts";
+import { verificationFirst } from "../lib/query.ts";
+import type { RecipeRow } from "../lib/types.ts";
 import type { RouteContext, RouteDeps } from "../router.ts";
 
 export async function serviceIndex(_context: RouteContext, _deps: RouteDeps): Promise<Response> {
@@ -104,9 +107,16 @@ export async function family(context: RouteContext, deps: RouteDeps): Promise<Re
   const familyModels = models
     .filter((model) => model.familySlug === slug)
     .sort((a, b) => (b.bestScore ?? 0) - (a.bestScore ?? 0));
+  // Corroboration outranks score here too.
   const familyRecipes = recipes
     .filter((recipe) => recipe.familySlug === slug)
-    .sort((a, b) => b.score - a.score);
+    .sort(
+      verificationFirst(
+        (recipe: RecipeRow) =>
+          recipe.verification === "verified" || recipe.verification === "publisher",
+        (a, b) => b.score - a.score || a.kl - b.kl || compareIds(a.id, b.id),
+      ),
+    );
 
   return json(
     {

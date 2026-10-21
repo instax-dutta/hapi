@@ -8,8 +8,20 @@
  */
 import { applyConditional, emptyResponse, errorResponse } from "./lib/http.ts";
 import { DatasetLoader } from "./lib/dataset.ts";
-import { NullStore, R2Store, type DatasetStore, type R2BucketLike } from "./lib/store.ts";
-import { matchRoute, type Route, type RouteContext, type RouteDeps } from "./router.ts";
+import {
+  DatasetUnavailableError,
+  NullStore,
+  R2Store,
+  type DatasetStore,
+  type R2BucketLike,
+} from "./lib/store.ts";
+import {
+  hasMalformedEncoding,
+  matchRoute,
+  type Route,
+  type RouteContext,
+  type RouteDeps,
+} from "./router.ts";
 import * as meta from "./routes/meta.ts";
 import * as models from "./routes/models.ts";
 import * as recipes from "./routes/recipes.ts";
@@ -111,6 +123,10 @@ export default {
       return emptyResponse(204);
     }
 
+    if (hasMalformedEncoding(url.pathname)) {
+      return errorResponse(400, "bad_request", "The path contains a malformed escape.");
+    }
+
     const { match, pathExists } = matchRoute(routes, method === "HEAD" ? "GET" : method, url.pathname);
     if (!match) {
       if (pathExists) {
@@ -118,6 +134,7 @@ export default {
           405,
           "method_not_allowed",
           "This API is read-only. Use GET, HEAD or OPTIONS.",
+          { Allow: "GET, HEAD, OPTIONS" },
         );
       }
       return errorResponse(404, "not_found", `No endpoint matches ${url.pathname}.`);
@@ -142,8 +159,7 @@ export default {
     } catch (error) {
       // A missing or unparseable dataset is a service problem, not a client
       // problem. Everything else is a bug, and the message stays server-side.
-      const message = error instanceof Error ? error.message : String(error);
-      if (message.includes("dataset object") || message.includes("dataset store")) {
+      if (error instanceof DatasetUnavailableError) {
         console.error("hapi: dataset unavailable", error);
         return errorResponse(
           503,

@@ -110,8 +110,10 @@ export async function getCreator(context: RouteContext, deps: RouteDeps): Promis
     .sort((a, b) => b.downloadsAllTime - a.downloadsAllTime);
   // Corroboration leads here too. A creator's uncorroborated card must not
   // sit at the top of their own list.
+  // Every ablation the creator published, including one they re-uploaded from
+  // someone else.
   const creatorRecipes: RecipeRow[] = recipes
-    .filter((recipe) => recipe.author.toLowerCase() === wanted)
+    .filter((recipe) => recipe.authors.some((author) => author.toLowerCase() === wanted))
     .sort(
       verificationFirst(
         (recipe: RecipeRow) =>

@@ -5,9 +5,9 @@
  * guide. It is deliberately not reachable from the Worker entry point, so the
  * Worker bundle never pulls in `node:fs`.
  */
-import { readFile } from "node:fs/promises";
-import { join, normalize, sep } from "node:path";
-import type { DatasetStore } from "./store.ts";
+import { readFile, stat } from "node:fs/promises";
+import { join, normalize } from "node:path";
+import type { DatasetStore, StoredObject } from "./store.ts";
 
 export class FileStore implements DatasetStore {
   private readonly directory: string;
@@ -25,10 +25,14 @@ export class FileStore implements DatasetStore {
     return join(this.directory, safe);
   }
 
-  async get(key: string): Promise<string | null> {
+  async get(key: string): Promise<StoredObject | null> {
+    const path = this.pathFor(key);
     try {
-      const text = await readFile(this.pathFor(key), "utf8");
-      return text;
+      const [text, info] = await Promise.all([readFile(path, "utf8"), stat(path)]);
+      // The size and the modification time are a validator for the bytes. It
+      // is not a cryptographic digest, and it does not need to be: the ETag
+      // only has to change when the bytes change.
+      return { text, etag: `"${info.size.toString(16)}-${Math.floor(info.mtimeMs).toString(16)}"` };
     } catch (error) {
       const code = (error as NodeJS.ErrnoException).code;
       if (code === "ENOENT" || code === "EISDIR") return null;
@@ -41,5 +45,3 @@ export class FileStore implements DatasetStore {
 export function defaultDataDirectory(root = process.cwd()): string {
   return join(root, "dist");
 }
-
-export { sep };

@@ -11,12 +11,20 @@
 
 /** The subset of a Cloudflare R2 bucket this project uses. */
 export interface R2BucketLike {
-  get(key: string): Promise<{ text(): Promise<string> } | null>;
+  get(key: string): Promise<{ text(): Promise<string>; httpEtag?: string } | null>;
+}
+
+/** One published dataset object, as the store holds it. */
+export interface StoredObject {
+  /** The raw bytes. */
+  text: string;
+  /** The store's own validator for the bytes. */
+  etag: string;
 }
 
 export interface DatasetStore {
-  /** The raw bytes of one dataset object, or null when it does not exist. */
-  get(key: string): Promise<string | null>;
+  /** One dataset object, or null when it does not exist. */
+  get(key: string): Promise<StoredObject | null>;
 }
 
 export class DatasetUnavailableError extends Error {
@@ -34,10 +42,10 @@ export class R2Store implements DatasetStore {
     this.bucket = bucket;
   }
 
-  async get(key: string): Promise<string | null> {
+  async get(key: string): Promise<StoredObject | null> {
     const object = await this.bucket.get(key);
     if (!object) return null;
-    return object.text();
+    return { text: await object.text(), etag: object.httpEtag ?? "" };
   }
 }
 
@@ -48,7 +56,7 @@ export class R2Store implements DatasetStore {
  * inside the handler.
  */
 export class NullStore implements DatasetStore {
-  async get(_key: string): Promise<string | null> {
+  async get(_key: string): Promise<StoredObject | null> {
     throw new DatasetUnavailableError(
       "No dataset store is configured. Bind an R2 bucket or set a data directory.",
     );

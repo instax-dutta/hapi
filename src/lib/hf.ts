@@ -229,7 +229,7 @@ export async function fetchModel(
 }
 
 /** A repository id, as the Hub spells it: `owner/name`. */
-export const REPO_ID_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+const REPO_ID_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 
 export function isValidRepoId(value: string): boolean {
   return REPO_ID_PATTERN.test(value);
@@ -265,7 +265,11 @@ export function toRawRepo(model: HubModel): RawRepo {
     downloadsAllTime: model.downloadsAllTime ?? 0,
     likes: model.likes ?? 0,
     tags: model.tags ?? [],
-    gated: Boolean(model.gated),
+    // The Hub sends a boolean, but the type allows a string. The string
+    // "false" is false, not true.
+    gated:
+      model.gated === true ||
+      (typeof model.gated === "string" && model.gated !== "false"),
     pipelineTag: model.pipeline_tag ?? null,
     libraryName: model.library_name ?? null,
     declaredBaseModels: [...new Set(declared)],

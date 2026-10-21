@@ -78,25 +78,28 @@ function main(): void {
   const discovered = collectModels(tagged, named);
   const discoveredTotals = aggregate(discovered);
 
-  // The indexed scope: the artifacts the directory publishes.
-  let indexedTotals: DownloadTotals = {
-    modelCount: 0,
-    allTimeDownloads: 0,
-    last30DaysDownloads: 0,
-  };
-  if (existsSync(REPOS_PATH)) {
-    const repos = (JSON.parse(readFileSync(REPOS_PATH, "utf8")) as { repos: RawRepo[] }).repos;
-    indexedTotals = aggregate(
-      repos.map((repo) => ({
-        id: repo.id,
-        url: `https://huggingface.co/${repo.id}`,
-        downloads: repo.downloads30d,
-        downloadsAllTime: repo.downloadsAllTime,
-        likes: repo.likes,
-        source: "tagged" as const,
-      })),
-    );
+  // The indexed scope: the artifacts the directory publishes. A missing list
+  // is a failed build, not an empty measurement. Publishing a zero would
+  // tell every client the ecosystem is empty.
+  if (!existsSync(REPOS_PATH)) {
+    console.error("dist/repos.json is missing. Run `npm run build:dataset` first.");
+    process.exit(1);
   }
+  const repos = (JSON.parse(readFileSync(REPOS_PATH, "utf8")) as { repos: RawRepo[] }).repos;
+  if (repos.length === 0) {
+    console.error("dist/repos.json holds no artifacts. Refusing to publish an empty measurement.");
+    process.exit(1);
+  }
+  const indexedTotals: DownloadTotals = aggregate(
+    repos.map((repo) => ({
+      id: repo.id,
+      url: `https://huggingface.co/${repo.id}`,
+      downloads: repo.downloads30d,
+      downloadsAllTime: repo.downloadsAllTime,
+      likes: repo.likes,
+      source: "tagged" as const,
+    })),
+  );
 
   const updatedAt = raw.crawledAt;
   const scope: StatsScope = {

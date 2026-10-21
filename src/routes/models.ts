@@ -14,9 +14,11 @@ import {
   matchesText,
   parseQuery,
   runQuery,
+  verificationFirst,
   type CommonQuery,
   type RowComparator,
 } from "../lib/query.ts";
+import { compareCanonicalModel, compareIds } from "../core/scoring.ts";
 import type { ModelRow, RecipeRow, RepoRow } from "../lib/types.ts";
 import type { RouteContext, RouteDeps } from "../router.ts";
 
@@ -24,6 +26,7 @@ export const MODEL_SORTS = [
   "score",
   "kl",
   "refusals",
+  "refusalRate",
   "downloads",
   "recent",
   "params",
@@ -48,7 +51,7 @@ function matches(row: ModelRow, query: CommonQuery): boolean {
   if (query.implausible === "0" && row.bestRecipe?.implausible) return false;
   if (query.implausible === "1" && !row.bestRecipe?.implausible) return false;
   if (query.maxParams > 0 && (row.paramsB ?? Infinity) > query.maxParams) return false;
-  if (!isUpdatedAfter(row.lastModified, query.updatedAfter)) return false;
+  if (!isUpdatedAfter(row.lastModified, query.updatedAfterTime)) return false;
   if (query.q) {
     const haystack = `${row.id} ${row.name} ${row.displayName} ${row.owner} ${row.authors.join(" ")}`;
     if (!matchesText(haystack, query.q)) return false;
@@ -58,9 +61,15 @@ function matches(row: ModelRow, query: CommonQuery): boolean {
 
 function buildComparators(query: CommonQuery): Record<string, RowComparator<ModelRow>> {
   const dir = query.dir;
-  const byScore: RowComparator<ModelRow> = (a, b) => compareNullable(a.bestScore, b.bestScore, dir);
+  // The canonical order of models, so the rank column and the row order agree.
+  const byScore: RowComparator<ModelRow> = (a, b) => {
+    const rest = compareCanonicalModel(a, b);
+    return dir === "asc" ? -rest : rest;
+  };
   const byKl: RowComparator<ModelRow> = (a, b) => compareNullable(a.bestKl, b.bestKl, dir);
   const byRefusals: RowComparator<ModelRow> = (a, b) =>
+    compareNullable(a.bestRefusals, b.bestRefusals, dir);
+  const byRefusalRate: RowComparator<ModelRow> = (a, b) =>
     compareNullable(a.bestRefusalRate, b.bestRefusalRate, dir);
   const byDownloads: RowComparator<ModelRow> = (a, b) =>
     compareNullable(a.downloadsAllTime, b.downloadsAllTime, dir);
@@ -73,12 +82,13 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Mode
     compareNullable(a.recipeCount, b.recipeCount, dir);
   const byRepos: RowComparator<ModelRow> = (a, b) => compareNullable(a.repoCount, b.repoCount, dir);
   const byLikes: RowComparator<ModelRow> = (a, b) => compareNullable(a.likes, b.likes, dir);
-  const byId: RowComparator<ModelRow> = (a, b) => a.id.localeCompare(b.id);
+  const byId: RowComparator<ModelRow> = (a, b) => compareIds(a.id, b.id);
 
   return {
     score: byScore,
     kl: byKl,
     refusals: byRefusals,
+    refusalRate: byRefusalRate,
     downloads: byDownloads,
     recent: byRecent,
     params: byParams,
@@ -123,9 +133,17 @@ export async function getModel(context: RouteContext, deps: RouteDeps): Promise<
     return errorResponse(404, "not_found", `No model matches the id "${id}".`);
   }
 
+  // Corroboration outranks score here too. A model page must not lead with
+  // an uncorroborated card.
   const modelRecipes: RecipeRow[] = recipes
     .filter((recipe) => recipe.originId === model.id)
-    .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
+    .sort(
+      verificationFirst(
+        (recipe: RecipeRow) =>
+          recipe.verification === "verified" || recipe.verification === "publisher",
+        (a, b) => b.score - a.score || a.kl - b.kl || compareIds(a.id, b.id),
+      ),
+    );
   const modelRepos: RepoRow[] = repos
     .filter((repo) => repo.originId === model.id)
     .sort((a, b) => b.downloadsAllTime - a.downloadsAllTime);

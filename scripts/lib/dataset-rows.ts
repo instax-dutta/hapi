@@ -8,6 +8,12 @@
 import { createHash } from "node:crypto";
 import type { Snapshot } from "../../src/core/types.ts";
 import { estimateDownloadsPerSecond, LIVE_RATE_WINDOW_DAYS } from "../../src/core/live.ts";
+import {
+  compareCanonical,
+  compareCanonicalModel,
+  compareIds,
+  type RankedRow,
+} from "../../src/core/scoring.ts";
 import type {
   BestRecipeSummary,
   CreatorRow,
@@ -33,8 +39,6 @@ export interface RawExtras {
   tags?: Record<string, string[]>;
   /** The total parameter count the Hub reports, in parameters. */
   safetensorsTotal?: Record<string, number>;
-  /** The commit the crawl read. */
-  sha?: Record<string, string>;
 }
 
 const RATE_WINDOW_DAYS = LIVE_RATE_WINDOW_DAYS;
@@ -73,15 +77,7 @@ function facet(rows: Array<{ value: string; downloadsAllTime: number }>): FacetC
  * and still looks broken.
  */
 export function compareRecipes(a: RecipeRow, b: RecipeRow): number {
-  const verified = (row: RecipeRow) =>
-    row.verification === "verified" || row.verification === "publisher";
-  return (
-    Number(verified(b)) - Number(verified(a)) ||
-    b.score - a.score ||
-    a.kl - b.kl ||
-    a.refusalRate - b.refusalRate ||
-    a.id.localeCompare(b.id)
-  );
+  return compareCanonical(a as RankedRow, b as RankedRow);
 }
 
 /**
@@ -216,11 +212,11 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
       baseRefusalRate,
       refusalReduction:
         baseRefusalRate === null ? null : Math.round((baseRefusalRate - recipe.refusalRate) * 10000) / 10000,
-      licenses: [...new Set(members.map((member) => member.license).filter(Boolean))].sort() as string[],
+      licenses: [...new Set(members.map((member) => member.license).filter(Boolean))].sort(compareIds) as string[],
       quantizations: [
         ...new Set(members.map((member) => member.quant).filter(Boolean)),
-      ].sort() as string[],
-      authors: [...new Set(members.map((member) => member.author))].sort(),
+      ].sort(compareIds) as string[],
+      authors: [...new Set(members.map((member) => member.author))].sort(compareIds),
     };
   });
 
@@ -272,6 +268,7 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
       bestScore: origin.bestScore,
       bestKl: origin.bestKl,
       bestRefusalRate: origin.bestRefusalRate,
+      bestRefusals: best?.refusals ?? null,
       bestRecipe: summary,
       verifiedRepoCount: origin.verifiedRepoCount,
       downloadsAllTime: origin.downloadsAllTime,
@@ -285,7 +282,7 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
       hereticVersions: [
         ...new Set(members.map((member) => member.hereticVersion).filter(Boolean)),
       ].sort() as string[],
-      authors: [...new Set(members.map((member) => member.author))].sort(),
+      authors: [...new Set(members.map((member) => member.author))].sort(compareIds),
     };
   });
 
@@ -329,20 +326,13 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
 export function assignModelRanks(models: ModelRow[]): void {
   const ranked = models
     .filter((model) => model.bestRecipe !== null)
-    .sort(
-      (a, b) =>
-        (b.bestScore ?? 0) - (a.bestScore ?? 0) ||
-        (a.bestKl ?? Number.POSITIVE_INFINITY) - (b.bestKl ?? Number.POSITIVE_INFINITY) ||
-        (a.bestRefusalRate ?? Number.POSITIVE_INFINITY) -
-          (b.bestRefusalRate ?? Number.POSITIVE_INFINITY) ||
-        a.id.localeCompare(b.id),
-    );
+    .sort((a, b) => compareCanonicalModel(a, b));
   ranked.forEach((model, index) => {
     model.rank = index + 1;
   });
 }
 
-function buildCreators(
+export function buildCreators(
   repos: RepoRow[],
   recipes: RecipeRow[],
   updatedAt: string,
@@ -356,9 +346,11 @@ function buildCreators(
 
   const recipesByAuthor = new Map<string, RecipeRow[]>();
   for (const recipe of recipes) {
-    const list = recipesByAuthor.get(recipe.author) ?? [];
-    list.push(recipe);
-    recipesByAuthor.set(recipe.author, list);
+    for (const author of recipe.authors) {
+      const list = recipesByAuthor.get(author) ?? [];
+      list.push(recipe);
+      recipesByAuthor.set(author, list);
+    }
   }
 
   const creators: CreatorRow[] = [];
@@ -412,21 +404,21 @@ function buildCreators(
   return creators;
 }
 
-function buildFacets(recipes: RecipeRow[], repos: RepoRow[], models: ModelRow[]): DatasetFacets {
-  const versions = new Map<string, RepoRow[]>();
-  for (const repo of repos) {
-    if (!repo.hereticVersion) continue;
-    const list = versions.get(repo.hereticVersion) ?? [];
-    list.push(repo);
-    versions.set(repo.hereticVersion, list);
-  }
-
+export function buildFacets(
+  recipes: RecipeRow[],
+  repos: RepoRow[],
+  models: ModelRow[],
+): DatasetFacets {
   return {
+    // Every facet counts artifacts, so the counts line up with what a filter
+    // over the artifacts returns.
     versions: facet(
-      [...versions.entries()].map(([value, list]) => ({
-        value,
-        downloadsAllTime: list.reduce((sum, repo) => sum + repo.downloadsAllTime, 0),
-      })),
+      repos
+        .filter((repo) => Boolean(repo.hereticVersion))
+        .map((repo) => ({
+          value: repo.hereticVersion as string,
+          downloadsAllTime: repo.downloadsAllTime,
+        })),
     ),
     formats: facet(
       recipes.flatMap((recipe) =>

@@ -35,6 +35,8 @@ export interface CommonQuery {
   implausible: string;
   direct: boolean;
   updatedAfter: string;
+  /** The parsed boundary, so it is not parsed once per row. */
+  updatedAfterTime: number;
   sort: string;
   dir: SortDir;
   page: number;
@@ -45,7 +47,14 @@ export const PER_PAGE_OPTIONS = [25, 50, 100, 200] as const;
 export const DEFAULT_PER_PAGE = 50;
 
 /** Sort keys whose natural order is ascending. */
-const ASCENDING_BY_DEFAULT = new Set(["kl", "refusals", "params", "model", "author", "score_asc"]);
+const ASCENDING_BY_DEFAULT = new Set([
+  "kl",
+  "refusalRate",
+  "refusals",
+  "params",
+  "model",
+  "author",
+]);
 
 export function defaultDirFor(sort: string): SortDir {
   return ASCENDING_BY_DEFAULT.has(sort) ? "asc" : "desc";
@@ -123,6 +132,7 @@ export function parseQuery(
     implausible: one(params, "implausible").trim().toLowerCase(),
     direct: one(params, "direct") === "1",
     updatedAfter,
+    updatedAfterTime: Number.isFinite(updatedAfterTime) ? updatedAfterTime : Number.NEGATIVE_INFINITY,
     sort,
     dir,
     page,
@@ -130,12 +140,16 @@ export function parseQuery(
   };
 }
 
-/** True when a row is newer than the requested date. */
-export function isUpdatedAfter(lastModified: string, updatedAfter: string): boolean {
-  if (!updatedAfter) return true;
+/**
+ * True when a row is newer than the requested date.
+ *
+ * The boundary is parsed once, when the query is read, so a filter over a
+ * whole page does not parse the same string once per row.
+ */
+export function isUpdatedAfter(lastModified: string, boundary: number): boolean {
+  if (!Number.isFinite(boundary)) return true;
   const time = Date.parse(lastModified);
-  const boundary = Date.parse(updatedAfter);
-  if (!Number.isFinite(time) || !Number.isFinite(boundary)) return true;
+  if (!Number.isFinite(time)) return true;
   return time >= boundary;
 }
 

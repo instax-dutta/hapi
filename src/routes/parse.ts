@@ -10,7 +10,7 @@
 import { parseCard } from "../core/card.ts";
 import type { ParsedCard } from "../core/types.ts";
 import { errorResponse, json } from "../lib/http.ts";
-import { fetchModel, fetchReadme, isValidRepoId } from "../lib/hf.ts";
+import { fetchModel, fetchReadme, isValidRepoId, type HubModel } from "../lib/hf.ts";
 import type { RouteContext, RouteDeps } from "../router.ts";
 
 /**
@@ -74,7 +74,7 @@ export async function parseRepo(context: RouteContext, deps: RouteDeps): Promise
 
   const fetchImpl = deps.fetchImpl;
   let markdown: string | null;
-  let meta = null;
+  let meta: HubModel | null = null;
   try {
     [markdown, meta] = await Promise.all([
       fetchReadme(raw, { retries: 2, timeoutMs: 20_000 }, fetchImpl),

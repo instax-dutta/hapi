@@ -10,8 +10,9 @@
 import { createServer } from "node:http";
 import { join } from "node:path";
 import handler from "./index.ts";
+import { errorResponse } from "./lib/http.ts";
 import { FileStore } from "./lib/store-file.ts";
-import { R2Store, type DatasetStore } from "./lib/store.ts";
+import type { DatasetStore } from "./lib/store.ts";
 
 const port = Number(process.env.HAPI_PORT ?? 8787);
 const host = process.env.HAPI_HOST ?? "127.0.0.1";
@@ -34,14 +35,11 @@ const server = createServer((request, response) => {
       response.writeHead(result.status, Object.fromEntries(result.headers));
       response.end(result.body ? Buffer.from(await result.arrayBuffer()) : undefined);
     })
-    .catch((error) => {
+    .catch(async (error) => {
       console.error("hapi: request failed", error);
-      response.writeHead(500, { "Content-Type": "application/json" });
-      response.end(
-        JSON.stringify({
-          error: { status: 500, code: "internal_error", message: "Something went wrong." },
-        }),
-      );
+      const failed = errorResponse(500, "internal_error", "Something went wrong.");
+      response.writeHead(failed.status, Object.fromEntries(failed.headers));
+      response.end(await failed.text());
     });
 });
 

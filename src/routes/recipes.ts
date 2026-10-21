@@ -17,6 +17,7 @@ import {
   type CommonQuery,
   type RowComparator,
 } from "../lib/query.ts";
+import { compareCohort, compareIds, compareVerification } from "../core/scoring.ts";
 import type { RecipeRow } from "../lib/types.ts";
 import type { RouteContext, RouteDeps } from "../router.ts";
 
@@ -24,6 +25,7 @@ export const RECIPE_SORTS = [
   "score",
   "kl",
   "refusals",
+  "refusalRate",
   "downloads",
   "recent",
   "params",
@@ -58,7 +60,7 @@ function matches(row: RecipeRow, query: CommonQuery): boolean {
   if (query.bench && row.benchmarks.length === 0) return false;
   if (query.implausible === "0" && row.implausible) return false;
   if (query.implausible === "1" && !row.implausible) return false;
-  if (!isUpdatedAfter(row.lastModified, query.updatedAfter)) return false;
+  if (!isUpdatedAfter(row.lastModified, query.updatedAfterTime)) return false;
   if (query.q) {
     const haystack = `${row.id} ${row.originId} ${row.originName} ${row.author} ${row.authors.join(" ")} ${row.bestRepoId} ${row.evidenceRepoId}`;
     if (!matchesText(haystack, query.q)) return false;
@@ -68,9 +70,21 @@ function matches(row: RecipeRow, query: CommonQuery): boolean {
 
 function buildComparators(query: CommonQuery): Record<string, RowComparator<RecipeRow>> {
   const dir = query.dir;
-  const byScore: RowComparator<RecipeRow> = (a, b) => compareNullable(a.score, b.score, dir);
+  // The default sort is the canonical leaderboard order, so the rank column
+  // and the row order always agree. The corroboration partition does not flip
+  // with the direction: an uncorroborated row never leads.
+  const byScore: RowComparator<RecipeRow> = (a, b) => {
+    const partition = compareVerification(a, b);
+    if (partition !== 0) return partition;
+    const rest = compareCohort(a, b);
+    return dir === "asc" ? -rest : rest;
+  };
   const byKl: RowComparator<RecipeRow> = (a, b) => compareNullable(a.kl, b.kl, dir);
+  // The count and the rate are different questions. `refusals` is the count
+  // of refused tests; `refusalRate` is the share of them.
   const byRefusals: RowComparator<RecipeRow> = (a, b) =>
+    compareNullable(a.refusals, b.refusals, dir);
+  const byRefusalRate: RowComparator<RecipeRow> = (a, b) =>
     compareNullable(a.refusalRate, b.refusalRate, dir);
   const byDownloads: RowComparator<RecipeRow> = (a, b) =>
     compareNullable(a.downloadsAllTime, b.downloadsAllTime, dir);
@@ -83,7 +97,7 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Reci
   const byBenchmarks: RowComparator<RecipeRow> = (a, b) =>
     compareNullable(a.benchmarkCount, b.benchmarkCount, dir);
   const byRepos: RowComparator<RecipeRow> = (a, b) => compareNullable(a.repoCount, b.repoCount, dir);
-  const byId: RowComparator<RecipeRow> = (a, b) => a.id.localeCompare(b.id);
+  const byId: RowComparator<RecipeRow> = (a, b) => compareIds(a.id, b.id);
 
   // Corroboration outranks the requested sort. A fabricated card that claims
   // zero refusals and a zero KL cannot lead any ordering.
@@ -94,6 +108,7 @@ function buildComparators(query: CommonQuery): Record<string, RowComparator<Reci
     score: verified(byScore),
     kl: verified(byKl),
     refusals: verified(byRefusals),
+    refusalRate: verified(byRefusalRate),
     downloads: verified(byDownloads),
     recent: verified(byRecent),
     params: verified(byParams),

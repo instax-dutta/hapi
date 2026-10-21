@@ -18,6 +18,8 @@ export interface CardLoaderResult {
   card: ParsedCard | null;
   /** True when the README was fetched from the network. */
   fetched: boolean;
+  /** True when the entry differs from the one on disk and must be written. */
+  changed: boolean;
   entry: CardCacheEntry;
 }
 
@@ -34,15 +36,19 @@ export async function loadCard(
   fetchMarkdown: (id: string) => Promise<string | null>,
   parse: (markdown: string, options: { selfId: string }) => ParsedCard,
 ): Promise<CardLoaderResult> {
-  if (cached && cached.sha === repo.sha) {
+  // A repository with no commit hash has no usable cache key, so it is always
+  // fetched. Otherwise a missing hash would match any cached entry and the
+  // stale parse would be reused forever.
+  if (cached && repo.sha && cached.sha === repo.sha) {
     if (cached.parserVersion === PARSER_VERSION && cached.card !== undefined) {
-      return { card: cached.card, fetched: false, entry: cached };
+      return { card: cached.card, fetched: false, changed: false, entry: cached };
     }
     if (cached.markdown !== undefined) {
       const card = cached.markdown ? parse(cached.markdown, { selfId: repo.id }) : null;
       return {
         card,
         fetched: false,
+        changed: true,
         entry: {
           sha: repo.sha,
           parserVersion: PARSER_VERSION,
@@ -58,6 +64,7 @@ export async function loadCard(
   return {
     card,
     fetched: true,
+    changed: true,
     entry: { sha: repo.sha, parserVersion: PARSER_VERSION, markdown, card },
   };
 }

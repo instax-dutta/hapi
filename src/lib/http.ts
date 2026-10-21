@@ -72,7 +72,12 @@ export function json(body: unknown, options: JsonOptions = {}): Response {
   return new Response(text, { status: options.status ?? 200, headers });
 }
 
-export function errorResponse(status: number, code: string, message: string): Response {
+export function errorResponse(
+  status: number,
+  code: string,
+  message: string,
+  headers: Record<string, string> = {},
+): Response {
   const body: ApiError = {
     error: { status, code, message, docs: DOCS_URL },
   };
@@ -84,6 +89,7 @@ export function errorResponse(status: number, code: string, message: string): Re
       "Cache-Control": CACHE.error,
       "X-Content-Type-Options": "nosniff",
       ...corsHeaders(),
+      ...headers,
     },
   });
 }
@@ -99,8 +105,11 @@ export function applyConditional(request: Request, response: Response): Response
   if (!etag) return response;
   const requestEtag = request.headers.get("If-None-Match");
   if (!requestEtag) return response;
-  const candidates = requestEtag.split(",").map((value) => value.trim());
-  if (!candidates.includes(etag) && !candidates.includes("*")) return response;
+  // A weak validator matches a strong one. RFC 9110 asks for the weak
+  // comparison, so `W/"abc"` has to match `"abc"`.
+  const candidates = requestEtag.split(",").map((value) => value.trim().replace(/^W\//, ""));
+  const strong = etag.replace(/^W\//, "");
+  if (!candidates.includes(strong) && !candidates.includes("*")) return response;
 
   const headers = new Headers(response.headers);
   headers.delete("Content-Type");
@@ -108,7 +117,7 @@ export function applyConditional(request: Request, response: Response): Response
   return new Response(null, { status: 304, headers });
 }
 
-/** A response with no body, for `OPTIONS` and for `HEAD`. */
+/** A response with no body, for `OPTIONS`. */
 export function emptyResponse(status: number, cache: CachePolicy = "meta"): Response {
   return new Response(null, {
     status,
