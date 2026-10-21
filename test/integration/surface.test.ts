@@ -117,8 +117,16 @@ test("the comparison names both models and the difference between them", async (
   const store = fixtureStore({
     models: [
       modelRow(),
-      modelRow({ id: "x/y", displayName: "y", bestScore: 50, bestKl: 0.5, downloadsAllTime: 200 }),
+      modelRow({
+        id: "x/y",
+        displayName: "y",
+        bestRecipeId: "rcp_b",
+        bestScore: 50,
+        bestKl: 0.5,
+        downloadsAllTime: 200,
+      }),
     ],
+    recipes: [recipeRow({ id: "rcp_a" }), recipeRow({ id: "rcp_b", score: 50, kl: 0.5 })],
   });
   const response = await call(
     "/v1/compare?a=google/gemma-3-12b-it&b=x/y",
