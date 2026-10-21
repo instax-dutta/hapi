@@ -11,7 +11,7 @@
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { apiRowsFromSnapshot } from "./lib/dataset-rows.ts";
+import { apiRowsFromSnapshot, assignModelRanks, assignRanks } from "./lib/dataset-rows.ts";
 import { aggregate, estimateDownloadsPerSecond, LIVE_RATE_WINDOW_DAYS } from "../src/core/live.ts";
 
 const source = process.argv[2];
@@ -37,6 +37,11 @@ const keptRepos = full.repos.filter(
 const keptCreators = full.creators.filter((creator) =>
   keptRepos.some((repo) => repo.author === creator.username),
 );
+
+// The sample is a slice, so its ranks are the ranks inside the slice. A rank
+// from the whole corpus would point at rows the sample does not publish.
+assignRanks(keptRecipes);
+assignModelRanks(keptModels);
 
 const families = snapshot.families.filter((family) =>
   keptModels.some((model) => model.familySlug === family.slug),

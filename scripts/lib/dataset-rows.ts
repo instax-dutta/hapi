@@ -91,7 +91,7 @@ export function compareRecipes(a: RecipeRow, b: RecipeRow): number {
  * is the position among the ablations of the same model, which is the number
  * a model page shows.
  */
-function assignRanks(recipes: RecipeRow[]): void {
+export function assignRanks(recipes: RecipeRow[]): void {
   const ranked = recipes.filter((recipe) => recipe.ranked).sort(compareRecipes);
   ranked.forEach((recipe, index) => {
     recipe.rank = index + 1;
@@ -289,19 +289,7 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
     };
   });
 
-  const rankedModels = models
-    .filter((model) => model.bestRecipe !== null)
-    .sort(
-      (a, b) =>
-        (b.bestScore ?? 0) - (a.bestScore ?? 0) ||
-        (a.bestKl ?? Number.POSITIVE_INFINITY) - (b.bestKl ?? Number.POSITIVE_INFINITY) ||
-        (a.bestRefusalRate ?? Number.POSITIVE_INFINITY) -
-          (b.bestRefusalRate ?? Number.POSITIVE_INFINITY) ||
-        a.id.localeCompare(b.id),
-    );
-  rankedModels.forEach((model, index) => {
-    model.rank = index + 1;
-  });
+  assignModelRanks(models);
 
   const creators = buildCreators(repos, recipes, snapshot.updatedAt);
   const facets = buildFacets(recipes, repos, models);
@@ -330,6 +318,28 @@ export function apiRowsFromSnapshot(snapshot: Snapshot, extras: RawExtras = {}):
   };
 
   return { meta, models, recipes, repos, creators };
+}
+
+/**
+ * Give every model its position.
+ *
+ * The position is among the models that lead with a corroborated ablation. A
+ * model whose conversions are all uncorroborated has no place on the board.
+ */
+export function assignModelRanks(models: ModelRow[]): void {
+  const ranked = models
+    .filter((model) => model.bestRecipe !== null)
+    .sort(
+      (a, b) =>
+        (b.bestScore ?? 0) - (a.bestScore ?? 0) ||
+        (a.bestKl ?? Number.POSITIVE_INFINITY) - (b.bestKl ?? Number.POSITIVE_INFINITY) ||
+        (a.bestRefusalRate ?? Number.POSITIVE_INFINITY) -
+          (b.bestRefusalRate ?? Number.POSITIVE_INFINITY) ||
+        a.id.localeCompare(b.id),
+    );
+  ranked.forEach((model, index) => {
+    model.rank = index + 1;
+  });
 }
 
 function buildCreators(
