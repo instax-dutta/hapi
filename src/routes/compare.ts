@@ -24,6 +24,31 @@ interface Side {
 }
 
 /**
+ * The numbers a side is compared on.
+ *
+ * An artifact is compared on its own downloads, an ablation on its own, and a
+ * model on the total of everything published under it.
+ */
+function subject(side: Side): { downloadsAllTime: number; downloads30d: number } {
+  if (side.repo) {
+    return {
+      downloadsAllTime: side.repo.downloadsAllTime,
+      downloads30d: side.repo.downloads30d,
+    };
+  }
+  if (side.kind === "recipe" && side.recipe) {
+    return {
+      downloadsAllTime: side.recipe.downloadsAllTime,
+      downloads30d: side.recipe.downloads30d,
+    };
+  }
+  return {
+    downloadsAllTime: side.model.downloadsAllTime,
+    downloads30d: side.model.downloads30d,
+  };
+}
+
+/**
  * Resolve an id to a comparable side.
  *
  * A model id names a model. An ablation id names an ablation, and the model it
@@ -105,8 +130,11 @@ export async function compare(context: RouteContext, deps: RouteDeps): Promise<R
         bestScore: difference(firstBest?.score ?? null, secondBest?.score ?? null),
         kl: difference(firstBest?.kl ?? null, secondBest?.kl ?? null),
         refusalRate: difference(firstBest?.refusalRate ?? null, secondBest?.refusalRate ?? null),
-        downloadsAllTime: difference(first.model.downloadsAllTime, second.model.downloadsAllTime),
-        downloads30d: difference(first.model.downloads30d, second.model.downloads30d),
+        downloadsAllTime: difference(
+          subject(first).downloadsAllTime,
+          subject(second).downloadsAllTime,
+        ),
+        downloads30d: difference(subject(first).downloads30d, subject(second).downloads30d),
         paramsB: difference(first.model.paramsB, second.model.paramsB),
         recipeCount: difference(first.model.recipeCount, second.model.recipeCount),
         repoCount: difference(first.model.repoCount, second.model.repoCount),

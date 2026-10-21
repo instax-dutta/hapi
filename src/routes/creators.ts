@@ -12,6 +12,7 @@ import {
   matchesText,
   parseQuery,
   runQuery,
+  verificationFirst,
   type CommonQuery,
   type RowComparator,
 } from "../lib/query.ts";
@@ -107,9 +108,17 @@ export async function getCreator(context: RouteContext, deps: RouteDeps): Promis
   const creatorRepos: RepoRow[] = repos
     .filter((repo) => repo.author.toLowerCase() === wanted)
     .sort((a, b) => b.downloadsAllTime - a.downloadsAllTime);
+  // Corroboration leads here too. A creator's uncorroborated card must not
+  // sit at the top of their own list.
   const creatorRecipes: RecipeRow[] = recipes
     .filter((recipe) => recipe.author.toLowerCase() === wanted)
-    .sort((a, b) => b.score - a.score);
+    .sort(
+      verificationFirst(
+        (recipe: RecipeRow) =>
+          recipe.verification === "verified" || recipe.verification === "publisher",
+        (a, b) => b.score - a.score || a.kl - b.kl || a.id.localeCompare(b.id),
+      ),
+    );
 
   return json(
     {
