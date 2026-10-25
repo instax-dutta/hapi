@@ -9,18 +9,23 @@ JSON document, and a JSON document back into a response.
 ## Ownership
 
 - `index.ts` - the exported `fetch(request, env, ctx)` handler. The only entry point
-- `server-node.ts` - the Node entry point. The same handler over the filesystem store
+- `server-node.ts` - the Node entry point. The same handler over the filesystem
+  store, plus transport: gzip with an ETag-keyed cache, a per-client rate
+  limit, one JSON access line per request and a drain on `SIGTERM`
 - `router.ts` - path matching and parameter extraction. No domain knowledge
 - `http.ts` - CORS, JSON responses, the error envelope, ETag and conditional
   requests
 - `store.ts` - the `DatasetStore` interface plus the R2 and null
   implementations. A store hands over the bytes and its own validator for them
-- `dataset.ts` - the published dataset shape and the lazy, memoized loader
+- `dataset.ts` - the published dataset shape and the lazy, memoized loader.
+  The loader options let the Node entry keep every family parsed and refresh
+  stale families in the background
 - `hf.ts` - the Hugging Face Hub client: pagination, expansions, retries, the
   README fetch. The one place that knows how to talk to the Hub
 - `store-file.ts` - the filesystem store, for the Node entry point and the tests.
   It is never reachable from the Worker bundle
 - `query.ts` - the filter, sort and paginate engine shared by the list endpoints
+- `rate-limit.ts` - the fixed-window per-client limiter used by the Node entry
 - `types.ts` - the public API response types
 
 ## Local Contracts
@@ -35,14 +40,24 @@ JSON document, and a JSON document back into a response.
 - The handler never throws. Every failure becomes an error envelope with the
   standard shape
 - `env` is optional in the type. A missing binding is a `503`, not a crash
+- Transport concerns live in the Node entry only: gzip, the rate limit, the
+  access log and the shutdown drain. The portable handler must stay unchanged
+  on Workers, so a route never imports a Node built-in and never assumes a
+  long-lived process
 
 ### The dataset is the source of truth
 
 - Every number the API returns comes from the published dataset. The handler
   never fetches the Hub, except on `GET /v1/parse`
-- The dataset is loaded lazily per entity family and memoized per isolate.
+- The dataset is loaded lazily per entity family and memoized per process.
   A request for `/v1/repos` must not pay the parse cost of the origin data.
   The families are `meta`, `models`, `recipes`, `repos`, `creators` and `stats`
+- The loader defaults stay Worker-safe: two families, a 30 second TTL and an
+  awaited refresh. The Node entry raises the window, keeps every family and
+  refreshes stale families behind the response. A failed refresh keeps the
+  stale copy, and concurrent readers share one store read
+- The bulk object's UTF-8 bytes and the summary document are memoized per
+  dataset version, so neither is rebuilt per request
 - A dataset that is missing or unparseable answers `503 dataset_unavailable`
   with a plain sentence. It never answers with a partial document
 
@@ -58,6 +73,8 @@ JSON document, and a JSON document back into a response.
 - Any method other than `GET`, `HEAD` and `OPTIONS` answers `405`
 - Every error response overrides the cache headers to `no-store`. A failure
   cached at the edge leaves the API degraded long after the cause is gone
+- A rate-limited request answers `429 rate_limited` with `Retry-After`. The
+  limiter lives in the Node entry and is per client address
 - Upstream messages are never echoed to the client. The server logs them
 
 ### Query engine

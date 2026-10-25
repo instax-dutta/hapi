@@ -16,8 +16,29 @@ import type {
 } from "./types.ts";
 import { DatasetUnavailableError, KEYS, type DatasetStore, type StoredObject } from "./store.ts";
 
-/** How long a memoized family stays fresh before it is read again. */
-const MEMO_TTL_MS = 30_000;
+/**
+ * How long a memoized family is served before it is read again.
+ *
+ * The default suits a Worker isolate, where the dataset updates every two
+ * hours and memory is tight. The Node entry extends the window and refreshes
+ * behind the response.
+ */
+const DEFAULT_TTL_MS = 30_000;
+
+/** How many families are kept parsed at once by default. */
+const DEFAULT_MAX_FAMILIES = 2;
+
+export interface DatasetLoaderOptions {
+  /** How long a parsed family is served before it is read again. */
+  ttlMs?: number;
+  /** How many parsed families the memo keeps. */
+  maxFamilies?: number;
+  /**
+   * Serve a stale family immediately and refresh it behind the response.
+   * Off by default: a Worker may not keep the promise alive.
+   */
+  background?: boolean;
+}
 
 interface MemoEntry {
   value: unknown;
@@ -30,40 +51,24 @@ interface MemoEntry {
  */
 let memos = new WeakMap<object, Map<string, MemoEntry>>();
 
-/**
- * How many families an isolate keeps parsed at once.
- *
- * Two is enough for the common pairing (a list of ablations, then the origin
- * of each) and it bounds the heap: the full corpus is large enough that
- * holding every family at once would not fit in an isolate.
- */
-const MEMO_FAMILIES = 2;
+/** One in-flight read per family, shared by every concurrent caller. */
+let inflight = new WeakMap<object, Map<string, Promise<MemoEntry>>>();
 
 export class DatasetLoader {
   private readonly store: DatasetStore;
+  private readonly ttlMs: number;
+  private readonly maxFamilies: number;
+  private readonly background: boolean;
 
-  constructor(store: DatasetStore) {
+  constructor(store: DatasetStore, options: DatasetLoaderOptions = {}) {
     this.store = store;
+    this.ttlMs = options.ttlMs ?? DEFAULT_TTL_MS;
+    this.maxFamilies = options.maxFamilies ?? DEFAULT_MAX_FAMILIES;
+    this.background = options.background ?? false;
   }
 
-  private async load<T>(key: string): Promise<T> {
-    const storeKey = this.store as unknown as object;
-    let perStore = memos.get(storeKey);
-    if (!perStore) {
-      perStore = new Map<string, MemoEntry>();
-      memos.set(storeKey, perStore);
-    }
-
-    const hit = perStore.get(key);
-    const now = Date.now();
-    if (hit && now - hit.at < MEMO_TTL_MS) {
-      // Refresh the position, so the least recently used family is the one
-      // that gets dropped.
-      perStore.delete(key);
-      perStore.set(key, hit);
-      return hit.value as T;
-    }
-
+  /** Read and parse one family from the store. */
+  private async read<T>(key: string): Promise<MemoEntry> {
     const stored = await this.store.get(key);
     if (stored === null) {
       throw new DatasetUnavailableError(`The dataset object "${key}" is missing.`);
@@ -78,16 +83,82 @@ export class DatasetLoader {
       );
     }
 
-    // Refresh the position, so the family that was just re-read is not the
-    // first one to be dropped.
-    perStore.delete(key);
-    perStore.set(key, { value, at: now });
-    while (perStore.size > MEMO_FAMILIES) {
-      const oldest = perStore.keys().next();
-      if (oldest.done) break;
-      perStore.delete(oldest.value);
+    return { value, at: Date.now() };
+  }
+
+  /**
+   * Refresh one family.
+   *
+   * Concurrent callers share one read, so a burst never parses the same
+   * family twice. The in-flight entry is cleared when the read settles,
+   * including on failure, so the next caller retries instead of joining a
+   * dead promise.
+   */
+  private refresh(key: string): Promise<MemoEntry> {
+    const storeKey = this.store as unknown as object;
+    let pendingByKey = inflight.get(storeKey);
+    if (!pendingByKey) {
+      pendingByKey = new Map<string, Promise<MemoEntry>>();
+      inflight.set(storeKey, pendingByKey);
     }
-    return value;
+
+    const pending = pendingByKey.get(key);
+    if (pending) return pending;
+
+    const promise = this.read(key)
+      .then((entry) => {
+        let perStore = memos.get(storeKey);
+        if (!perStore) {
+          perStore = new Map<string, MemoEntry>();
+          memos.set(storeKey, perStore);
+        }
+        perStore.delete(key);
+        perStore.set(key, entry);
+        while (perStore.size > this.maxFamilies) {
+          const oldest = perStore.keys().next();
+          if (oldest.done) break;
+          perStore.delete(oldest.value);
+        }
+        return entry;
+      })
+      .finally(() => {
+        pendingByKey.delete(key);
+      });
+
+    pendingByKey.set(key, promise);
+    return promise;
+  }
+
+  private async load<T>(key: string): Promise<T> {
+    const storeKey = this.store as unknown as object;
+    const perStore = memos.get(storeKey);
+    const hit = perStore?.get(key);
+
+    if (hit && perStore) {
+      // Keep the most recently used family at the end of the map.
+      perStore.delete(key);
+      perStore.set(key, hit);
+      if (Date.now() - hit.at >= this.ttlMs) {
+        if (this.background) {
+          // Serve the stale copy now and refresh behind the response. A
+          // failed refresh keeps the stale copy, so an outage never empties
+          // the API.
+          void this.refresh(key).catch(() => {});
+        } else {
+          // The store may fail; the stale copy is still better than a 503.
+          try {
+            const entry = await this.refresh(key);
+            return entry.value as T;
+          } catch {
+            return hit.value as T;
+          }
+        }
+      }
+      return hit.value as T;
+    }
+
+    const entry = await this.refresh(key);
+    return entry.value as T;
   }
 
   /**
@@ -135,7 +206,8 @@ export class DatasetLoader {
 
 }
 
-/** Drops every memoized family. Used by the tests. */
+/** Drops every memoized family and in-flight read. Used by the tests. */
 export function resetDatasetMemo(): void {
   memos = new WeakMap<object, Map<string, MemoEntry>>();
+  inflight = new WeakMap<object, Map<string, Promise<MemoEntry>>>();
 }

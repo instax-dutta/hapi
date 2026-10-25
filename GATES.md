@@ -33,8 +33,9 @@ command that produced it.
   numbers match it too, for a prolific re-uploader and for a small one
 - The leaderboard order of every shared ablation is identical to the live
   ranking site, the ties broken the same way
-- Fifty-six hostile requests against the live corpus: no 5xx, every error in
-  the standard envelope, CORS on every response
+- Fifty-six hostile requests against the live corpus: no 5xx. Every error that
+  reached the app is in the standard envelope with CORS; a CDN may reject a
+  malformed path with its own 400 before the request reaches the origin
 - Every consistency check holds against the live corpus: the pages continue
   without a gap or a repeat, the counts agree across the metadata, the lists
   and the summary, the filters really filter, the rank column follows the

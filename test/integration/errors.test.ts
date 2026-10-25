@@ -4,9 +4,22 @@ import handler from "../../src/index.ts";
 import { fixtureStore } from "../helpers/fixtures.ts";
 
 function call(path: string, init: RequestInit = {}) {
-  const request = new Request(`https://hapi.sdad.pro${path}`, init);
+  const request = new Request(`https://hapi.thevinod.lol${path}`, init);
   return handler.fetch(request, { HAPI_STORE: fixtureStore() }, undefined);
 }
+
+test("a malformed path escape is a JSON bad request", async () => {
+  const response = await call("/v1/models/%ZZ");
+  assert.equal(response.status, 400);
+  assert.equal(response.headers.get("Access-Control-Allow-Origin"), "*");
+  assert.equal(response.headers.get("Cache-Control"), "no-store");
+  const body = (await response.json()) as {
+    error: { status: number; code: string; docs: string };
+  };
+  assert.equal(body.error.status, 400);
+  assert.equal(body.error.code, "bad_request");
+  assert.match(body.error.docs, /openapi/);
+});
 
 test("a preflight is answered with no body and the CORS headers", async () => {
   const response = await call("/v1/models", { method: "OPTIONS" });

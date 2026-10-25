@@ -11,7 +11,7 @@ import {
 import type { DatasetStore } from "../../src/lib/store.ts";
 
 function call(path: string, store: DatasetStore = fixtureStore(), init: RequestInit = {}) {
-  const request = new Request(`https://hapi.sdad.pro${path}`, init);
+  const request = new Request(`https://hapi.thevinod.lol${path}`, init);
   return handler.fetch(request, { HAPI_STORE: store }, undefined);
 }
 

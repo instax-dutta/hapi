@@ -7,7 +7,7 @@
  * The handler never throws. Every failure becomes the standard error envelope.
  */
 import { applyConditional, emptyResponse, errorResponse } from "./lib/http.ts";
-import { DatasetLoader } from "./lib/dataset.ts";
+import { DatasetLoader, type DatasetLoaderOptions } from "./lib/dataset.ts";
 import {
   DatasetUnavailableError,
   NullStore,
@@ -40,6 +40,11 @@ export interface Env {
   HAPI_BUCKET?: R2BucketLike;
   /** A store supplied directly. Used by the Node entry point and by tests. */
   HAPI_STORE?: DatasetStore;
+  /**
+   * Loader tuning. The Node entry extends the memo window and refreshes in
+   * the background; the defaults stay Worker-safe.
+   */
+  HAPI_LOADER?: DatasetLoaderOptions;
   [key: string]: unknown;
 }
 
@@ -101,7 +106,7 @@ function loaderFor(env: Env | undefined): DatasetLoader {
   const key = store as unknown as object;
   let loader = loaders.get(key);
   if (!loader) {
-    loader = new DatasetLoader(store);
+    loader = new DatasetLoader(store, env?.HAPI_LOADER);
     loaders.set(key, loader);
   }
   return loader;

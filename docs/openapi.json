@@ -4,14 +4,14 @@
     "title": "hapi - Heretic API",
     "version": "0.1.0",
     "summary": "A public, free, read-only JSON API for the Heretic (abliterated) model ecosystem.",
-    "description": "hapi combines the live download intelligence of `heretic-live-agent` with the\nHeretic directory of `heretico` into one read-only API.\n\nThree entity levels: an **origin** is one canonical upstream model, a\n**recipe** is one ablation attempt and is what a leaderboard ranks, and a\n**repo** is one published artifact. An artifact is never ranked.\n\nEvery response is CORS-open. There is no key, no account and no signup.\n\nA metric is never invented. A model card that does not publish KL and\nrefusals yields an unranked recipe, and the response says so.\n\nNumbers that are derived rather than measured are named as such:\n`downloadsPerDay`, `downloadsPerSecond` and `refusalReduction` are\ncalculations, and the API says which.",
+    "description": "hapi combines the live download intelligence of `heretic-live-agent` with the\nHeretic directory of `heretico` into one read-only API.\n\nThree entity levels: an **origin** is one canonical upstream model, a\n**recipe** is one ablation attempt and is what a leaderboard ranks, and a\n**repo** is one published artifact. An artifact is never ranked.\n\nEvery response is CORS-open. There is no key, no account and no signup.\n\nThe public deployment allows 600 requests per minute per client address.\nA refused request answers `429` with the standard error envelope, the\ncode `rate_limited` and a `Retry-After` header. Responses over one\nkilobyte are served gzipped when the client asks for it.\n\nA metric is never invented. A model card that does not publish KL and\nrefusals yields an unranked recipe, and the response says so.\n\nNumbers that are derived rather than measured are named as such:\n`downloadsPerDay`, `downloadsPerSecond` and `refusalReduction` are\ncalculations, and the API says which.",
     "license": {
       "name": "MIT"
     }
   },
   "servers": [
     {
-      "url": "https://hapi.sdad.pro",
+      "url": "https://hapi.thevinod.lol",
       "description": "Production"
     }
   ],
@@ -2079,7 +2079,8 @@
                   "method_not_allowed",
                   "upstream_unavailable",
                   "dataset_unavailable",
-                  "internal_error"
+                  "internal_error",
+                  "rate_limited"
                 ]
               },
               "message": {

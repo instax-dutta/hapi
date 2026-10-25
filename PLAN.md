@@ -1,7 +1,7 @@
 # Plan: hapi - the Heretic API
 
-The design record for `hapi.sdad.pro`. This file states the contract that the
-code implements. When the code and this file disagree, one of them is a bug.
+The design record for `hapi.thevinod.lol`. This file states the contract that
+the code implements. When the code and this file disagree, one of them is a bug.
 
 ## 1. What this is
 
@@ -172,13 +172,14 @@ Error envelope, always the same shape:
     "status": 404,
     "code": "not_found",
     "message": "No recipe matches that id.",
-    "docs": "https://hapi.sdad.pro/v1/openapi.json"
+    "docs": "https://hapi.thevinod.lol/v1/openapi.json"
   }
 }
 ```
 
 Codes: `bad_request`, `not_found`, `method_not_allowed`, `upstream_unavailable`,
-`dataset_unavailable`, `internal_error`. Upstream messages are never echoed.
+`dataset_unavailable`, `internal_error`, `rate_limited`. Upstream messages are
+never echoed.
 
 ### 3.5 Caching
 
@@ -244,7 +245,10 @@ is what a client needs to describe one.
 
 The store is split per entity family on purpose. A request for `/v1/repos` must
 not pay the parse cost of the recipe and origin data, and vice versa. The
-dataset is loaded lazily per family and memoized per isolate.
+dataset is loaded lazily per family and memoized per process. On Node the memo
+holds every family, serves a stale family while one background read refreshes
+it, and re-reads a family at most every five minutes. A failed refresh keeps
+the stale copy.
 
 ### 4.3 The store
 

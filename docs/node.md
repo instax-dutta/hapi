@@ -34,9 +34,21 @@ It listens on `127.0.0.1:8787` by default.
 | `HAPI_PORT` | `8787` | The port |
 | `HAPI_HOST` | `127.0.0.1` | The interface to bind |
 | `HAPI_DATA_DIR` | `./dist` | The directory holding the published dataset |
+| `HAPI_RATE_LIMIT` | `600` | Requests per minute per client address. `0` disables the limiter |
 
 Behind a reverse proxy, set `HAPI_HOST=0.0.0.0` and let the proxy terminate
 TLS.
+
+The process adds the transport concerns the handler does not carry:
+
+- JSON over 1 KB is gzipped once per dataset version and the compressed bytes
+  are reused, so the 14 MB bulk object compresses once rather than per request
+- One JSON access line per request goes to stdout, so `journalctl -u hapi -o
+  cat` is the access log
+- The client address is `cf-connecting-ip`, then the first `x-forwarded-for`
+  entry, then the socket address
+- `SIGTERM` stops accepting connections, lets in-flight responses finish and
+  exits
 
 ## 3. A systemd unit
 
@@ -69,7 +81,7 @@ sudo systemctl enable --now hapi
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name hapi.sdad.pro;
+    server_name hapi.thevinod.lol;
 
     location / {
         proxy_pass http://127.0.0.1:8787;
@@ -84,18 +96,36 @@ server {
 The responses already carry the right `Cache-Control`, so nginx and the browser
 cache them as the API intends.
 
-## 5. The schedule
+## 5. An edge cache
+
+The origin is one Node process, and the network path to it is the slowest part
+of a request. If the host is behind Cloudflare, let the edge cache the public
+reads. In the dashboard, **Caching** then **Cache Rules**, create a rule:
+
+- When incoming requests match: `(http.host eq "hapi.thevinod.lol")`
+- Then: **Eligible for cache**
+- Edge TTL: **Use cache-control header if present**
+- Browser TTL: **Respect origin**
+
+Every response already sends `Cache-Control` with `s-maxage`, so the rule
+applies the API's own freshness windows. Errors are `no-store` and are never
+cached. Without the rule Cloudflare answers `cf-cache-status: DYNAMIC` and
+every request crosses the tunnel to the origin.
+
+## 6. The schedule
 
 ```cron
 17 */2 * * * cd /home/tejes/work/hapi && npm run refresh >> data/refresh.log 2>&1
 ```
 
 The crawl is incremental, so a run that finds nothing new is cheap. The server
-reads the dataset on each request and memoizes it per process, so a refresh is
-picked up within a minute.
+keeps every family parsed and re-reads one at most every five minutes, in the
+background, so a refresh never blocks a request and a new dataset is picked up
+within five minutes.
 
 ## The memory ceiling
 
-The dataset is about 4 MB of JSON. Parsed, it is roughly 40 MB of heap. One
-Node process is enough for a public read API; run a second process if the
-traffic outgrows one core.
+The published dataset is about 28 MB on disk, and the parsed families measure
+under 200 MB of heap. One Node process is enough for a public read API; run a
+second process if the traffic outgrows one core, and raise the service's memory
+limit accordingly.

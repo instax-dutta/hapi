@@ -82,8 +82,8 @@ Point the domain at the Worker. In the Cloudflare dashboard, under
 **Workers and Pages**, open the `hapi` worker, then **Settings** and
 **Triggers and Bindings** to add a custom domain.
 
-`hapi.sdad.pro` is a subdomain of `sdad.pro`. The zone is on Cloudflare, so the
-record is a Worker route rather than a DNS `A` record.
+`hapi.thevinod.lol` is a subdomain of `thevinod.lol`. The zone is on Cloudflare,
+so the record is a Worker route rather than a DNS `A` record.
 
 ## 5. The cache
 

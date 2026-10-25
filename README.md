@@ -13,10 +13,11 @@ It merges the two backends of the author's own projects into one surface:
   ablation recipe grouping, metric inheritance, KL and refusal scoring, Pareto
   frontiers, best picks, filtering and ranking
 
-No key. No account. No signup. Every response is CORS-open.
+No key. No account. No signup. Every response is CORS-open. The public
+deployment allows 600 requests per minute per client address.
 
 ```
-https://hapi.sdad.pro/v1/models?family=gemma-3&sort=kl&perPage=25
+https://hapi.thevinod.lol/v1/models?family=gemma-3&sort=kl&perPage=25
 ```
 
 ## The three entity levels
@@ -186,14 +187,14 @@ Errors always have the same shape:
     "status": 404,
     "code": "not_found",
     "message": "No recipe matches the id \"rcp_nope\".",
-    "docs": "https://hapi.sdad.pro/v1/openapi.json"
+    "docs": "https://hapi.thevinod.lol/v1/openapi.json"
   }
 }
 ```
 
 Codes: `bad_request`, `not_found`, `method_not_allowed`, `upstream_unavailable`,
-`dataset_unavailable`, `internal_error`. An upstream message is never echoed to
-the client.
+`dataset_unavailable`, `internal_error`, `rate_limited`. An upstream message is
+never echoed to the client.
 
 ## Caching and conditional requests
 

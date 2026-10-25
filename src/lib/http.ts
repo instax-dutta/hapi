@@ -8,7 +8,7 @@
 import type { ApiError } from "./types.ts";
 
 export const API_VERSION = "0.1.0";
-export const DOCS_URL = "https://hapi.sdad.pro/v1/openapi.json";
+export const DOCS_URL = "https://hapi.thevinod.lol/v1/openapi.json";
 
 /** The cache policy per surface. Errors override all of it to `no-store`. */
 export const CACHE = {

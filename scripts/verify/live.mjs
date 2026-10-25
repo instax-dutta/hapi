@@ -2,7 +2,7 @@
 /**
  * The live URL check.
  *
- *   node scripts/verify/live.mjs https://hapi.sdad.pro
+ *   node scripts/verify/live.mjs https://hapi.thevinod.lol
  *
  * It exercises the API the way a client on the internet does, over the public
  * URL, and proves the properties a consumer depends on:
@@ -52,6 +52,21 @@ async function get(path) {
   return { response, body, text };
 }
 
+/**
+ * A hostile path can be rejected by Cloudflare before it reaches the tunnel.
+ * That answer is the edge's own HTML 400, not the API's envelope, so the
+ * envelope assertions do not apply. The origin's own behaviour for a
+ * malformed escape is covered by the integration suite.
+ */
+function isEdgeRejection(response, body) {
+  return (
+    response.status === 400 &&
+    body === null &&
+    response.headers.get("server") === "cloudflare" &&
+    (response.headers.get("content-type") ?? "").includes("text/html")
+  );
+}
+
 const LIST_PATHS = ["/v1/models", "/v1/recipes", "/v1/repos", "/v1/creators"];
 const DETAIL_PATHS = ["/v1/models/google/gemma-3-12b-it", "/v1/recipes/rcp_a", "/v1/repos/a/b", "/v1/creators/coder3101"];
 
@@ -98,6 +113,7 @@ const failures_expected = [
 for (const [path, status] of failures_expected) {
   const { response, body } = await get(path);
   check(response.status === status, `${path} answered ${response.status}, expected ${status}`);
+  if (isEdgeRejection(response, body)) continue;
   check(
     body?.error && typeof body.error.code === "string" && body.error.docs,
     `${path} did not use the standard error envelope`,
@@ -223,7 +239,7 @@ const hostile = [
 for (const path of hostile) {
   const { response, body } = await get(path);
   check(response.status < 500, `${path} answered ${response.status}`);
-  if (response.status >= 400) {
+  if (response.status >= 400 && !isEdgeRejection(response, body)) {
     check(body?.error?.code, `${path} did not use the standard error envelope`);
   }
 }

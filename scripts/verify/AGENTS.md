@@ -22,6 +22,9 @@ runs the gates that prove the acceptance criteria in `GATES.md` still hold.
 - `dox.mjs` - proves the DOX tree is complete and internally consistent
 - `crawl.mjs` - runs a small live crawl and proves it produces cards
 - `serve.mjs` - starts the server and asks it the questions a client asks
+- `live.mjs` - the public URL check. It exercises every endpoint over the
+  deployed host and compares the served OpenAPI description with the committed
+  one
 
 ## Local Contracts
 
@@ -51,6 +54,11 @@ runs the gates that prove the acceptance criteria in `GATES.md` still hold.
 - The crawl gate needs the Hub. It is bounded, so it stays a gate
 - The serve gate needs a free port. It starts the server and stops it before it
   exits
+- The live check needs the public host. A CDN may reject a malformed path with
+  its own 400 before the request reaches the origin; that is an edge rejection,
+  not an API answer. The origin's envelope for the same path is covered by the
+  integration suite, so the live check accepts the edge rejection and keeps
+  asserting the envelope everywhere the request reaches the app
 
 ## Work Guidance
 

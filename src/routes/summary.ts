@@ -15,6 +15,15 @@ import type { RouteContext, RouteDeps } from "../router.ts";
 
 const TOP = 5;
 
+/**
+ * The built document per dataset version.
+ *
+ * Ranking every origin, recipe and creator costs tens of milliseconds. The
+ * answer only changes when the dataset version changes, so it is built once
+ * and reused until then.
+ */
+const built = new WeakMap<object, { version: string; doc: unknown }>();
+
 export async function summary(_context: RouteContext, deps: RouteDeps): Promise<Response> {
   const [meta, models, recipes, creators] = await Promise.all([
     deps.dataset.meta(),
@@ -22,6 +31,12 @@ export async function summary(_context: RouteContext, deps: RouteDeps): Promise<
     deps.dataset.recipes(),
     deps.dataset.creators(),
   ]);
+
+  const key = deps.dataset as unknown as object;
+  const cached = built.get(key);
+  if (cached && cached.version === meta.version) {
+    return json(cached.doc, { cache: "meta" });
+  }
 
   const topModels = models
     .filter((model) => model.bestRecipe !== null)
@@ -56,18 +71,18 @@ export async function summary(_context: RouteContext, deps: RouteDeps): Promise<
     .sort((a, b) => b.originCount - a.originCount || a.label.localeCompare(b.label))
     .slice(0, TOP);
 
-  return json(
-    {
-      updatedAt: meta.generatedAt,
-      version: meta.version,
-      totals: meta.totals,
-      counts: meta.counts,
-      topModels,
-      topRecipes,
-      topCreators,
-      topFamilies,
-      versions: meta.facets.versions.slice(0, TOP),
-    },
-    { cache: "meta" },
-  );
+  const doc = {
+    updatedAt: meta.generatedAt,
+    version: meta.version,
+    totals: meta.totals,
+    counts: meta.counts,
+    topModels,
+    topRecipes,
+    topCreators,
+    topFamilies,
+    versions: meta.facets.versions.slice(0, TOP),
+  };
+
+  built.set(key, { version: meta.version, doc });
+  return json(doc, { cache: "meta" });
 }
