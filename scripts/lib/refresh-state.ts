@@ -30,7 +30,11 @@ export function sourceSignature(root: string, rawText: string): string {
   for (const directory of ["src", "scripts/lib"]) {
     collect(root, join(root, directory), files);
   }
-  files.push(join(root, "package.json"));
+  files.push(
+    join(root, "scripts", "build-dataset.ts"),
+    join(root, "scripts", "build-stats.ts"),
+    join(root, "package.json"),
+  );
   files.sort();
 
   const hash = createHash("sha256").update(rawText);

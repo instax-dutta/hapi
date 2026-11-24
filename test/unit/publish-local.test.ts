@@ -61,6 +61,8 @@ test("a changed raw source or code produces a different signature", () => {
     mkdirSync(join(root, "src"), { recursive: true });
     mkdirSync(join(root, "scripts", "lib"), { recursive: true });
     writeFileSync(join(root, "src", "a.ts"), "export const a = 1;\n");
+    writeFileSync(join(root, "scripts", "build-dataset.ts"), "const dist = 1;\n");
+    writeFileSync(join(root, "scripts", "build-stats.ts"), "const stats = 1;\n");
     writeFileSync(join(root, "package.json"), "{}");
     const raw = JSON.stringify({ repos: [1] });
     const first = sourceSignature(root, raw);
@@ -68,6 +70,10 @@ test("a changed raw source or code produces a different signature", () => {
     assert.notEqual(sourceSignature(root, JSON.stringify({ repos: [2] })), first);
 
     writeFileSync(join(root, "src", "a.ts"), "export const a = 2;\n");
+    assert.notEqual(sourceSignature(root, raw), first);
+
+    writeFileSync(join(root, "src", "a.ts"), "export const a = 1;\n");
+    writeFileSync(join(root, "scripts", "build-dataset.ts"), "const dist = 2;\n");
     assert.notEqual(sourceSignature(root, raw), first);
   } finally {
     rmSync(root, { recursive: true, force: true });
