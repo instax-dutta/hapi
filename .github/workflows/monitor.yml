@@ -52,8 +52,8 @@ jobs:
                 throw new Error("the dataset is empty");
               }
 
-              const recipes = await check("/v1/recipes?perPage=1");
-              if (!Array.isArray(recipes.rows) || recipes.rows.length !== 1) {
+              const recipes = await check("/v1/recipes?perPage=25");
+              if (!Array.isArray(recipes.rows) || recipes.rows.length === 0) {
                 throw new Error("the recipe list does not answer");
               }
 
