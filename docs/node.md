@@ -138,9 +138,9 @@ public API every two hours and opens an issue when it goes stale; a
 entirely.
 
 The crawl is incremental, so a run that finds nothing new is cheap. The server
-keeps every family parsed and re-reads one at most every five minutes, in the
-background, so a refresh never blocks a request and a new dataset is picked up
-within five minutes.
+keeps every family parsed and re-reads one at most every minute, in the
+background, so a refresh never blocks a request and a symlink switch is visible
+within a minute.
 
 ## The memory ceiling
 

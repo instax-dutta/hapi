@@ -185,7 +185,8 @@ const server = createServer((request, response) => {
         HAPI_STORE: store,
         // The Node process is long-lived, so keep every family parsed and
         // refresh in the background once the dataset version is old.
-        HAPI_LOADER: { ttlMs: 5 * 60_000, maxFamilies: 6, background: true },
+        // A published symlink switch is visible to readers within one minute.
+        HAPI_LOADER: { ttlMs: 60_000, maxFamilies: 6, background: true },
       },
       undefined,
     )
