@@ -146,9 +146,19 @@ export async function listAllModels(
 
   for (let page = 0; page < maxPages && url; page += 1) {
     const response = await hfFetch(url, options, fetchImpl);
-    if (response.status === 404) break;
+    // hfFetch returns auth failures as responses so the README fetch can treat
+    // a gated repo as "no card". A listing has no such interpretation: a
+    // rejected token means zero results for every page, which reads as an
+    // empty ecosystem rather than a broken crawl.
+    if (response.status === 401 || response.status === 403) {
+      throw new Error(`Hugging Face rejected the token (HTTP ${response.status}). Rotate HF_TOKEN.`);
+    }
+    if (response.status === 404) {
+      throw new Error(`The Hub model listing returned HTTP 404 for ${url}.`);
+    }
     const batch = (await response.json()) as HubModel[];
-    if (!Array.isArray(batch) || batch.length === 0) break;
+    if (!Array.isArray(batch)) throw new Error("Hugging Face returned an invalid model list.");
+    if (batch.length === 0) break;
     for (const model of batch) {
       if (!model.id || seen.has(model.id)) continue;
       seen.add(model.id);

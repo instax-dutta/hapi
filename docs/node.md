@@ -115,8 +115,16 @@ every request crosses the tunnel to the origin.
 ## 6. The schedule
 
 ```cron
-17 */2 * * * cd /home/tejes/work/hapi && npm run refresh >> data/refresh.log 2>&1
+17 */2 * * * cd /home/tejes/work/hapi && HF_TOKEN=$(cat /home/tejes/.config/hapi/hf_token) npm run refresh:server >> data/refresh.log 2>&1
 ```
+
+`refresh:server` is the whole refresh: it checks that the token is still
+accepted, refuses an empty discovery, crawls, builds, validates the built
+dataset and waits until the live API reports the new version. A rejected token
+or a broken Hub answer stops the run before the previous good files are
+touched. The GitHub Actions workflow `monitor.yml` checks the public API every
+two hours and opens an issue when it goes stale; a `HEARTBEAT_URL` repository
+secret also catches a schedule that stops running entirely.
 
 The crawl is incremental, so a run that finds nothing new is cheap. The server
 keeps every family parsed and re-reads one at most every five minutes, in the

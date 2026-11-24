@@ -251,6 +251,14 @@ cached parse, so a refresh only fetches new or edited cards. A parser change
 bumps `PARSER_VERSION` and the cached markdown is re-parsed locally, with no
 network round trip.
 
+`npm run refresh:server` is the automated form on a self-hosted deployment. It
+rejects an expired Hugging Face token before touching any file, refuses an
+empty discovery, runs the build and its gates, and waits for the live API to
+report the new dataset version. A GitHub Actions workflow runs the full verify
+on every pull request and checks the public API every two hours, opening an
+issue when it goes stale. See [docs/node.md](docs/node.md) for the cron entry
+and the required secret.
+
 ## Hosting
 
 The runtime is portable. The two guides are
@@ -267,6 +275,7 @@ bucket, and [docs/node.md](docs/node.md) for a plain Node process.
 | `scripts/` | The offline pipeline |
 | `test/` | The suites, the fixtures and the gate harness |
 | `docs/` | The OpenAPI description and the hosting guides |
+| `.github/` | CI, the live monitor and dependency updates |
 | `AGENTS.md` | The DOX tree: the binding contract for every directory |
 
 `PLAN.md` is the design record. `GATES.md` is the acceptance ledger.

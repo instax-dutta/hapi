@@ -19,6 +19,8 @@ runs the gates that prove the acceptance criteria in `GATES.md` still hold.
   agree: the paths, the parameters, the response schemas and the references
 - `dataset.mjs` - proves the published dataset satisfies its invariants,
   re-derived from the published rows
+- `automation.mjs` - proves CI, the self-hosted refresh wrapper and the live
+  monitor still carry their checks
 - `dox.mjs` - proves the DOX tree is complete and internally consistent
 - `crawl.mjs` - runs a small live crawl and proves it produces cards
 - `serve.mjs` - starts the server and asks it the questions a client asks

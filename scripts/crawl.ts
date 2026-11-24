@@ -13,6 +13,7 @@ import { dirname, join } from "node:path";
 import { discoverHereticModels, fetchReadme, toRawRepo, type HFRawModel } from "../src/lib/hf.ts";
 import { mapLimit } from "./lib/pool.ts";
 import { loadCard, type CardCacheEntry } from "./lib/incremental.ts";
+import { assertDiscovery } from "./lib/discovery.ts";
 import { parseCard } from "../src/core/card.ts";
 import type { ParsedCard, RawRepo } from "../src/core/types.ts";
 
@@ -77,6 +78,7 @@ async function main(): Promise<void> {
 
   let models: HFRawModel[] = discovery.merged;
   if (limit > 0) models = models.slice(0, limit);
+  assertDiscovery(models);
   console.log(
     `Discovered ${discovery.tagged.length} tagged + ${discovery.named.length} named = ${discovery.merged.length} unique; enriching ${models.length}`,
   );

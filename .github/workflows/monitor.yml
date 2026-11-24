@@ -1,0 +1,122 @@
+name: Monitor API freshness
+
+# The dataset is refreshed by cron on the server that serves the API. A green
+# cron says nothing about what the public URL is serving, and a schedule that
+# stops running fails no check on its own. This workflow asks the live API
+# every two hours and opens an issue when it goes stale or breaks.
+on:
+  schedule:
+    - cron: "17 */2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-freshness
+  cancel-in-progress: true
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Is the public API fresh and answering?
+        env:
+          LIVE: https://hapi.thevinod.lol
+        run: |
+          node -e '
+            (async () => {
+              const base = process.env.LIVE;
+              const check = async (path) => {
+                const response = await fetch(base + path, { cache: "no-store" });
+                if (!response.ok) throw new Error(path + " returned HTTP " + response.status);
+                if (response.headers.get("access-control-allow-origin") !== "*") {
+                  throw new Error(path + " lost its CORS header");
+                }
+                return response.json();
+              };
+
+              const health = await check("/v1/health");
+              const ageH = health.dataset.ageSeconds / 3600;
+              console.log("dataset " + health.dataset.version + ", " + ageH.toFixed(1) + "h old");
+              if (ageH > 12) {
+                throw new Error("the published dataset is " + ageH.toFixed(1) + "h old");
+              }
+
+              const meta = await check("/v1/meta");
+              if (meta.counts.models < 1 || meta.counts.recipes < 1 || meta.counts.repos < 1) {
+                throw new Error("the dataset is empty");
+              }
+
+              const recipes = await check("/v1/recipes?perPage=1");
+              if (!Array.isArray(recipes.rows) || recipes.rows.length !== 1) {
+                throw new Error("the recipe list does not answer");
+              }
+
+              const missing = await fetch(base + "/v1/recipes/does-not-exist");
+              const error = await missing.json();
+              if (missing.status !== 404 || error.error?.code !== "not_found") {
+                throw new Error("errors no longer use the standard envelope");
+              }
+
+              console.log("Public API is fresh and answering.");
+            })().catch((error) => {
+              console.log("::error::" + error.message);
+              process.exit(1);
+            });
+          '
+
+      - name: Open or keep a failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          echo "::error::The live API is stale or broken. See $RUN_URL"
+          gh label create api-freshness --repo "$REPO" --color B60205 \
+            --description "The public API is stale or failing" --force
+          open=$(gh issue list --repo "$REPO" --label api-freshness --state open \
+            --limit 1 --json number --jq '.[0].number // empty')
+          if [ -n "$open" ]; then
+            echo "Issue #$open is already open; not filing a duplicate."
+            exit 0
+          fi
+          gh issue create --repo "$REPO" --label api-freshness \
+            --title "Public API is stale or failing" \
+            --body "$(printf '%s\n' \
+              'The public health check failed. The API may be serving an old dataset or an error.' \
+              '' \
+              "Run: $RUN_URL" \
+              '' \
+              'On the server, check `data/refresh.log`, then `systemctl status hapi`. An expired HF_TOKEN is the usual cause: the refresh now refuses an expired token instead of publishing an empty index.' \
+              '' \
+              'This issue closes itself on the next successful check.')"
+
+      - name: Close an open failure issue
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          for n in $(gh issue list --repo "$REPO" --label api-freshness --state open \
+            --limit 20 --json number --jq '.[].number'); do
+            gh issue close "$n" --repo "$REPO" --comment "Recovered: $RUN_URL"
+            echo "Closed issue #$n"
+          done
+
+      # A schedule that stops running entirely runs none of the steps above.
+      # The heartbeat is the only alarm for that. Inert until the secret exists.
+      - name: Ping the external heartbeat
+        if: env.HEARTBEAT_URL != ''
+        env:
+          HEARTBEAT_URL: ${{ secrets.HEARTBEAT_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          curl -fsS -m 20 -o /dev/null --data-binary "$RUN_URL" "$HEARTBEAT_URL" \
+            || echo "::warning::Heartbeat ping failed. The API is fine; the monitor may report a late ping."

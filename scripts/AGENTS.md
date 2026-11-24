@@ -19,6 +19,8 @@ request.
   `dist/stats.json`. It publishes two scopes: the reach (every model the
   tag-and-name index found) and the indexed artifacts the directory published
 - `publish.ts` - upload the dataset objects to the configured store
+- `refresh-server.mjs` - the self-hosted refresh: reject a dead token, crawl,
+  build, validate the result and check that the live process picked it up
 - `make-sample.mjs` - cut a committed sample dataset out of a directory
   snapshot, for the gate that checks the dataset invariants. Everything the
   sample publishes is re-derived from the slice
@@ -29,6 +31,8 @@ request.
   generated
 - `lib/pool.ts` - bounded-concurrency mapping that preserves input order
 - `lib/incremental.ts` - the card cache decision: fetch, reuse or re-parse
+- `lib/discovery.ts` - refuse an empty discovery before it can overwrite a
+  good `raw.json`
 - `verify/` - the verification harness and the acceptance gates
 
 ## Local Contracts
@@ -39,6 +43,11 @@ request.
   `search=heretic` for the name. The tagged pass wins on a duplicate
 - Every Hub request is bounded by a timeout and retried with backoff. A 429 or
   a 5xx is retried; a 404, 401 or 403 is not
+- A listing that gets 401, 403, 404 or a non-list answer fails the crawl. Those
+  are not "zero models": treating them as empty is what lets an expired token
+  leave the API on month-old data
+- Discovery that finds no models fails before `raw.json` is written, so the
+  last good raw file survives a bad run
 - A repo whose `sha` has not changed reuses its cached parse. Only changed or
   new READMEs are fetched
 - A parser change bumps `PARSER_VERSION` and the cached markdown is re-parsed

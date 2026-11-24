@@ -1,0 +1,35 @@
+version: 2
+# Weeklies keep the locked dependencies and the pinned action SHAs moving
+# without anyone watching. Groups keep a week to one review, not twenty. A
+# major is left out of the groups so it arrives alone and gets read.
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    rebase-strategy: auto
+    commit-message:
+      prefix: deps
+    groups:
+      npm-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 10
+    rebase-strategy: auto
+    commit-message:
+      prefix: ci
+    groups:
+      actions-patch-minor:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]

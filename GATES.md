@@ -90,3 +90,8 @@ secret and never reaches the repository, the dataset or the API.
   CHECK: node scripts/verify/gate.mjs serve
   EXPECT: SERVE PASSED
   EVIDENCE: automatic-evidence=v1; definition-sha256=a785ed5a3b423470aac022f31f6f159097ccf31896ca43ade60d1da9a6eba479; exit=0; EXPECT=matched; output-sha256=be67fb35c9c59991c7a42b20af6ff74ef32a7598a736d75246e9b58cd50d33e7; output-bytes=95; shell=/bin/sh; cwd=/home/tejes/work/hapi; path=f5a00065660f/9 entries
+
+- [x] G10: The automation keeps the published dataset fresh and reports failure
+  CHECK: node scripts/verify/automation.mjs
+  EXPECT: AUTOMATION VERIFIED
+  EVIDENCE: local-run=2026-11-24; exit=0; EXPECT=matched; checked CI, the self-hosted refresh wrapper and the live monitor

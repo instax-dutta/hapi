@@ -1,0 +1,35 @@
+name: Verify
+
+# Every change proves itself before it can reach main. Dependabot opens pull
+# requests here too, so a dependency bump is never merged on the strength of a
+# passing check that did not actually run the code. `pull_request` is used on
+# purpose: fork pull requests get a read-only token, with no secrets to leak.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The same command that must pass before a local commit. It runs the
+      # typecheck, both suites and every gate in GATES.md.
+      - run: npm run verify

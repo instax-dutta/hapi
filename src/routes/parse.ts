@@ -45,6 +45,38 @@ function rememberParse(id: string, parsed: ParsedCard, fetchedAt: string): void 
   }
 }
 
+interface FetchedParse {
+  parsed: ParsedCard;
+  fetchedAt: string;
+  meta: HubModel | null;
+}
+
+/**
+ * One in-flight fetch per repo.
+ *
+ * The parse cache is written only after the Hub answers, so a burst for one
+ * card would otherwise fetch it once per request. Concurrent callers share
+ * the work instead.
+ */
+const inflight = new Map<string, Promise<FetchedParse | null>>();
+
+async function fetchAndParse(raw: string, fetchImpl: typeof fetch): Promise<FetchedParse | null> {
+  const [markdown, meta] = await Promise.all([
+    fetchReadme(raw, { retries: 2, timeoutMs: 20_000 }, fetchImpl),
+    fetchModel(raw, { retries: 2, timeoutMs: 20_000 }, fetchImpl),
+  ]);
+
+  if (markdown === null) return null;
+
+  const declaredBaseModels = Array.isArray(meta?.baseModels?.models)
+    ? meta.baseModels.models.map((entry) => entry.id)
+    : [];
+  const parsed = parseCard(markdown, { selfId: raw, declaredBaseModels });
+  const fetchedAt = new Date().toISOString();
+  rememberParse(raw, parsed, fetchedAt);
+  return { parsed, fetchedAt, meta };
+}
+
 export async function parseRepo(context: RouteContext, deps: RouteDeps): Promise<Response> {
   const raw = (context.query.get("repo") ?? "").trim();
   if (!raw) {
@@ -72,14 +104,17 @@ export async function parseRepo(context: RouteContext, deps: RouteDeps): Promise
     );
   }
 
-  const fetchImpl = deps.fetchImpl;
-  let markdown: string | null;
-  let meta: HubModel | null = null;
+  let pending = inflight.get(raw);
+  if (!pending) {
+    pending = fetchAndParse(raw, deps.fetchImpl).finally(() => {
+      inflight.delete(raw);
+    });
+    inflight.set(raw, pending);
+  }
+
+  let fetched: FetchedParse | null;
   try {
-    [markdown, meta] = await Promise.all([
-      fetchReadme(raw, { retries: 2, timeoutMs: 20_000 }, fetchImpl),
-      fetchModel(raw, { retries: 2, timeoutMs: 20_000 }, fetchImpl),
-    ]);
+    fetched = await pending;
   } catch (error) {
     // The upstream message is logged, never sent. A client learns that the Hub
     // is unavailable, not how the Hub failed.
@@ -91,17 +126,11 @@ export async function parseRepo(context: RouteContext, deps: RouteDeps): Promise
     );
   }
 
-  if (markdown === null) {
+  if (fetched === null) {
     return errorResponse(404, "not_found", `No model card was found for "${raw}".`);
   }
 
-  const declaredBaseModels = Array.isArray(meta?.baseModels?.models)
-    ? meta.baseModels.models.map((entry) => entry.id)
-    : [];
-
-  const parsed = parseCard(markdown, { selfId: raw, declaredBaseModels });
-  const fetchedAt = new Date().toISOString();
-  rememberParse(raw, parsed, fetchedAt);
+  const { parsed, fetchedAt, meta } = fetched;
 
   return json(
     {
