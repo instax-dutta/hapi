@@ -7,6 +7,19 @@ export function needsBuild(last: string | null, current: string): boolean {
   return last !== current;
 }
 
+/**
+ * Strip the crawl timestamp from a raw file before hashing it.
+ *
+ * Every crawl stamps a new `crawledAt`. Including it would make the signature
+ * differ on every run and force a rebuild even when no model, card or download
+ * count changed.
+ */
+export function rawSignatureText(rawText: string): string {
+  const data = JSON.parse(rawText) as Record<string, unknown>;
+  delete data.crawledAt;
+  return JSON.stringify(data);
+}
+
 function collect(root: string, directory: string, out: string[]): void {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name);

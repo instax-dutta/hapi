@@ -5,7 +5,7 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, readlinkSync, rmSync,
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { publishLocal } from "../../scripts/lib/publish-local.ts";
-import { needsBuild, sourceSignature } from "../../scripts/lib/refresh-state.ts";
+import { needsBuild, rawSignatureText, sourceSignature } from "../../scripts/lib/refresh-state.ts";
 
 function staging(root: string, version: string, value: string): string {
   const dir = join(root, `stage-${version}`);
@@ -68,6 +68,13 @@ test("a changed raw source or code produces a different signature", () => {
     const first = sourceSignature(root, raw);
     assert.equal(sourceSignature(root, raw), first);
     assert.notEqual(sourceSignature(root, JSON.stringify({ repos: [2] })), first);
+
+    const later = JSON.stringify({ crawledAt: "later", repos: [1] });
+    assert.equal(
+      sourceSignature(root, rawSignatureText(later)),
+      sourceSignature(root, rawSignatureText(raw)),
+      "a new crawl timestamp alone must not rebuild the dataset",
+    );
 
     writeFileSync(join(root, "src", "a.ts"), "export const a = 2;\n");
     assert.notEqual(sourceSignature(root, raw), first);

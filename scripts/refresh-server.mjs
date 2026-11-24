@@ -10,7 +10,7 @@
 import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { needsBuild, sourceSignature } from "./lib/refresh-state.ts";
+import { needsBuild, rawSignatureText, sourceSignature } from "./lib/refresh-state.ts";
 
 const root = resolve(process.cwd());
 const data = join(root, "data");
@@ -87,7 +87,7 @@ await preflight();
 run("crawl", "npm", ["run", "crawl", "--", "--concurrency", "8"]);
 
 const rawText = readFileSync(join(data, "raw.json"), "utf8");
-const signature = sourceSignature(root, rawText);
+const signature = sourceSignature(root, rawSignatureText(rawText));
 if (!needsBuild(readSignature(), signature) && existsSync(join(current, "meta.json"))) {
   const meta = JSON.parse(readFileSync(join(current, "meta.json"), "utf8"));
   console.log(`Nothing changed. Keeping ${meta.version} and skipping the rebuild.`);
