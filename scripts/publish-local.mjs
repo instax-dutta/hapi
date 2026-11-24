@@ -8,7 +8,8 @@
 import { resolve } from "node:path";
 import { publishLocal } from "./lib/publish-local.ts";
 
-const root = resolve(process.cwd());
-const staging = resolve(root, process.argv[2] ?? "data/staging");
+const cwd = resolve(process.cwd());
+const root = resolve(cwd, "data");
+const staging = resolve(cwd, process.argv[2] ?? "data/staging");
 const version = publishLocal(root, staging);
-console.log(`Published ${version} at ${root}/data/current`);
+console.log(`Published ${version} at ${root}/current`);

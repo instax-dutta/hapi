@@ -1,8 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, readlinkSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { publishLocal } from "../../scripts/lib/publish-local.ts";
 import { needsBuild, sourceSignature } from "../../scripts/lib/refresh-state.ts";
 
@@ -30,6 +31,25 @@ test("publication switches one symlink and keeps the previous version", () => {
     publishLocal(root, staging(root, "v3", "three"));
     assert.equal(readlinkSync(current), join("versions", "v3"));
     assert.ok(!existsSync(join(root, "versions", "v1")), "older versions are not pruned");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("the CLI publishes under data/, where the service reads", () => {
+  const root = mkdtempSync(join(tmpdir(), "hapi-publish-cli-"));
+  try {
+    const dir = join(root, "staging");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "meta.json"), JSON.stringify({ version: "cli-v1" }));
+    const script = resolve(process.cwd(), "scripts", "publish-local.mjs");
+    const result = spawnSync(process.execPath, [script, "staging"], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(readlinkSync(join(root, "data", "current")), join("versions", "cli-v1"));
+    assert.equal(readFileSync(join(root, "data", "current", "meta.json"), "utf8").includes("cli-v1"), true);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
