@@ -21,6 +21,8 @@ request.
 - `publish.ts` - upload the dataset objects to the configured store
 - `refresh-server.mjs` - the self-hosted refresh: reject a dead token, crawl,
   skip an unchanged build, build into staging and swap the published symlink
+- `refresh-cron.sh` - the single scheduled entry point: reads the token and
+  takes the lock for both cron and the systemd timer
 - `publish-local.mjs` - switch `data/current` to a finished build and keep one
   rollback
 - `make-sample.mjs` - cut a committed sample dataset out of a directory

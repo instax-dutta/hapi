@@ -123,19 +123,23 @@ every request crosses the tunnel to the origin.
 ## 6. The schedule
 
 ```cron
-17 */2 * * * cd /home/tejes/work/hapi && flock -n data/refresh.lock env HF_TOKEN=$(cat /home/tejes/.config/hapi/hf_token) npm run refresh:server >> data/refresh.log 2>&1
+17 */2 * * * /home/tejes/work/hapi/scripts/refresh-cron.sh >> /home/tejes/work/hapi/data/refresh.log 2>&1
 ```
 
-`flock -n` drops a tick when the previous refresh is still running, so two
-crawls can never race. `refresh:server` checks that the token is still
-accepted, refuses an empty discovery, builds into staging, validates the
-result and switches the symlink only after every gate passes. It hashes the raw
-crawl together with the source; when neither changed, it skips the rebuild
-entirely. A rejected token or a broken Hub answer stops the run before the last
-good dataset is touched. The GitHub Actions workflow `monitor.yml` checks the
-public API every two hours and opens an issue when it goes stale; a
-`HEARTBEAT_URL` repository secret also catches a schedule that stops running
-entirely.
+`refresh-cron.sh` is the single scheduled entry point: it reads the token,
+takes `data/refresh.lock` with `flock -n`, and invokes `refresh:server`. A
+systemd timer calls the same script at an offset every six hours, so one
+scheduler failing does not stop the refresh. The lock makes an overlapping
+trigger a no-op rather than two crawls against the Hub.
+
+`refresh:server` checks that the token is still accepted, refuses an empty
+discovery, builds into staging, validates the result and switches the symlink
+only after every gate passes. It hashes the raw crawl together with the source;
+when neither changed, it skips the rebuild entirely. A rejected token or a
+broken Hub answer stops the run before the last good dataset is touched. The
+GitHub Actions workflow `monitor.yml` checks the public API every two hours and
+opens an issue when it goes stale. A `HEARTBEAT_URL` repository secret makes a
+schedule that stops running entirely report itself to an external monitor.
 
 The crawl is incremental, so a run that finds nothing new is cheap. The server
 keeps every family parsed and re-reads one at most every minute, in the

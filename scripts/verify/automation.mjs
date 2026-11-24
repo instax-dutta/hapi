@@ -27,6 +27,7 @@ for (const file of [
   ".github/dependabot.yml",
   ".github/AGENTS.md",
   "scripts/refresh-server.mjs",
+  "scripts/refresh-cron.sh",
 ]) {
   assert(has(file), `${file} is missing`);
 }
@@ -40,6 +41,8 @@ const ciText = read(".github/workflows/ci.yml");
 const monitorText = read(".github/workflows/monitor.yml");
 const dependabotText = read(".github/dependabot.yml");
 const wrapper = read("scripts/refresh-server.mjs");
+const scheduled = read("scripts/refresh-cron.sh");
+const hostingGuide = read("docs/node.md");
 let ci;
 let monitor;
 let dependabot;
@@ -94,6 +97,15 @@ for (const marker of [
 ]) {
   assert(wrapper.includes(marker), `the server refresh does not contain \`${marker}\``);
 }
+// The scheduled wrapper must hold the lock and the hosting guide must describe
+// both triggers. One scheduler alone is a single point of failure.
+assert(/flock -n/.test(scheduled), "the scheduled refresh does not take the lock");
+assert(/HF_TOKEN/.test(scheduled), "the scheduled refresh does not read the token");
+assert(
+  /systemd timer/.test(hostingGuide) && /refresh-cron\.sh/.test(hostingGuide),
+  "the hosting guide does not document the redundant trigger",
+);
+
 // An unpinned action is a mutable pointer running with a repository token.
 for (const file of readdirSync(join(root, ".github", "workflows"))) {
   if (!file.endsWith(".yml")) continue;
