@@ -67,7 +67,7 @@ if (ci && monitor && dependabot) {
   assert(monitorTriggers.includes("workflow_dispatch"), "the live monitor cannot be run by hand");
   assert(/v1\/health/.test(monitorText), "the monitor does not ask the live API for its health");
   assert(
-    /ageSeconds/.test(monitorText) && /12/.test(monitorText),
+    /ageSeconds/.test(monitorText) && /6/.test(monitorText),
     "the monitor does not reject a stale dataset",
   );
   assert(/::error/.test(monitorText), "the monitor has no failure reporting");

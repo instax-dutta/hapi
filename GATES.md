@@ -40,6 +40,12 @@ command that produced it.
   without a gap or a repeat, the counts agree across the metadata, the lists
   and the summary, the filters really filter, the rank column follows the
   canonical order, and the two download scopes are consistent
+- A bounded load check against the public host answered 500 requests at 25
+  concurrent clients with no 5xx and no missing CORS headers; the single-origin
+  loopback process answered 300 requests at 20 clients at 224 requests/second,
+  p95 267 ms. A second process served the same published symlink, which is the
+  horizontal-scaling path. Rolling the symlink back and forward was visible to
+  the API within 20 to 60 seconds in both directions
 
 The full corpus needs a Hugging Face token for the crawl. The token is a
 secret and never reaches the repository, the dataset or the API.

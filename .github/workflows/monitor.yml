@@ -43,7 +43,7 @@ jobs:
               const health = await check("/v1/health");
               const ageH = health.dataset.ageSeconds / 3600;
               console.log("dataset " + health.dataset.version + ", " + ageH.toFixed(1) + "h old");
-              if (ageH > 12) {
+              if (ageH > 6) {
                 throw new Error("the published dataset is " + ageH.toFixed(1) + "h old");
               }
 

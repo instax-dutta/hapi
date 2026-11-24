@@ -138,8 +138,9 @@ only after every gate passes. It hashes the raw crawl together with the source;
 when neither changed, it skips the rebuild entirely. A rejected token or a
 broken Hub answer stops the run before the last good dataset is touched. The
 GitHub Actions workflow `monitor.yml` checks the public API every two hours and
-opens an issue when it goes stale. A `HEARTBEAT_URL` repository secret makes a
-schedule that stops running entirely report itself to an external monitor.
+opens an issue when the published dataset is more than six hours old. A
+`HEARTBEAT_URL` repository secret makes a schedule that stops running entirely
+report itself to an external monitor.
 
 The crawl is incremental, so a run that finds nothing new is cheap. The server
 keeps every family parsed and re-reads one at most every minute, in the
