@@ -9,17 +9,25 @@ This guide assumes a server you control. If you want the managed version, use
 
 ## 1. The dataset
 
-The pipeline writes the published objects into `dist/`:
+The pipeline writes each build into a staging directory and then switches the
+`data/current` symlink to the finished version. The server reads that symlink,
+so it never sees a half-written set of objects:
 
 ```bash
 npm run crawl
-npm run build:dataset
-npm run build:stats
+HAPI_DIST_DIR=data/staging npm run build:dataset
+HAPI_DIST_DIR=data/staging npm run build:stats
+node scripts/publish-local.mjs data/staging
 ```
 
-`dist/` now holds `meta.json`, `models.json`, `recipes.json`, `repos.json`,
-`creators.json`, `stats.json` and `dataset.json`. The server reads that
-directory.
+A published version holds `meta.json`, `models.json`, `recipes.json`,
+`repos.json`, `creators.json`, `stats.json` and `dataset.json`. The previous
+version stays under `data/versions/` as an immediate rollback. Point the
+service at the symlink:
+
+```ini
+Environment=HAPI_DATA_DIR=/home/tejes/work/hapi/data/current
+```
 
 ## 2. The server
 
@@ -115,16 +123,19 @@ every request crosses the tunnel to the origin.
 ## 6. The schedule
 
 ```cron
-17 */2 * * * cd /home/tejes/work/hapi && HF_TOKEN=$(cat /home/tejes/.config/hapi/hf_token) npm run refresh:server >> data/refresh.log 2>&1
+17 */2 * * * cd /home/tejes/work/hapi && flock -n data/refresh.lock env HF_TOKEN=$(cat /home/tejes/.config/hapi/hf_token) npm run refresh:server >> data/refresh.log 2>&1
 ```
 
-`refresh:server` is the whole refresh: it checks that the token is still
-accepted, refuses an empty discovery, crawls, builds, validates the built
-dataset and waits until the live API reports the new version. A rejected token
-or a broken Hub answer stops the run before the previous good files are
-touched. The GitHub Actions workflow `monitor.yml` checks the public API every
-two hours and opens an issue when it goes stale; a `HEARTBEAT_URL` repository
-secret also catches a schedule that stops running entirely.
+`flock -n` drops a tick when the previous refresh is still running, so two
+crawls can never race. `refresh:server` checks that the token is still
+accepted, refuses an empty discovery, builds into staging, validates the
+result and switches the symlink only after every gate passes. It hashes the raw
+crawl together with the source; when neither changed, it skips the rebuild
+entirely. A rejected token or a broken Hub answer stops the run before the last
+good dataset is touched. The GitHub Actions workflow `monitor.yml` checks the
+public API every two hours and opens an issue when it goes stale; a
+`HEARTBEAT_URL` repository secret also catches a schedule that stops running
+entirely.
 
 The crawl is incremental, so a run that finds nothing new is cheap. The server
 keeps every family parsed and re-reads one at most every five minutes, in the

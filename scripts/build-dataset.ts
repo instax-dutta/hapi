@@ -7,7 +7,7 @@
  *   node scripts/build-dataset.ts
  */
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { buildSnapshot, type RawDataset } from "../src/core/snapshot.ts";
 import { apiRowsFromSnapshot, type RawExtras } from "./lib/dataset-rows.ts";
 import { buildCreators } from "./lib/creators.ts";
@@ -15,7 +15,7 @@ import type { DatasetMeta } from "../src/lib/types.ts";
 
 const ROOT = process.cwd();
 const RAW_PATH = join(ROOT, "data", "raw.json");
-const DIST = join(ROOT, "dist");
+const DIST = process.env.HAPI_DIST_DIR ? resolve(process.env.HAPI_DIST_DIR) : join(ROOT, "dist");
 
 function writeAtomic(path: string, content: string): void {
   mkdirSync(dirname(path), { recursive: true });

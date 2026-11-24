@@ -20,7 +20,9 @@ request.
   tag-and-name index found) and the indexed artifacts the directory published
 - `publish.ts` - upload the dataset objects to the configured store
 - `refresh-server.mjs` - the self-hosted refresh: reject a dead token, crawl,
-  build, validate the result and check that the live process picked it up
+  skip an unchanged build, build into staging and swap the published symlink
+- `publish-local.mjs` - switch `data/current` to a finished build and keep one
+  rollback
 - `make-sample.mjs` - cut a committed sample dataset out of a directory
   snapshot, for the gate that checks the dataset invariants. Everything the
   sample publishes is re-derived from the slice
@@ -33,6 +35,9 @@ request.
 - `lib/incremental.ts` - the card cache decision: fetch, reuse or re-parse
 - `lib/discovery.ts` - refuse an empty discovery before it can overwrite a
   good `raw.json`
+- `lib/publish-local.ts` - the atomic symlink switch and version pruning
+- `lib/refresh-state.ts` - the source signature that decides whether a rebuild
+  is needed
 - `verify/` - the verification harness and the acceptance gates
 
 ## Local Contracts
@@ -64,8 +69,11 @@ request.
   refresh that changed nothing publishes nothing. The timestamp comes from the
   crawl, never from the clock, and the published ordering never depends on the
   runtime's locale
-- The dataset objects are written atomically. A half-written object is never
-  visible
+- The dataset objects are written into a staging directory and made visible by
+  one symlink switch. A reader never sees a mix of two builds, and the previous
+  version stays available as a rollback
+- A run whose raw crawl and source are byte-identical to the last build skips
+  the build entirely
 - `build-stats` refuses to publish a measurement when the artifact list is
   missing or empty
 - The build refuses to publish a dataset that lost more than 5% of its

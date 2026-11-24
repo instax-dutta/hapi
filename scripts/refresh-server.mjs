@@ -2,16 +2,21 @@
 /**
  * The self-hosted refresh, run by cron on the server that serves the API.
  *
- * The Node entry reads `dist/` directly, so publishing is a local rebuild
- * followed by a check that the live process picked it up. Every step is loud:
- * an expired Hub token or an empty discovery stops the run before the previous
- * good files are touched.
+ * The Node entry reads `data/current`, a symlink switched only after the whole
+ * dataset has been built and validated. An expired token or an empty discovery
+ * stops the run before the previous good files are touched, and an unchanged
+ * source skips the rebuild entirely.
  */
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { needsBuild, sourceSignature } from "./lib/refresh-state.ts";
 
 const root = resolve(process.cwd());
+const data = join(root, "data");
+const staging = join(data, "staging");
+const current = join(data, "current");
+const signaturePath = join(data, "last-signature");
 const live = process.env.HAPI_LIVE_URL ?? "https://hapi.thevinod.lol";
 
 function fail(message) {
@@ -27,6 +32,14 @@ function run(label, command, args, env = {}) {
     env: { ...process.env, ...env },
   });
   if (result.status !== 0) fail(`${label} (exit ${result.status ?? 1})`);
+}
+
+function readSignature() {
+  try {
+    return readFileSync(signaturePath, "utf8").trim();
+  } catch {
+    return null;
+  }
 }
 
 async function preflight() {
@@ -72,11 +85,31 @@ async function verifyLive(version) {
 
 await preflight();
 run("crawl", "npm", ["run", "crawl", "--", "--concurrency", "8"]);
-run("build", "npm", ["run", "build:dataset"]);
-run("stats", "npm", ["run", "build:stats"]);
-run("dataset gate", "node", ["scripts/verify/gate.mjs", "dataset"], {
-  HAPI_DATASET_DIR: "dist",
-});
 
-const meta = JSON.parse(readFileSync(join(root, "dist", "meta.json"), "utf8"));
-await verifyLive(meta.version);
+const rawText = readFileSync(join(data, "raw.json"), "utf8");
+const signature = sourceSignature(root, rawText);
+if (!needsBuild(readSignature(), signature) && existsSync(join(current, "meta.json"))) {
+  const meta = JSON.parse(readFileSync(join(current, "meta.json"), "utf8"));
+  console.log(`Nothing changed. Keeping ${meta.version} and skipping the rebuild.`);
+  await verifyLive(meta.version);
+  process.exit(0);
+}
+
+rmSync(staging, { recursive: true, force: true });
+mkdirSync(staging, { recursive: true });
+// The coverage guard needs the last published baseline, not an empty stage.
+if (existsSync(join(current, "meta.json"))) {
+  copyFileSync(join(current, "meta.json"), join(staging, "meta.json"));
+}
+
+const buildEnv = { HAPI_DIST_DIR: staging };
+run("build", "npm", ["run", "build:dataset"], buildEnv);
+run("stats", "npm", ["run", "build:stats"], buildEnv);
+run("dataset gate", "node", ["scripts/verify/gate.mjs", "dataset"], {
+  HAPI_DATASET_DIR: staging,
+});
+run("publish", "node", ["scripts/publish-local.mjs", "data/staging"]);
+
+const published = JSON.parse(readFileSync(join(current, "meta.json"), "utf8"));
+await verifyLive(published.version);
+writeFileSync(signaturePath, `${signature}\n`);

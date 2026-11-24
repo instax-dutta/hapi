@@ -88,6 +88,8 @@ for (const marker of [
   '"stats"',
   "scripts/verify/gate.mjs",
   "HAPI_DATASET_DIR",
+  "scripts/publish-local.mjs",
+  "sourceSignature",
   "v1/health",
 ]) {
   assert(wrapper.includes(marker), `the server refresh does not contain \`${marker}\``);

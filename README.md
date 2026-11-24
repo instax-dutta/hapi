@@ -253,11 +253,11 @@ network round trip.
 
 `npm run refresh:server` is the automated form on a self-hosted deployment. It
 rejects an expired Hugging Face token before touching any file, refuses an
-empty discovery, runs the build and its gates, and waits for the live API to
-report the new dataset version. A GitHub Actions workflow runs the full verify
-on every pull request and checks the public API every two hours, opening an
-issue when it goes stale. See [docs/node.md](docs/node.md) for the cron entry
-and the required secret.
+empty discovery, skips the rebuild when nothing changed, and publishes by
+switching one symlink after every gate passes. A GitHub Actions workflow runs
+the full verify on every pull request and checks the public API every two
+hours, opening an issue when it goes stale. See [docs/node.md](docs/node.md)
+for the cron entry, the atomic publication layout and the required secret.
 
 ## Hosting
 

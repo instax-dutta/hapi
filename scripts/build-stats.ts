@@ -14,7 +14,7 @@
  *   node scripts/build-stats.ts
  */
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import {
   aggregate,
   collectModels,
@@ -27,8 +27,8 @@ import type { DownloadTotals, StatsScope } from "../src/lib/types.ts";
 
 const ROOT = process.cwd();
 const RAW_PATH = join(ROOT, "data", "raw.json");
-const REPOS_PATH = join(ROOT, "dist", "repos.json");
-const DIST = join(ROOT, "dist");
+const DIST = process.env.HAPI_DIST_DIR ? resolve(process.env.HAPI_DIST_DIR) : join(ROOT, "dist");
+const REPOS_PATH = join(DIST, "repos.json");
 
 interface RawFile {
   crawledAt: string;
