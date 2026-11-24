@@ -37,6 +37,8 @@ request.
 - `lib/incremental.ts` - the card cache decision: fetch, reuse or re-parse
 - `lib/discovery.ts` - refuse an empty discovery before it can overwrite a
   good `raw.json`
+- `lib/hf-auth.ts` - the authenticated Hub endpoint used to reject a dead
+  token before a crawl starts
 - `lib/publish-local.ts` - the atomic symlink switch and version pruning
 - `lib/refresh-state.ts` - the source signature that decides whether a rebuild
   is needed

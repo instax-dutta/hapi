@@ -11,6 +11,7 @@ import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { needsBuild, rawSignatureText, sourceSignature } from "./lib/refresh-state.ts";
+import { authResult, AUTH_CHECK_URL } from "./lib/hf-auth.ts";
 
 const root = resolve(process.cwd());
 const data = join(root, "data");
@@ -47,17 +48,18 @@ async function preflight() {
   if (!token) fail("HF_TOKEN is not set.");
   let response;
   try {
-    response = await fetch("https://huggingface.co/api/models?limit=1", {
+    response = await fetch(AUTH_CHECK_URL, {
       headers: { Authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(20_000),
     });
   } catch (error) {
     fail(`Hugging Face preflight failed: ${error.message}`);
   }
-  if (response.status === 401 || response.status === 403) {
+  const verdict = authResult(response.status);
+  if (verdict === "rejected") {
     fail(`Hugging Face rejected HF_TOKEN (HTTP ${response.status}). Rotate the token.`);
   }
-  if (!response.ok) fail(`Hugging Face preflight returned HTTP ${response.status}.`);
+  if (verdict === "other") fail(`Hugging Face preflight returned HTTP ${response.status}.`);
   console.log("HF_TOKEN accepted by the Hub.");
 }
 
